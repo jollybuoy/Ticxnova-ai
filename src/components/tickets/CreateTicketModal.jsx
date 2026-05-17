@@ -4,7 +4,12 @@ import { Input } from '../ui/Input';
 import { Textarea } from '../ui/Textarea';
 import { Select } from '../ui/Select';
 import { Button } from '../ui/Button';
-import { TICKET_CATEGORIES, TICKET_PRIORITIES } from '../../lib/tickets/constants';
+import {
+  TICKET_CATEGORIES,
+  TICKET_PRIORITIES,
+  getTicketTypeForCategory,
+} from '../../lib/tickets/constants';
+import { DeviceSelector, suggestTicketCategory } from '../itsm/DeviceSelector';
 
 const emptyForm = {
   title: '',
@@ -12,6 +17,8 @@ const emptyForm = {
   priority: 'medium',
   category: TICKET_CATEGORIES[0],
   requester_name: '',
+  department: '',
+  device_ids: [],
 };
 
 export function CreateTicketModal({ open, onClose, onCreate, loading }) {
@@ -24,7 +31,10 @@ export function CreateTicketModal({ open, onClose, onCreate, loading }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const result = await onCreate(form);
+    const result = await onCreate({
+      ...form,
+      ticket_type: getTicketTypeForCategory(form.category),
+    });
     if (result.success) {
       setForm(emptyForm);
       onClose();
@@ -32,6 +42,18 @@ export function CreateTicketModal({ open, onClose, onCreate, loading }) {
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+
+  const handleDeviceSelection = (deviceIds) => {
+    setForm((f) => ({ ...f, device_ids: deviceIds }));
+  };
+
+  const handlePrimaryDeviceChange = (device) => {
+    setForm((f) => ({
+      ...f,
+      department: device.department || f.department,
+      category: suggestTicketCategory(device) || f.category,
+    }));
+  };
 
   return (
     <Modal
@@ -78,6 +100,19 @@ export function CreateTicketModal({ open, onClose, onCreate, loading }) {
           placeholder="Who reported this issue?"
           value={form.requester_name}
           onChange={set('requester_name')}
+          disabled={loading}
+        />
+        <Input
+          label="Department"
+          placeholder="Auto-filled from selected device when available"
+          value={form.department}
+          onChange={set('department')}
+          disabled={loading}
+        />
+        <DeviceSelector
+          selectedIds={form.device_ids}
+          onChange={handleDeviceSelection}
+          onPrimaryDeviceChange={handlePrimaryDeviceChange}
           disabled={loading}
         />
         <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">

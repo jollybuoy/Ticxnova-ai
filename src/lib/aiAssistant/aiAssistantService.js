@@ -1,6 +1,6 @@
 import { supabase } from '../supabase';
 
-export async function sendAIAssistantMessage({ message, history }) {
+export async function sendAIAssistantMessage({ message, history, deviceContext = [] }) {
   const { data, error } = await supabase.functions.invoke('ai-assistant', {
     body: {
       message,
@@ -8,6 +8,7 @@ export async function sendAIAssistantMessage({ message, history }) {
         role: item.role,
         content: item.content,
       })),
+      deviceContext: deviceContext.slice(0, 20),
     },
   });
 

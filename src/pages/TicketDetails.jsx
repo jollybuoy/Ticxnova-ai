@@ -18,6 +18,8 @@ import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
 import { Spinner } from '../components/ui/Spinner';
 import { Textarea } from '../components/ui/Textarea';
+import { LinkedDevicesPanel } from '../components/itsm/LinkedDevicesPanel';
+import { TicketDeviceBadge } from '../components/itsm/TicketDeviceBadge';
 import { useTicketDetails } from '../hooks/useTicketDetails';
 import {
   TICKET_PRIORITIES,
@@ -129,8 +131,18 @@ function WorkNotes({ comments, onSubmit, loading }) {
 export default function TicketDetails() {
   const { ticketId } = useParams();
   const navigate = useNavigate();
-  const { ticket, comments, activity, loading, mutating, updateFields, addComment } =
-    useTicketDetails(ticketId);
+  const {
+    ticket,
+    comments,
+    activity,
+    linkedDevices,
+    loading,
+    mutating,
+    updateFields,
+    addComment,
+    updateLinkedDevices,
+    removeLinkedDevice,
+  } = useTicketDetails(ticketId);
 
   const [assignment, setAssignment] = useState({ assignee_name: '', department: '' });
 
@@ -226,6 +238,24 @@ export default function TicketDetails() {
                   <FieldRow icon={UserRound} label="Assigned to" value={ticket.assignee_name} />
                   <FieldRow icon={Clock} label="Created" value={formatTicketDate(ticket.created_at)} />
                 </div>
+
+                <div>
+                  <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+                    <Building2 size={16} className="text-violet-300" />
+                    Linked affected assets
+                  </div>
+                  {linkedDevices.length === 0 ? (
+                    <p className="rounded-2xl border border-dashed border-white/10 px-4 py-5 text-sm text-zinc-500">
+                      No affected devices linked to this ticket.
+                    </p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {linkedDevices.map((device) => (
+                        <TicketDeviceBadge key={device.id} device={device} />
+                      ))}
+                    </div>
+                  )}
+                </div>
               </CardBody>
             </Card>
 
@@ -269,6 +299,14 @@ export default function TicketDetails() {
                 />
               </CardBody>
             </Card>
+
+            <LinkedDevicesPanel
+              devices={linkedDevices}
+              selectedIds={linkedDevices.map((device) => device.id)}
+              onSelectionChange={updateLinkedDevices}
+              onRemove={removeLinkedDevice}
+              mutating={mutating}
+            />
 
             <Card hover={false}>
               <CardHeader title="Assignment" subtitle="Owner and department" />

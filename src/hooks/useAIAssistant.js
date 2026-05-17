@@ -7,6 +7,7 @@ import {
 } from '../lib/aiAssistant/aiAssistantService';
 import { createTicket, getTicketErrorMessage } from '../lib/tickets/ticketService';
 import { getUserDisplayName } from '../lib/user';
+import { useDevices } from './useDevices';
 
 const welcomeMessage = {
   id: 'welcome',
@@ -64,7 +65,11 @@ function normalizeTicketDraft(draft, fallbackText) {
     category: base.category || 'Other',
     priority: base.priority || 'medium',
     department: base.department || 'IT Operations',
-    ticket_type: base.ticket_type || base.ticketType || 'incident',
+    ticket_type:
+      base.category === 'Device Request'
+        ? 'service_request'
+        : base.ticket_type || base.ticketType || 'incident',
+    device_ids: base.device_ids || base.deviceIds || [],
   };
 }
 
@@ -79,6 +84,7 @@ function formatTicketCreatedAt(iso) {
 
 export function useAIAssistant() {
   const { user } = useAuth();
+  const { devices } = useDevices();
   const storageKey = useMemo(
     () => (user?.id ? `ticxnova-ai-assistant:${user.id}` : null),
     [user?.id],
@@ -124,6 +130,7 @@ export function useAIAssistant() {
         priority: draft.priority || 'medium',
         ticket_type: draft.ticket_type || 'incident',
         department: draft.department || 'IT Operations',
+        device_ids: draft.device_ids || [],
         ai_summary: draft.summary || draft.description || message.content,
         ai_suggested_category: draft.category || 'Other',
         ai_suggested_priority: draft.priority || 'medium',
@@ -241,6 +248,15 @@ export function useAIAssistant() {
       const { data, error } = await sendAIAssistantMessage({
         message: trimmed,
         history,
+        deviceContext: devices.map((device) => ({
+          id: device.id,
+          name: device.name,
+          asset_tag: device.asset_tag,
+          device_type: device.device_type,
+          department: device.department,
+          health_status: device.health_status,
+          assigned_user: device.assigned_user,
+        })),
       });
 
       setLoading(false);
@@ -269,7 +285,7 @@ export function useAIAssistant() {
         }),
       ]);
     },
-    [createTicketFromMessage, declineTicketProposal, loading, messages, prepareTicketProposal],
+    [createTicketFromMessage, declineTicketProposal, devices, loading, messages, prepareTicketProposal],
   );
 
   const clearConversation = useCallback(() => {

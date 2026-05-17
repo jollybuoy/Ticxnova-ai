@@ -1,5 +1,6 @@
 import { supabase } from '../supabase';
 import { getTicketTypeMeta } from './constants';
+import { linkTicketDevices } from '../itsm/ticketDeviceService';
 
 function getTicketPrefix(payload = {}) {
   return getTicketTypeMeta(payload.ticket_type).prefix;
@@ -105,6 +106,13 @@ export async function createTicket(userId, payload) {
       actor_name: payload.requester_name ?? 'AI Assistant',
       actor_email: payload.requester_email ?? null,
     });
+
+    if (payload.device_ids?.length > 0) {
+      await linkTicketDevices(userId, data.id, payload.device_ids, {
+        name: payload.requester_name ?? 'System',
+        email: payload.requester_email ?? null,
+      });
+    }
   }
 
   return { data, error };

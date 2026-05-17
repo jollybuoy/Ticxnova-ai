@@ -59,7 +59,7 @@ create table if not exists public.ticket_activity (
   ticket_id uuid not null references public.tickets (id) on delete cascade,
   user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   type text not null
-    check (type in ('status_change', 'field_update', 'comment', 'system')),
+    check (type in ('status_change', 'field_update', 'comment', 'system', 'device_linked', 'device_unlinked')),
   field text,
   previous_value text,
   new_value text,
@@ -73,7 +73,24 @@ alter table public.ticket_comments
   alter column user_id set default auth.uid();
 
 alter table public.ticket_activity
-  alter column user_id set default auth.uid();
+  alter column user_id set default auth.uid(),
+  add column if not exists type text not null default 'system',
+  add column if not exists field text,
+  add column if not exists previous_value text,
+  add column if not exists new_value text,
+  add column if not exists message text not null default 'activity updated',
+  add column if not exists actor_name text,
+  add column if not exists actor_email text;
+
+do $$
+begin
+  alter table public.ticket_activity drop constraint if exists ticket_activity_type_check;
+  alter table public.ticket_activity
+    add constraint ticket_activity_type_check
+    check (type in ('status_change', 'field_update', 'comment', 'system', 'device_linked', 'device_unlinked'));
+exception
+  when duplicate_object then null;
+end $$;
 
 create unique index if not exists tickets_ticket_number_idx
   on public.tickets (ticket_number);

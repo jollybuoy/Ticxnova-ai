@@ -8,6 +8,9 @@ import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 import TicketDetails from './pages/TicketDetails';
 import AIAssistant from './pages/AIAssistant';
+import Devices from './pages/Devices';
+import DeviceDetails from './pages/DeviceDetails';
+import AssetOverview from './pages/AssetOverview';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -53,6 +56,30 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <AIAssistant />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/assets"
+          element={
+            <ProtectedRoute>
+              <AssetOverview />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/devices"
+          element={
+            <ProtectedRoute>
+              <Devices />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/devices/:deviceId"
+          element={
+            <ProtectedRoute>
+              <DeviceDetails />
             </ProtectedRoute>
           }
         />

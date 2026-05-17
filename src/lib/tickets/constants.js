@@ -23,9 +23,15 @@ export const TICKET_CATEGORIES = [
   'Password Reset',
   'Software Issue',
   'Hardware Issue',
+  'Device Request',
   'Network Issue',
   'Other',
 ];
+
+export function getTicketTypeForCategory(category, fallback = 'incident') {
+  if (category === 'Device Request') return 'service_request';
+  return fallback;
+}
 
 export function getStatusMeta(status) {
   return TICKET_STATUSES.find((s) => s.value === status) ?? TICKET_STATUSES[0];

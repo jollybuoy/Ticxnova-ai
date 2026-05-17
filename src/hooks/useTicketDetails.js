@@ -11,6 +11,12 @@ import {
   getTicketErrorMessage,
   updateTicketFields,
 } from '../lib/tickets/ticketService';
+import {
+  fetchTicketDevices,
+  getTicketDeviceErrorMessage,
+  replaceTicketDevices,
+  unlinkTicketDevice,
+} from '../lib/itsm/ticketDeviceService';
 
 export function useTicketDetails(ticketId) {
   const { user } = useAuth();
@@ -18,6 +24,7 @@ export function useTicketDetails(ticketId) {
   const [ticket, setTicket] = useState(null);
   const [comments, setComments] = useState([]);
   const [activity, setActivity] = useState([]);
+  const [linkedDevices, setLinkedDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
 
@@ -33,10 +40,11 @@ export function useTicketDetails(ticketId) {
     if (!userId || !ticketId) return;
 
     setLoading(true);
-    const [ticketResult, commentsResult, activityResult] = await Promise.all([
+    const [ticketResult, commentsResult, activityResult, devicesResult] = await Promise.all([
       fetchTicketById(userId, ticketId),
       fetchTicketComments(userId, ticketId),
       fetchTicketActivity(ticketId),
+      fetchTicketDevices(ticketId),
     ]);
 
     if (ticketResult.error) {
@@ -56,6 +64,12 @@ export function useTicketDetails(ticketId) {
       toast.error(getTicketErrorMessage(activityResult.error));
     } else {
       setActivity(activityResult.data);
+    }
+
+    if (devicesResult.error) {
+      toast.error(getTicketDeviceErrorMessage(devicesResult.error));
+    } else {
+      setLinkedDevices(devicesResult.data);
     }
 
     setLoading(false);
@@ -110,6 +124,19 @@ export function useTicketDetails(ticketId) {
           fetchTicketActivity(ticketId).then(({ data }) => setActivity(data ?? []));
         },
       )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'ticket_devices',
+          filter: `ticket_id=eq.${ticketId}`,
+        },
+        () => {
+          fetchTicketDevices(ticketId).then(({ data }) => setLinkedDevices(data ?? []));
+          fetchTicketActivity(ticketId).then(({ data }) => setActivity(data ?? []));
+        },
+      )
       .subscribe();
 
     return () => {
@@ -157,14 +184,52 @@ export function useTicketDetails(ticketId) {
     [actor, ticketId, userId],
   );
 
+  const updateLinkedDevices = useCallback(
+    async (deviceIds) => {
+      if (!userId || !ticketId) return { success: false };
+      setMutating(true);
+      const { error } = await replaceTicketDevices(userId, ticketId, deviceIds, actor);
+      setMutating(false);
+      if (error) {
+        toast.error(getTicketDeviceErrorMessage(error));
+        return { success: false };
+      }
+      const { data } = await fetchTicketDevices(ticketId);
+      setLinkedDevices(data ?? []);
+      toast.success('Linked devices updated');
+      return { success: true };
+    },
+    [actor, ticketId, userId],
+  );
+
+  const removeLinkedDevice = useCallback(
+    async (deviceId) => {
+      if (!ticketId) return { success: false };
+      setMutating(true);
+      const { error } = await unlinkTicketDevice(ticketId, deviceId);
+      setMutating(false);
+      if (error) {
+        toast.error(getTicketDeviceErrorMessage(error));
+        return { success: false };
+      }
+      setLinkedDevices((prev) => prev.filter((device) => device.id !== deviceId));
+      toast.success('Device removed from ticket');
+      return { success: true };
+    },
+    [ticketId],
+  );
+
   return {
     ticket,
     comments,
     activity,
+    linkedDevices,
     loading,
     mutating,
     refetch: loadTicket,
     updateFields,
     addComment,
+    updateLinkedDevices,
+    removeLinkedDevice,
   };
 }

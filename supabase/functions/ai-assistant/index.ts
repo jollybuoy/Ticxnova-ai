@@ -11,6 +11,16 @@ type ChatMessage = {
   content: string;
 };
 
+type DeviceContext = {
+  id: string;
+  name: string;
+  asset_tag?: string;
+  device_type?: string;
+  department?: string;
+  health_status?: string;
+  assigned_user?: string;
+};
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -19,6 +29,22 @@ function jsonResponse(body: unknown, status = 200) {
       'Content-Type': 'application/json',
     },
   });
+}
+
+function sanitizeDeviceContext(value: unknown): DeviceContext[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is DeviceContext => Boolean(item && typeof item === 'object' && (item as DeviceContext).id))
+    .slice(0, 20)
+    .map((item) => ({
+      id: String(item.id),
+      name: String(item.name ?? 'Unnamed device').slice(0, 120),
+      asset_tag: item.asset_tag ? String(item.asset_tag).slice(0, 80) : undefined,
+      device_type: item.device_type ? String(item.device_type).slice(0, 80) : undefined,
+      department: item.department ? String(item.department).slice(0, 80) : undefined,
+      health_status: item.health_status ? String(item.health_status).slice(0, 40) : undefined,
+      assigned_user: item.assigned_user ? String(item.assigned_user).slice(0, 120) : undefined,
+    }));
 }
 
 function sanitizeHistory(history: unknown): ChatMessage[] {
@@ -53,7 +79,7 @@ serve(async (req) => {
     return jsonResponse({ error: 'OPENAI_API_KEY is not configured' }, 500);
   }
 
-  let payload: { message?: string; history?: unknown };
+  let payload: { message?: string; history?: unknown; deviceContext?: unknown };
   try {
     payload = await req.json();
   } catch (_error) {
@@ -66,6 +92,15 @@ serve(async (req) => {
   }
 
   const history = sanitizeHistory(payload.history);
+  const deviceContext = sanitizeDeviceContext(payload.deviceContext);
+  const deviceContextText = deviceContext.length
+    ? deviceContext
+        .map(
+          (device) =>
+            `- ${device.name} (${device.asset_tag ?? 'no asset tag'}, ${device.device_type ?? 'unknown type'}, ${device.health_status ?? 'unknown health'}, department: ${device.department ?? 'unknown'}, assigned: ${device.assigned_user ?? 'unassigned'}, id: ${device.id})`,
+        )
+        .join('\n')
+    : 'No device inventory context was provided.';
 
   const systemPrompt = `
 You are Ticxnova-AI Copilot, an enterprise IT support assistant for a Managed Service Provider SaaS platform.
@@ -82,6 +117,13 @@ Behavior:
 - End the response by saying: "If the issue continues, I can prepare a ticket for your review."
 - If the user is only asking a how-to question and the issue appears resolved through guidance, set shouldCreateTicket false.
 - Never invent tenant-specific facts, credentials, device names, or policy settings.
+- Device inventory context is available below. If the user mentions a device, endpoint, laptop, server, network device, mobile device, asset tag, assigned user, or recurring hardware issue, reference likely matching devices from this context.
+- If a ticketDraft is for a specific device, include "device_ids" with matching device IDs. Prefer unhealthy devices or direct name/asset tag matches.
+- Use category "Device Request" for device provisioning, refresh, replacement, accessory, repair, or attach-to-device requests. Device Request must always use ticket_type "service_request".
+- If repeated failures or unhealthy status are visible, mention replacement review or recurring incident investigation where appropriate.
+
+Device inventory context:
+${deviceContextText}
 
 Return strict JSON only:
 {
@@ -91,10 +133,11 @@ Return strict JSON only:
     "title": "short ticket title",
     "description": "issue summary and troubleshooting context for the ticket body",
     "summary": "1-2 sentence business-ready ticket summary",
-    "category": "Password Reset | Software Issue | Hardware Issue | Network Issue | Other",
+    "category": "Password Reset | Software Issue | Hardware Issue | Device Request | Network Issue | Other",
     "priority": "low | medium | high | urgent",
     "department": "IT Operations | Security | Network Operations | End User Computing | Collaboration",
-    "ticket_type": "incident | service_request | problem | change_request"
+    "ticket_type": "incident | service_request | problem | change_request",
+    "device_ids": ["matching-device-id"]
   } | null
 }
 `;

@@ -27,6 +27,20 @@
     background-color: var(--color-surface);
   }
 
+  input[type="date"] {
+    color-scheme: dark;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(1);
+    opacity: 0.75;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    opacity: 1;
+  }
+
   * {
     scrollbar-width: thin;
     scrollbar-color: rgb(255 255 255 / 0.12) transparent;
