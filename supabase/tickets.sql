@@ -11,10 +11,22 @@ create table if not exists public.tickets (
   priority text not null default 'medium'
     check (priority in ('low', 'medium', 'high', 'urgent')),
   category text,
+  ai_summary text,
+  ai_suggested_category text,
+  ai_suggested_priority text,
+  ai_reasoning text,
+  ai_summary_generated_at timestamptz,
   requester_name text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.tickets
+  add column if not exists ai_summary text,
+  add column if not exists ai_suggested_category text,
+  add column if not exists ai_suggested_priority text,
+  add column if not exists ai_reasoning text,
+  add column if not exists ai_summary_generated_at timestamptz;
 
 create index if not exists tickets_user_id_idx on public.tickets (user_id);
 create index if not exists tickets_status_idx on public.tickets (status);

@@ -127,14 +127,22 @@ export function useTickets() {
     [userId],
   );
 
-  const handleSummarize = useCallback(async (ticket) => {
-    const { data, error } = await summarizeTicket(ticket);
-    if (error) {
-      toast.error(getTicketErrorMessage(error));
-      return { success: false };
-    }
-    return { success: true, data };
-  }, []);
+  const handleSummarize = useCallback(
+    async (ticket) => {
+      if (!userId) return { success: false };
+
+      const { data, error } = await summarizeTicket(userId, ticket);
+      if (error) {
+        toast.error(getTicketErrorMessage(error));
+        return { success: false };
+      }
+
+      setTickets((prev) => prev.map((t) => (t.id === ticket.id ? data : t)));
+      toast.success('AI summary saved to ticket');
+      return { success: true, data };
+    },
+    [userId],
+  );
 
   return {
     tickets,

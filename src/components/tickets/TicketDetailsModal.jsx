@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bot, Clock, FileText, Sparkles, UserRound } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Badge } from '../ui/Badge';
@@ -59,6 +59,18 @@ function AiSummaryCard({ summary, loading }) {
   );
 }
 
+function getSavedAiSummary(ticket) {
+  if (!ticket?.ai_summary) return null;
+
+  return {
+    summary: ticket.ai_summary,
+    category: ticket.ai_suggested_category || 'Not suggested',
+    priority: ticket.ai_suggested_priority || 'Not suggested',
+    reasoning: ticket.ai_reasoning,
+    generatedAt: ticket.ai_summary_generated_at,
+  };
+}
+
 export function TicketDetailsModal({
   ticket,
   open,
@@ -67,8 +79,13 @@ export function TicketDetailsModal({
   onStatusChange,
   onSummarize,
 }) {
-  const [summary, setSummary] = useState(null);
+  const savedSummary = useMemo(() => getSavedAiSummary(ticket), [ticket]);
+  const [summary, setSummary] = useState(savedSummary);
   const [aiLoading, setAiLoading] = useState(false);
+
+  useEffect(() => {
+    setSummary(savedSummary);
+  }, [savedSummary]);
 
   if (!ticket) return null;
 
@@ -79,7 +96,7 @@ export function TicketDetailsModal({
     setAiLoading(true);
     const result = await onSummarize(ticket);
     if (result.success) {
-      setSummary(result.data);
+      setSummary(getSavedAiSummary(result.data));
     }
     setAiLoading(false);
   };
@@ -105,6 +122,11 @@ export function TicketDetailsModal({
           </div>
 
           <AiSummaryCard summary={summary} loading={aiLoading} />
+          {summary?.generatedAt && !aiLoading && (
+            <p className="text-xs text-zinc-600">
+              AI summary saved {formatTicketDate(summary.generatedAt)}
+            </p>
+          )}
         </div>
 
         <aside className="space-y-4">
@@ -156,7 +178,7 @@ export function TicketDetailsModal({
             onClick={handleSummarize}
           >
             <Sparkles size={16} />
-            Summarize with AI
+            {summary ? 'Refresh AI summary' : 'Summarize with AI'}
           </Button>
         </aside>
       </div>

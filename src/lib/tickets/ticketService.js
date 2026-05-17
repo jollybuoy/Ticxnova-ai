@@ -66,7 +66,7 @@ export async function deleteTicket(userId, ticketId) {
   return { error };
 }
 
-export async function summarizeTicket(ticket) {
+export async function summarizeTicket(userId, ticket) {
   const { data, error } = await supabase.functions.invoke('summarize-ticket', {
     body: {
       title: ticket.title,
@@ -76,7 +76,28 @@ export async function summarizeTicket(ticket) {
     },
   });
 
-  return { data, error };
+  if (error) {
+    return { data: null, error };
+  }
+
+  const { data: updatedTicket, error: updateError } = await supabase
+    .from('tickets')
+    .update({
+      ai_summary: data.summary,
+      ai_suggested_category: data.category,
+      ai_suggested_priority: data.priority,
+      ai_reasoning: data.reasoning ?? null,
+      ai_summary_generated_at: new Date().toISOString(),
+    })
+    .eq('id', ticket.id)
+    .eq('user_id', userId)
+    .select()
+    .single();
+
+  return {
+    data: updatedTicket,
+    error: updateError,
+  };
 }
 
 export function getTicketErrorMessage(error) {
