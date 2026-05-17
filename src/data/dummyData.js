@@ -1,16 +1,16 @@
 export const navItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', active: true },
-  { id: 'tickets', label: 'Tickets', icon: 'Ticket', badge: 23 },
-  { id: 'ai-assistant', label: 'AI Assistant', icon: 'Bot' },
-  { id: 'devices', label: 'Devices', icon: 'Monitor' },
-  { id: 'users', label: 'Users', icon: 'Users' },
-  { id: 'knowledge', label: 'Knowledge Base', icon: 'BookOpen' },
-  { id: 'automation', label: 'Automation', icon: 'Workflow' },
-  { id: 'reports', label: 'Reports', icon: 'BarChart3' },
-  { id: 'security', label: 'Security', icon: 'Shield' },
-  { id: 'integrations', label: 'Integrations', icon: 'Plug' },
-  { id: 'billing', label: 'Billing', icon: 'CreditCard' },
-  { id: 'settings', label: 'Settings', icon: 'Settings' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard' },
+  { id: 'tickets', label: 'Tickets', icon: 'Ticket', path: '/tickets', showOpenBadge: true },
+  { id: 'ai-assistant', label: 'AI Assistant', icon: 'Bot', path: '/dashboard' },
+  { id: 'devices', label: 'Devices', icon: 'Monitor', path: '/dashboard' },
+  { id: 'users', label: 'Users', icon: 'Users', path: '/dashboard' },
+  { id: 'knowledge', label: 'Knowledge Base', icon: 'BookOpen', path: '/dashboard' },
+  { id: 'automation', label: 'Automation', icon: 'Workflow', path: '/dashboard' },
+  { id: 'reports', label: 'Reports', icon: 'BarChart3', path: '/dashboard' },
+  { id: 'security', label: 'Security', icon: 'Shield', path: '/dashboard' },
+  { id: 'integrations', label: 'Integrations', icon: 'Plug', path: '/dashboard' },
+  { id: 'billing', label: 'Billing', icon: 'CreditCard', path: '/dashboard' },
+  { id: 'settings', label: 'Settings', icon: 'Settings', path: '/dashboard' },
 ];
 
 export const metrics = [

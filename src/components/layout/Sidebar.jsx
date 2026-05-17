@@ -1,10 +1,13 @@
+import { NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Icon } from '../ui/IconMap';
 import { NavBadge } from '../ui/Badge';
 import { navItems } from '../../data/dummyData';
+import { useOpenTicketCount } from '../../hooks/useOpenTicketCount';
 
 export function Sidebar({ open, collapsed, onClose }) {
   const width = collapsed ? 'w-[72px]' : 'w-64';
+  const openTicketCount = useOpenTicketCount();
 
   return (
     <>
@@ -23,59 +26,72 @@ export function Sidebar({ open, collapsed, onClose }) {
         }`}
       >
         <div className={`border-b border-white/[0.06] ${collapsed ? 'px-3 py-4' : 'px-5 py-5'}`}>
-          <motion.div
-            className="flex items-center gap-3"
-            whileHover={{ scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 28 }}
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-600/30">
-              <Icon name="Hexagon" size={20} className="text-white" />
-            </div>
-            {!collapsed && (
-              <motion.div
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="min-w-0"
-              >
-                <h1 className="truncate text-base font-semibold tracking-tight text-white">
-                  Ticxnova-AI
-                </h1>
-                <p className="truncate text-[11px] text-zinc-500">IT Management Platform</p>
+          <NavLink to="/dashboard" onClick={onClose} className="block">
+            <motion.div
+              className="flex items-center gap-3"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+            >
+              <motion.div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow-lg shadow-violet-600/30">
+                <Icon name="Hexagon" size={20} className="text-white" />
               </motion.div>
-            )}
-          </motion.div>
+              {!collapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="min-w-0"
+                >
+                  <h1 className="truncate text-base font-semibold tracking-tight text-white">
+                    Ticxnova-AI
+                  </h1>
+                  <p className="truncate text-[11px] text-zinc-500">IT Management Platform</p>
+                </motion.div>
+              )}
+            </motion.div>
+          </NavLink>
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-          {navItems.map((item, i) => (
-            <motion.button
-              key={item.id}
-              type="button"
-              title={collapsed ? item.label : undefined}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: i * 0.025 }}
-              whileHover={{ x: collapsed ? 0 : 3, backgroundColor: 'rgba(255,255,255,0.04)' }}
-              className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                collapsed ? 'justify-center' : ''
-              } ${
-                item.active
-                  ? 'bg-gradient-to-r from-violet-600/90 to-indigo-600/80 text-white shadow-lg shadow-violet-600/20'
-                  : 'text-zinc-400 hover:text-white'
-              }`}
-            >
-              <Icon name={item.icon} size={18} className="shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="truncate">{item.label}</span>
-                  {item.badge && <NavBadge count={item.badge} />}
-                </>
-              )}
-              {collapsed && item.badge && (
-                <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-              )}
-            </motion.button>
-          ))}
+          {navItems.map((item, i) => {
+            const badge =
+              item.showOpenBadge && openTicketCount > 0 ? openTicketCount : null;
+
+            return (
+              <NavLink
+                key={item.id}
+                to={item.path}
+                title={collapsed ? item.label : undefined}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                    collapsed ? 'justify-center' : ''
+                  } ${
+                    isActive
+                      ? 'bg-gradient-to-r from-violet-600/90 to-indigo-600/80 text-white shadow-lg shadow-violet-600/20'
+                      : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                  }`
+                }
+              >
+                <motion.span
+                  className="flex w-full items-center gap-3"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.025 }}
+                >
+                  <Icon name={item.icon} size={18} className="shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="truncate">{item.label}</span>
+                      {badge != null && <NavBadge count={badge} />}
+                    </>
+                  )}
+                  {collapsed && badge != null && (
+                    <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+                  )}
+                </motion.span>
+              </NavLink>
+            );
+          })}
         </nav>
 
         {!collapsed && (
