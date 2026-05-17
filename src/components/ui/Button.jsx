@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { Spinner } from './Spinner';
 
 const variants = {
   primary:
@@ -15,17 +16,23 @@ export function Button({
   variant = 'primary',
   className = '',
   type = 'button',
+  loading = false,
+  disabled = false,
   ...props
 }) {
+  const isDisabled = disabled || loading;
+
   return (
     <motion.button
       type={type}
-      whileHover={{ scale: 1.01, y: -1 }}
-      whileTap={{ scale: 0.98 }}
+      disabled={isDisabled}
+      whileHover={isDisabled ? undefined : { scale: 1.01, y: -1 }}
+      whileTap={isDisabled ? undefined : { scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      className={`focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors duration-200 disabled:opacity-50 ${variants[variant]} ${className}`}
+      className={`focus-ring inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed disabled:opacity-60 ${variants[variant]} ${className}`}
       {...props}
     >
+      {loading && <Spinner className="h-4 w-4" />}
       {children}
     </motion.button>
   );

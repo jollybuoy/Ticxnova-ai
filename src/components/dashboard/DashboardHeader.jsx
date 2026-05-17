@@ -1,7 +1,12 @@
 import { motion } from 'framer-motion';
 import { Icon } from '../ui/IconMap';
+import { useAuth } from '../../hooks/useAuth';
+import { getUserDisplayName } from '../../lib/user';
 
 export function DashboardHeader() {
+  const { user } = useAuth();
+  const name = getUserDisplayName(user);
+
   return (
     <motion.header
       initial={{ opacity: 0, y: -12 }}
@@ -13,7 +18,8 @@ export function DashboardHeader() {
         <p className="text-label mb-2">Overview</p>
         <h1 className="text-display">Dashboard</h1>
         <p className="text-body mt-2 max-w-xl">
-          Welcome back, Admin. Here&apos;s what&apos;s happening across your IT environment today.
+          Welcome back, {name}. Here&apos;s what&apos;s happening across your IT environment
+          today.
         </p>
       </div>
       <motion.button
