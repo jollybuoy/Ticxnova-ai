@@ -6,10 +6,10 @@ export const TICKET_STATUSES = [
 ];
 
 export const TICKET_PRIORITIES = [
-  { value: 'low', label: 'Low' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
+  { value: 'low', label: 'Low', badge: 'slate' },
+  { value: 'medium', label: 'Medium', badge: 'blue' },
+  { value: 'high', label: 'High', badge: 'yellow' },
+  { value: 'urgent', label: 'Urgent', badge: 'red' },
 ];
 
 export const TICKET_CATEGORIES = [
@@ -26,6 +26,20 @@ export function getStatusMeta(status) {
 
 export function getPriorityLabel(priority) {
   return TICKET_PRIORITIES.find((p) => p.value === priority)?.label ?? priority;
+}
+
+export function getPriorityMeta(priority) {
+  return TICKET_PRIORITIES.find((p) => p.value === priority) ?? TICKET_PRIORITIES[1];
+}
+
+export function getTicketCounts(tickets) {
+  return TICKET_STATUSES.reduce(
+    (counts, status) => ({
+      ...counts,
+      [status.value]: tickets.filter((ticket) => ticket.status === status.value).length,
+    }),
+    { all: tickets.length },
+  );
 }
 
 export function formatTicketDate(iso) {

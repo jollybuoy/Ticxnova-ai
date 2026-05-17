@@ -1,10 +1,14 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { TicketsToolbar } from '../components/tickets/TicketsToolbar';
 import { TicketsTable } from '../components/tickets/TicketsTable';
 import { CreateTicketModal } from '../components/tickets/CreateTicketModal';
 import { DeleteTicketModal } from '../components/tickets/DeleteTicketModal';
+import { TicketDetailsModal } from '../components/tickets/TicketDetailsModal';
 import { useTickets } from '../hooks/useTickets';
+import { getTicketCounts } from '../lib/tickets/constants';
+
+const PAGE_SIZE = 8;
 
 export default function Tickets() {
   const {
@@ -14,27 +18,62 @@ export default function Tickets() {
     createTicket,
     updateStatus,
     deleteTicket,
+    summarizeTicket,
   } = useTickets();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
 
   const filteredTickets = useMemo(() => {
     const query = search.trim().toLowerCase();
     return tickets.filter((ticket) => {
       const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
-      if (!matchesStatus) return false;
+      const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
+      if (!matchesStatus || !matchesPriority) return false;
       if (!query) return true;
       return (
         ticket.title?.toLowerCase().includes(query) ||
         ticket.ticket_number?.toLowerCase().includes(query) ||
         ticket.requester_name?.toLowerCase().includes(query) ||
-        ticket.category?.toLowerCase().includes(query)
+        ticket.category?.toLowerCase().includes(query) ||
+        ticket.description?.toLowerCase().includes(query)
       );
     });
-  }, [tickets, search, statusFilter]);
+  }, [tickets, search, statusFilter, priorityFilter]);
+
+  const counts = useMemo(() => getTicketCounts(tickets), [tickets]);
+  const totalPages = Math.max(1, Math.ceil(filteredTickets.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const paginatedTickets = filteredTickets.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    if (!selectedTicket) return;
+    const latestTicket = tickets.find((ticket) => ticket.id === selectedTicket.id);
+    setSelectedTicket(latestTicket ?? null);
+  }, [selectedTicket?.id, tickets]);
+
+  const handleSearchChange = (value) => {
+    setSearch(value);
+    setPage(1);
+  };
+
+  const handleStatusFilterChange = (value) => {
+    setStatusFilter(value);
+    setPage(1);
+  };
+
+  const handlePriorityFilterChange = (value) => {
+    setPriorityFilter(value);
+    setPage(1);
+  };
 
   const handleDeleteConfirm = async () => {
     if (!ticketToDelete) return;
@@ -48,21 +87,29 @@ export default function Tickets() {
     <DashboardLayout>
       <TicketsToolbar
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={handleSearchChange}
         statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
+        priorityFilter={priorityFilter}
+        onPriorityFilterChange={handlePriorityFilterChange}
+        counts={counts}
         onCreateClick={() => setCreateOpen(true)}
         totalCount={filteredTickets.length}
       />
 
       <div className="mt-8">
         <TicketsTable
-          tickets={filteredTickets}
+          tickets={paginatedTickets}
           loading={loading}
           mutating={mutating}
           onStatusChange={updateStatus}
           onDelete={setTicketToDelete}
           onCreate={() => setCreateOpen(true)}
+          onOpen={setSelectedTicket}
+          page={currentPage}
+          pageSize={PAGE_SIZE}
+          totalCount={filteredTickets.length}
+          onPageChange={setPage}
         />
       </div>
 
@@ -79,6 +126,15 @@ export default function Tickets() {
         ticket={ticketToDelete}
         onConfirm={handleDeleteConfirm}
         loading={mutating}
+      />
+
+      <TicketDetailsModal
+        open={Boolean(selectedTicket)}
+        onClose={() => setSelectedTicket(null)}
+        ticket={selectedTicket}
+        mutating={mutating}
+        onStatusChange={updateStatus}
+        onSummarize={summarizeTicket}
       />
     </DashboardLayout>
   );

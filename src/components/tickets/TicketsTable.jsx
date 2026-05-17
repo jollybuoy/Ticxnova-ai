@@ -1,12 +1,12 @@
 import { motion } from 'framer-motion';
-import { Trash2, Ticket } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Eye, Trash2, Ticket } from 'lucide-react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Spinner } from '../ui/Spinner';
 import { TicketStatusSelect } from './TicketStatusSelect';
 import {
   formatTicketDate,
-  getPriorityLabel,
+  getPriorityMeta,
   getStatusMeta,
 } from '../../lib/tickets/constants';
 
@@ -31,32 +31,40 @@ function EmptyState({ onCreate }) {
   );
 }
 
-function TicketRow({ ticket, mutating, onStatusChange, onDelete }) {
+function TicketRow({ ticket, mutating, onStatusChange, onDelete, onOpen }) {
   const statusMeta = getStatusMeta(ticket.status);
+  const priorityMeta = getPriorityMeta(ticket.priority);
 
   return (
     <motion.tr
       layout
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="border-b border-white/[0.04] transition-colors hover:bg-white/[0.02]"
+      whileHover={{ backgroundColor: 'rgba(255,255,255,0.035)' }}
+      className="group cursor-pointer border-b border-white/[0.04] transition-colors"
+      onClick={() => onOpen(ticket)}
     >
-      <td className="whitespace-nowrap px-6 py-4 text-xs font-medium text-violet-400">
-        {ticket.ticket_number}
+      <td className="whitespace-nowrap px-6 py-4">
+        <div className="flex items-center gap-3">
+          <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10 text-violet-300 ring-1 ring-violet-500/20">
+            <Ticket size={16} />
+          </span>
+          <span className="text-xs font-semibold text-violet-400">{ticket.ticket_number}</span>
+        </div>
       </td>
-      <td className="max-w-[200px] px-4 py-4">
+      <td className="max-w-[280px] px-4 py-4">
         <p className="truncate text-sm font-medium text-white">{ticket.title}</p>
-        {ticket.requester_name && (
-          <p className="mt-0.5 truncate text-xs text-zinc-500">{ticket.requester_name}</p>
-        )}
+        <p className="mt-0.5 line-clamp-1 text-xs text-zinc-500">
+          {ticket.description || ticket.requester_name || 'No description'}
+        </p>
       </td>
       <td className="hidden px-4 py-4 text-sm text-zinc-400 md:table-cell">
         {ticket.category ?? '—'}
       </td>
-      <td className="hidden px-4 py-4 text-sm text-zinc-400 sm:table-cell">
-        {getPriorityLabel(ticket.priority)}
+      <td className="hidden px-4 py-4 sm:table-cell">
+        <Badge variant={priorityMeta.badge}>{priorityMeta.label}</Badge>
       </td>
-      <td className="px-4 py-4">
+      <td className="px-4 py-4" onClick={(event) => event.stopPropagation()}>
         <TicketStatusSelect
           value={ticket.status}
           onChange={(status) => onStatusChange(ticket.id, status)}
@@ -69,7 +77,15 @@ function TicketRow({ ticket, mutating, onStatusChange, onDelete }) {
       <td className="hidden whitespace-nowrap px-4 py-4 text-xs text-zinc-500 xl:table-cell">
         {formatTicketDate(ticket.created_at)}
       </td>
-      <td className="px-4 py-4 text-right">
+      <td className="px-4 py-4 text-right" onClick={(event) => event.stopPropagation()}>
+        <button
+          type="button"
+          onClick={() => onOpen(ticket)}
+          className="focus-ring mr-1 rounded-lg p-2 text-zinc-500 transition-colors hover:bg-violet-500/10 hover:text-violet-300"
+          aria-label={`Open ${ticket.ticket_number}`}
+        >
+          <Eye size={16} />
+        </button>
         <button
           type="button"
           onClick={() => onDelete(ticket)}
@@ -84,8 +100,9 @@ function TicketRow({ ticket, mutating, onStatusChange, onDelete }) {
   );
 }
 
-function TicketCard({ ticket, mutating, onStatusChange, onDelete }) {
+function TicketCard({ ticket, mutating, onStatusChange, onDelete, onOpen }) {
   const statusMeta = getStatusMeta(ticket.status);
+  const priorityMeta = getPriorityMeta(ticket.priority);
 
   return (
     <motion.div
@@ -93,6 +110,7 @@ function TicketCard({ ticket, mutating, onStatusChange, onDelete }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       className="border-b border-white/[0.06] p-4 last:border-0"
+      onClick={() => onOpen(ticket)}
     >
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
@@ -114,7 +132,7 @@ function TicketCard({ ticket, mutating, onStatusChange, onDelete }) {
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant={statusMeta.badge}>{statusMeta.label}</Badge>
-        <span className="text-xs text-zinc-500">{getPriorityLabel(ticket.priority)}</span>
+        <Badge variant={priorityMeta.badge}>{priorityMeta.label}</Badge>
         {ticket.category && (
           <span className="text-xs text-zinc-500">· {ticket.category}</span>
         )}
@@ -138,6 +156,11 @@ export function TicketsTable({
   onStatusChange,
   onDelete,
   onCreate,
+  onOpen,
+  page,
+  pageSize,
+  totalCount,
+  onPageChange,
 }) {
   if (loading) {
     return (
@@ -157,9 +180,19 @@ export function TicketsTable({
 
   return (
     <Card hover={false} className="overflow-hidden p-0">
+      <div className="flex items-center justify-between border-b border-white/[0.06] px-6 py-4">
+        <div>
+          <h2 className="text-sm font-semibold text-white">Ticket queue</h2>
+          <p className="text-xs text-zinc-500">
+            Showing {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, totalCount)} of{' '}
+            {totalCount}
+          </p>
+        </div>
+        {mutating && <Spinner className="h-4 w-4 text-violet-300" />}
+      </div>
       <div className="hidden md:block">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px] text-left">
+          <table className="w-full min-w-[900px] text-left">
             <thead>
               <tr className="border-b border-white/[0.06] bg-white/[0.02] text-[11px] font-medium uppercase tracking-wider text-zinc-500">
                 <th className="px-6 py-3.5">ID</th>
@@ -180,6 +213,7 @@ export function TicketsTable({
                   mutating={mutating}
                   onStatusChange={onStatusChange}
                   onDelete={onDelete}
+                  onOpen={onOpen}
                 />
               ))}
             </tbody>
@@ -195,8 +229,34 @@ export function TicketsTable({
             mutating={mutating}
             onStatusChange={onStatusChange}
             onDelete={onDelete}
+            onOpen={onOpen}
           />
         ))}
+      </div>
+      <div className="flex flex-col gap-3 border-t border-white/[0.06] px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-zinc-500">
+          Page {page} of {Math.max(1, Math.ceil(totalCount / pageSize))}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+            className="focus-ring inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <ChevronLeft size={16} />
+            Previous
+          </button>
+          <button
+            type="button"
+            disabled={page >= Math.ceil(totalCount / pageSize)}
+            onClick={() => onPageChange(page + 1)}
+            className="focus-ring inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-zinc-300 transition-colors hover:bg-white/[0.06] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+            <ChevronRight size={16} />
+          </button>
+        </div>
       </div>
     </Card>
   );

@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
+import { supabase } from '../lib/supabase';
 import {
   createTicket,
   deleteTicket,
   fetchTickets,
   getTicketErrorMessage,
+  summarizeTicket,
   updateTicketStatus,
 } from '../lib/tickets/ticketService';
 
@@ -38,6 +40,30 @@ export function useTickets() {
   useEffect(() => {
     loadTickets();
   }, [loadTickets]);
+
+  useEffect(() => {
+    if (!userId) return undefined;
+
+    const channel = supabase
+      .channel(`tickets:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tickets',
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          loadTickets();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [loadTickets, userId]);
 
   const openCount = useMemo(
     () => tickets.filter((t) => t.status === 'open').length,
@@ -101,6 +127,15 @@ export function useTickets() {
     [userId],
   );
 
+  const handleSummarize = useCallback(async (ticket) => {
+    const { data, error } = await summarizeTicket(ticket);
+    if (error) {
+      toast.error(getTicketErrorMessage(error));
+      return { success: false };
+    }
+    return { success: true, data };
+  }, []);
+
   return {
     tickets,
     loading,
@@ -110,5 +145,6 @@ export function useTickets() {
     createTicket: handleCreate,
     updateStatus: handleUpdateStatus,
     deleteTicket: handleDelete,
+    summarizeTicket: handleSummarize,
   };
 }

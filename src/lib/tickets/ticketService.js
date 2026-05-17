@@ -66,6 +66,19 @@ export async function deleteTicket(userId, ticketId) {
   return { error };
 }
 
+export async function summarizeTicket(ticket) {
+  const { data, error } = await supabase.functions.invoke('summarize-ticket', {
+    body: {
+      title: ticket.title,
+      description: ticket.description,
+      category: ticket.category,
+      priority: ticket.priority,
+    },
+  });
+
+  return { data, error };
+}
+
 export function getTicketErrorMessage(error) {
   if (!error) return 'Something went wrong.';
   if (error.code === '42P01') {
