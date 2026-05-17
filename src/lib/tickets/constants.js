@@ -12,6 +12,13 @@ export const TICKET_PRIORITIES = [
   { value: 'urgent', label: 'Urgent', badge: 'red' },
 ];
 
+export const TICKET_TYPES = [
+  { value: 'incident', label: 'Incident', prefix: 'INC' },
+  { value: 'service_request', label: 'Service Request', prefix: 'SR' },
+  { value: 'problem', label: 'Problem', prefix: 'PRB' },
+  { value: 'change_request', label: 'Change Request', prefix: 'CHG' },
+];
+
 export const TICKET_CATEGORIES = [
   'Password Reset',
   'Software Issue',
@@ -30,6 +37,10 @@ export function getPriorityLabel(priority) {
 
 export function getPriorityMeta(priority) {
   return TICKET_PRIORITIES.find((p) => p.value === priority) ?? TICKET_PRIORITIES[1];
+}
+
+export function getTicketTypeMeta(type) {
+  return TICKET_TYPES.find((item) => item.value === type) ?? TICKET_TYPES[0];
 }
 
 export function getTicketCounts(tickets) {

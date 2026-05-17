@@ -9,7 +9,13 @@ function formatMessageTime(iso) {
   }).format(new Date(iso));
 }
 
-export function ChatMessage({ message, onCreateTicket, creatingTicket }) {
+export function ChatMessage({
+  message,
+  onCreateTicket,
+  onPrepareTicket,
+  onDeclineTicket,
+  creatingTicket,
+}) {
   const isUser = message.role === 'user';
 
   return (
@@ -30,6 +36,8 @@ export function ChatMessage({ message, onCreateTicket, creatingTicket }) {
           <AIMessage
             message={message}
             onCreateTicket={onCreateTicket}
+            onPrepareTicket={onPrepareTicket}
+            onDeclineTicket={onDeclineTicket}
             creatingTicket={creatingTicket}
           />
         )}

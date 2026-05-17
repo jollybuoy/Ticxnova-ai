@@ -14,6 +14,8 @@ create table if not exists public.tickets (
   ticket_number text not null,
   title text not null,
   description text,
+  ticket_type text not null default 'incident'
+    check (ticket_type in ('incident', 'service_request', 'problem', 'change_request')),
   status text not null default 'open'
     check (status in ('open', 'in_progress', 'pending', 'resolved')),
   priority text not null default 'medium'
@@ -32,6 +34,7 @@ create table if not exists public.tickets (
 );
 
 alter table public.tickets
+  add column if not exists ticket_type text not null default 'incident',
   add column if not exists requester_name text,
   add column if not exists assignee_name text,
   add column if not exists department text,

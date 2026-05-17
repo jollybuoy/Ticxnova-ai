@@ -27,16 +27,28 @@ function createMessage(role, content, extra = {}) {
 }
 
 const confirmationPhrases = ['yes', 'confirm', 'proceed', 'create it', 'create ticket', 'go ahead'];
+const declinePhrases = ['no', 'no thanks', 'not now', 'cancel', 'skip'];
 
 function isTicketConfirmation(message) {
   const normalized = message.trim().toLowerCase().replace(/[.!?]/g, '');
   return confirmationPhrases.some((phrase) => normalized === phrase || normalized.includes(phrase));
 }
 
+function isTicketDecline(message) {
+  const normalized = message.trim().toLowerCase().replace(/[.!?]/g, '');
+  return declinePhrases.some((phrase) => normalized === phrase || normalized.includes(phrase));
+}
+
 function findPendingTicketProposal(messages) {
   return [...messages]
     .reverse()
-    .find((message) => message.role === 'assistant' && message.ticketDraft && !message.ticketCreated);
+    .find(
+      (message) =>
+        message.role === 'assistant' &&
+        message.ticketDraft &&
+        !message.ticketCreated &&
+        !message.ticketDeclined,
+    );
 }
 
 function normalizeTicketDraft(draft, fallbackText) {
@@ -52,7 +64,17 @@ function normalizeTicketDraft(draft, fallbackText) {
     category: base.category || 'Other',
     priority: base.priority || 'medium',
     department: base.department || 'IT Operations',
+    ticket_type: base.ticket_type || base.ticketType || 'incident',
   };
+}
+
+function formatTicketCreatedAt(iso) {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(iso));
 }
 
 export function useAIAssistant() {
@@ -87,11 +109,11 @@ export function useAIAssistant() {
   }, [messages, storageKey]);
 
   const createTicketFromMessage = useCallback(
-    async (message) => {
+    async (message, editedDraft) => {
       if (!user?.id || !message?.ticketDraft || message.ticketCreated) return null;
 
       setCreatingTicketId(message.id);
-      const draft = message.ticketDraft;
+      const draft = normalizeTicketDraft(editedDraft ?? message.ticketDraft, message.content);
       const { data, error } = await createTicket(user.id, {
         title: draft.title || 'AI Assistant Support Request',
         description:
@@ -100,6 +122,7 @@ export function useAIAssistant() {
           `Created from AI Assistant conversation:\n\n${message.content}`,
         category: draft.category || 'Other',
         priority: draft.priority || 'medium',
+        ticket_type: draft.ticket_type || 'incident',
         department: draft.department || 'IT Operations',
         ai_summary: draft.summary || draft.description || message.content,
         ai_suggested_category: draft.category || 'Other',
@@ -119,15 +142,11 @@ export function useAIAssistant() {
           item.id === message.id
             ? {
                 ...item,
+                ticketDraft: draft,
                 ticketCreated: true,
                 ticketId: data.id,
                 ticketNumber: data.ticket_number,
-                ticketCreatedAt: new Intl.DateTimeFormat(undefined, {
-                  month: 'short',
-                  day: 'numeric',
-                  hour: 'numeric',
-                  minute: '2-digit',
-                }).format(new Date(data.created_at)),
+                ticketCreatedAt: formatTicketCreatedAt(data.created_at),
               }
             : item,
         ),
@@ -145,6 +164,53 @@ export function useAIAssistant() {
     [user],
   );
 
+  const prepareTicketProposal = useCallback((message) => {
+    if (!message?.ticketDraft || message.ticketCreated || message.ticketDeclined) return;
+
+    setMessages((prev) =>
+      prev.map((item) =>
+        item.id === message.id
+          ? {
+              ...item,
+              proposalReady: true,
+              ticketDraft: normalizeTicketDraft(item.ticketDraft, item.content),
+            }
+          : item,
+      ),
+    );
+
+    setMessages((prev) => [
+      ...prev,
+      createMessage(
+        'assistant',
+        'Here are the proposed ticket details. Please review and update anything needed, then confirm creation.',
+      ),
+    ]);
+  }, []);
+
+  const declineTicketProposal = useCallback((message) => {
+    if (!message?.ticketDraft || message.ticketCreated) return;
+
+    setMessages((prev) =>
+      prev.map((item) =>
+        item.id === message.id
+          ? {
+              ...item,
+              ticketDeclined: true,
+            }
+          : item,
+      ),
+    );
+
+    setMessages((prev) => [
+      ...prev,
+      createMessage(
+        'assistant',
+        'No problem. I’m glad I could help. If the issue comes back or you need anything else, just let me know.',
+      ),
+    ]);
+  }, []);
+
   const sendMessage = useCallback(
     async (content) => {
       const trimmed = content.trim();
@@ -155,8 +221,18 @@ export function useAIAssistant() {
       const history = [...messages, userMessage];
       setMessages(history);
 
+      if (pendingProposal && isTicketDecline(trimmed)) {
+        declineTicketProposal(pendingProposal);
+        return;
+      }
+
       if (pendingProposal && isTicketConfirmation(trimmed)) {
-        await createTicketFromMessage(pendingProposal);
+        if (pendingProposal.proposalReady) {
+          await createTicketFromMessage(pendingProposal);
+          return;
+        }
+
+        prepareTicketProposal(pendingProposal);
         return;
       }
 
@@ -189,10 +265,11 @@ export function useAIAssistant() {
           ticketDraft: data.shouldCreateTicket
             ? normalizeTicketDraft(data.ticketDraft, trimmed)
             : null,
+          proposalReady: false,
         }),
       ]);
     },
-    [createTicketFromMessage, loading, messages],
+    [createTicketFromMessage, declineTicketProposal, loading, messages, prepareTicketProposal],
   );
 
   const clearConversation = useCallback(() => {
@@ -209,5 +286,7 @@ export function useAIAssistant() {
     sendMessage,
     clearConversation,
     createTicketFromMessage,
+    prepareTicketProposal,
+    declineTicketProposal,
   };
 }

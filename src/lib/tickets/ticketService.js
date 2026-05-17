@@ -1,9 +1,8 @@
 import { supabase } from '../supabase';
+import { getTicketTypeMeta } from './constants';
 
 function getTicketPrefix(payload = {}) {
-  const text = `${payload.title ?? ''} ${payload.description ?? ''} ${payload.category ?? ''}`.toLowerCase();
-  const requestWords = ['setup', 'create', 'request', 'access', 'new', 'onboard', 'install'];
-  return requestWords.some((word) => text.includes(word)) ? 'SR' : 'INC';
+  return getTicketTypeMeta(payload.ticket_type).prefix;
 }
 
 export async function generateTicketNumber(payload) {
@@ -12,11 +11,13 @@ export async function generateTicketNumber(payload) {
     .from('tickets')
     .select('ticket_number')
     .like('ticket_number', `${prefix}-%`)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1000);
 
-  const lastNumber = Number(data?.ticket_number?.split('-')[1] ?? 1000);
+  const lastNumber = (data ?? []).reduce((max, ticket) => {
+    const value = Number(ticket.ticket_number?.split('-')[1]);
+    return Number.isFinite(value) ? Math.max(max, value) : max;
+  }, 1000);
+
   return `${prefix}-${lastNumber + 1}`;
 }
 
@@ -81,6 +82,7 @@ export async function createTicket(userId, payload) {
       title: payload.title.trim(),
       description: payload.description?.trim() || null,
       status: 'open',
+      ticket_type: payload.ticket_type || 'incident',
       priority: payload.priority ?? 'medium',
       category: payload.category || null,
       requester_name: payload.requester_name?.trim() || null,

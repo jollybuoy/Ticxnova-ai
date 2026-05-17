@@ -17,6 +17,8 @@ export default function AIAssistant() {
     sendMessage,
     clearConversation,
     createTicketFromMessage,
+    prepareTicketProposal,
+    declineTicketProposal,
   } = useAIAssistant();
   const messagesEndRef = useRef(null);
 
@@ -61,6 +63,8 @@ export default function AIAssistant() {
                       key={message.id}
                       message={message}
                       onCreateTicket={createTicketFromMessage}
+                      onPrepareTicket={prepareTicketProposal}
+                      onDeclineTicket={declineTicketProposal}
                       creatingTicket={creatingTicketId === message.id}
                     />
                   ))}
