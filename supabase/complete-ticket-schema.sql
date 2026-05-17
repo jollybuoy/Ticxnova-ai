@@ -44,7 +44,7 @@ alter table public.tickets
 create table if not exists public.ticket_comments (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references public.tickets (id) on delete cascade,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   body text not null,
   author_name text,
   author_email text,
@@ -54,7 +54,7 @@ create table if not exists public.ticket_comments (
 create table if not exists public.ticket_activity (
   id uuid primary key default gen_random_uuid(),
   ticket_id uuid not null references public.tickets (id) on delete cascade,
-  user_id uuid not null references auth.users (id) on delete cascade,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
   type text not null
     check (type in ('status_change', 'field_update', 'comment', 'system')),
   field text,
@@ -65,6 +65,12 @@ create table if not exists public.ticket_activity (
   actor_email text,
   created_at timestamptz not null default now()
 );
+
+alter table public.ticket_comments
+  alter column user_id set default auth.uid();
+
+alter table public.ticket_activity
+  alter column user_id set default auth.uid();
 
 create unique index if not exists tickets_ticket_number_idx
   on public.tickets (ticket_number);

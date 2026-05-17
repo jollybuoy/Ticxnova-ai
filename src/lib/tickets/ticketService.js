@@ -30,7 +30,6 @@ export async function fetchTicketComments(userId, ticketId) {
   const { data, error } = await supabase
     .from('ticket_comments')
     .select('*')
-    .eq('user_id', userId)
     .eq('ticket_id', ticketId)
     .order('created_at', { ascending: true });
 
@@ -106,7 +105,6 @@ async function createTicketActivity(ticketId, userId, activity) {
     .from('ticket_activity')
     .insert({
       ticket_id: ticketId,
-      user_id: userId,
       ...activity,
     })
     .select()
@@ -142,7 +140,6 @@ export async function updateTicketFields(userId, ticket, updates, actor) {
     await supabase.from('ticket_activity').insert(
       activityEntries.map((entry) => ({
         ticket_id: ticket.id,
-        user_id: userId,
         ...entry,
       })),
     );
@@ -156,7 +153,6 @@ export async function addTicketComment(userId, ticketId, body, actor) {
     .from('ticket_comments')
     .insert({
       ticket_id: ticketId,
-      user_id: userId,
       body: body.trim(),
       author_name: actor.name,
       author_email: actor.email,
