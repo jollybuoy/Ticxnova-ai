@@ -6,6 +6,7 @@ import { GuestRoute } from './components/auth/GuestRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
+import TicketDetails from './pages/TicketDetails';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -35,6 +36,14 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <Tickets />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/tickets/:ticketId"
+          element={
+            <ProtectedRoute>
+              <TicketDetails />
             </ProtectedRoute>
           }
         />

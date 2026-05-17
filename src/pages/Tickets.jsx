@@ -1,16 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { TicketsToolbar } from '../components/tickets/TicketsToolbar';
 import { TicketsTable } from '../components/tickets/TicketsTable';
 import { CreateTicketModal } from '../components/tickets/CreateTicketModal';
 import { DeleteTicketModal } from '../components/tickets/DeleteTicketModal';
-import { TicketDetailsModal } from '../components/tickets/TicketDetailsModal';
 import { useTickets } from '../hooks/useTickets';
 import { getTicketCounts } from '../lib/tickets/constants';
 
 const PAGE_SIZE = 8;
 
 export default function Tickets() {
+  const navigate = useNavigate();
   const {
     tickets,
     loading,
@@ -18,7 +19,6 @@ export default function Tickets() {
     createTicket,
     updateStatus,
     deleteTicket,
-    summarizeTicket,
   } = useTickets();
 
   const [search, setSearch] = useState('');
@@ -27,7 +27,6 @@ export default function Tickets() {
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState(null);
-  const [selectedTicket, setSelectedTicket] = useState(null);
 
   const filteredTickets = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -53,12 +52,6 @@ export default function Tickets() {
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE,
   );
-
-  useEffect(() => {
-    if (!selectedTicket) return;
-    const latestTicket = tickets.find((ticket) => ticket.id === selectedTicket.id);
-    setSelectedTicket(latestTicket ?? null);
-  }, [selectedTicket?.id, tickets]);
 
   const handleSearchChange = (value) => {
     setSearch(value);
@@ -105,7 +98,7 @@ export default function Tickets() {
           onStatusChange={updateStatus}
           onDelete={setTicketToDelete}
           onCreate={() => setCreateOpen(true)}
-          onOpen={setSelectedTicket}
+          onOpen={(ticket) => navigate(`/tickets/${ticket.id}`)}
           page={currentPage}
           pageSize={PAGE_SIZE}
           totalCount={filteredTickets.length}
@@ -126,15 +119,6 @@ export default function Tickets() {
         ticket={ticketToDelete}
         onConfirm={handleDeleteConfirm}
         loading={mutating}
-      />
-
-      <TicketDetailsModal
-        open={Boolean(selectedTicket)}
-        onClose={() => setSelectedTicket(null)}
-        ticket={selectedTicket}
-        mutating={mutating}
-        onStatusChange={updateStatus}
-        onSummarize={summarizeTicket}
       />
     </DashboardLayout>
   );

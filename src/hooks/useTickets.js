@@ -8,8 +8,9 @@ import {
   fetchTickets,
   getTicketErrorMessage,
   summarizeTicket,
-  updateTicketStatus,
+  updateTicketFields,
 } from '../lib/tickets/ticketService';
+import { getUserDisplayName, getUserEmail } from '../lib/user';
 
 export function useTickets() {
   const { user } = useAuth();
@@ -92,8 +93,19 @@ export function useTickets() {
   const handleUpdateStatus = useCallback(
     async (ticketId, status) => {
       if (!userId) return { success: false };
+      const ticket = tickets.find((item) => item.id === ticketId);
+      if (!ticket) return { success: false };
+
       setMutating(true);
-      const { data, error } = await updateTicketStatus(userId, ticketId, status);
+      const { data, error } = await updateTicketFields(
+        userId,
+        ticket,
+        { status },
+        {
+          name: getUserDisplayName(user),
+          email: getUserEmail(user),
+        },
+      );
       setMutating(false);
 
       if (error) {
@@ -105,7 +117,7 @@ export function useTickets() {
       toast.success('Status updated');
       return { success: true };
     },
-    [userId],
+    [tickets, user, userId],
   );
 
   const handleDelete = useCallback(
