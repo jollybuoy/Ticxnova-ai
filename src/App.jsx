@@ -13,6 +13,11 @@ const AIAssistant = lazy(() => import('./pages/AIAssistant'));
 const Devices = lazy(() => import('./pages/Devices'));
 const DeviceDetails = lazy(() => import('./pages/DeviceDetails'));
 const AssetOverview = lazy(() => import('./pages/AssetOverview'));
+const ReportsDashboard = lazy(() => import('./pages/reports/ReportsDashboard'));
+const TicketAnalytics = lazy(() => import('./pages/reports/TicketAnalytics'));
+const DeviceAnalytics = lazy(() => import('./pages/reports/DeviceAnalytics'));
+const AIInsightsReport = lazy(() => import('./pages/reports/AIInsightsReport'));
+const SLAReports = lazy(() => import('./pages/reports/SLAReports'));
 
 function RouteLoader() {
   return (
@@ -91,6 +96,46 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <DeviceDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <ReportsDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/tickets"
+            element={
+              <ProtectedRoute>
+                <TicketAnalytics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/devices"
+            element={
+              <ProtectedRoute>
+                <DeviceAnalytics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/ai-insights"
+            element={
+              <ProtectedRoute>
+                <AIInsightsReport />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports/sla"
+            element={
+              <ProtectedRoute>
+                <SLAReports />
               </ProtectedRoute>
             }
           />

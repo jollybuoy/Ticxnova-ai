@@ -4,7 +4,7 @@ export function Input({ label, id, className = '', ...props }) {
     if (props.type !== 'date') return;
     try {
       event.currentTarget.showPicker?.();
-    } catch (_error) {
+    } catch {
       // Browser may block showPicker outside a direct user gesture.
     }
   };

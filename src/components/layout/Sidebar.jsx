@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Icon } from '../ui/IconMap';
 import { NavBadge } from '../ui/Badge';
@@ -8,6 +9,19 @@ import { useOpenTicketCount } from '../../hooks/useOpenTicketCount';
 export function Sidebar({ open, collapsed, onClose }) {
   const width = collapsed ? 'w-[72px]' : 'w-64';
   const openTicketCount = useOpenTicketCount();
+  const location = useLocation();
+  const [expandedItems, setExpandedItems] = useState(() =>
+    location.pathname.startsWith('/reports') ? new Set(['reports']) : new Set(),
+  );
+
+  const toggleExpanded = (itemId) => {
+    setExpandedItems((current) => {
+      const next = new Set(current);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  };
 
   return (
     <>
@@ -55,41 +69,107 @@ export function Sidebar({ open, collapsed, onClose }) {
           {navItems.map((item, i) => {
             const badge =
               item.showOpenBadge && openTicketCount > 0 ? openTicketCount : null;
+            const hasChildren = Boolean(item.children?.length);
+            const isSectionActive = hasChildren && location.pathname.startsWith(item.path);
+            const isExpanded = expandedItems.has(item.id);
 
             return (
-              <NavLink
-                key={item.id}
-                to={item.path}
-                title={collapsed ? item.label : undefined}
-                onClick={onClose}
-                className={({ isActive }) =>
-                  `group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
-                    collapsed ? 'justify-center' : ''
-                  } ${
-                    isActive
-                      ? 'bg-gradient-to-r from-violet-600/90 to-indigo-600/80 text-white shadow-lg shadow-violet-600/20'
-                      : 'text-zinc-400 hover:bg-white/5 hover:text-white'
-                  }`
-                }
-              >
-                <motion.span
-                  className="flex w-full items-center gap-3"
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.025 }}
-                >
-                  <Icon name={item.icon} size={18} className="shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span className="truncate">{item.label}</span>
-                      {badge != null && <NavBadge count={badge} />}
-                    </>
-                  )}
-                  {collapsed && badge != null && (
-                    <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
-                  )}
-                </motion.span>
-              </NavLink>
+              <div key={item.id}>
+                {hasChildren ? (
+                  <button
+                    type="button"
+                    title={collapsed ? item.label : undefined}
+                    onClick={() => {
+                      if (collapsed) return;
+                      toggleExpanded(item.id);
+                    }}
+                    className={`group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                      collapsed ? 'justify-center' : ''
+                    } ${
+                      isSectionActive
+                        ? 'bg-gradient-to-r from-violet-600/90 to-indigo-600/80 text-white shadow-lg shadow-violet-600/20'
+                        : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                    }`}
+                  >
+                    <motion.span
+                      className="flex w-full items-center gap-3"
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.025 }}
+                    >
+                      <Icon name={item.icon} size={18} className="shrink-0" />
+                      {!collapsed && (
+                        <>
+                          <span className="truncate">{item.label}</span>
+                          <Icon
+                            name="ChevronDown"
+                            size={15}
+                            className={`ml-auto transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                          />
+                        </>
+                      )}
+                    </motion.span>
+                  </button>
+                ) : (
+                  <NavLink
+                    to={item.path}
+                    title={collapsed ? item.label : undefined}
+                    onClick={() => {
+                      setExpandedItems(new Set());
+                      onClose();
+                    }}
+                    className={({ isActive }) =>
+                      `group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
+                        collapsed ? 'justify-center' : ''
+                      } ${
+                        isActive
+                          ? 'bg-gradient-to-r from-violet-600/90 to-indigo-600/80 text-white shadow-lg shadow-violet-600/20'
+                          : 'text-zinc-400 hover:bg-white/5 hover:text-white'
+                      }`
+                    }
+                  >
+                  <motion.span
+                    className="flex w-full items-center gap-3"
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.025 }}
+                  >
+                    <Icon name={item.icon} size={18} className="shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <span className="truncate">{item.label}</span>
+                        {badge != null && <NavBadge count={badge} />}
+                      </>
+                    )}
+                    {collapsed && badge != null && (
+                      <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
+                    )}
+                  </motion.span>
+                  </NavLink>
+                )}
+
+                {!collapsed && hasChildren && isExpanded && (
+                  <div className="ml-6 mt-1 space-y-1 border-l border-white/[0.06] pl-3">
+                    {item.children.map((child) => (
+                      <NavLink
+                        key={child.id}
+                        to={child.path}
+                        onClick={onClose}
+                        end={child.path === item.path}
+                        className={({ isActive }) =>
+                          `block rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
+                            isActive
+                              ? 'bg-white/[0.07] text-white'
+                              : 'text-zinc-500 hover:bg-white/[0.04] hover:text-zinc-200'
+                          }`
+                        }
+                      >
+                        {child.label}
+                      </NavLink>
+                    ))}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>

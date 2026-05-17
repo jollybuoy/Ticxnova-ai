@@ -4,6 +4,19 @@ export const navItems = [
   { id: 'ai-assistant', label: 'AI Assistant', icon: 'Bot', path: '/ai-assistant' },
   { id: 'assets', label: 'Assets', icon: 'BarChart3', path: '/assets' },
   { id: 'devices', label: 'Devices', icon: 'Monitor', path: '/devices' },
+  {
+    id: 'reports',
+    label: 'Reports',
+    icon: 'BarChart3',
+    path: '/reports',
+    children: [
+      { id: 'reports-dashboard', label: 'Reports Dashboard', path: '/reports' },
+      { id: 'ticket-analytics', label: 'Ticket Analytics', path: '/reports/tickets' },
+      { id: 'device-analytics', label: 'Device Analytics', path: '/reports/devices' },
+      { id: 'ai-insights', label: 'AI Insights', path: '/reports/ai-insights' },
+      { id: 'sla-reports', label: 'SLA Reports', path: '/reports/sla' },
+    ],
+  },
 ];
 
 export const metrics = [
