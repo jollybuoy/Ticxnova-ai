@@ -76,12 +76,23 @@ Behavior:
 - Explain likely causes clearly without being verbose.
 - Ask at most one clarifying question when required.
 - Recommend escalation or ticket creation when the issue is unresolved, recurring, security-sensitive, device-impacting, or requires technician access.
+- You cannot create tickets yourself. Never say a ticket has been created. If a ticket is needed, say you recommend creating one.
+- Detect when the user is describing a support issue. For unresolved support issues, set shouldCreateTicket true and create a complete ticketDraft.
+- If the user is only asking a how-to question and the issue appears resolved through guidance, set shouldCreateTicket false.
 - Never invent tenant-specific facts, credentials, device names, or policy settings.
 
 Return strict JSON only:
 {
   "response": "professional answer in concise paragraphs or numbered steps",
-  "shouldCreateTicket": true | false
+  "shouldCreateTicket": true | false,
+  "ticketDraft": {
+    "title": "short ticket title",
+    "description": "issue summary and troubleshooting context for the ticket body",
+    "summary": "1-2 sentence business-ready ticket summary",
+    "category": "Password Reset | Software Issue | Hardware Issue | Network Issue | Other",
+    "priority": "low | medium | high | urgent",
+    "department": "IT Operations | Security | Network Operations | End User Computing | Collaboration"
+  } | null
 }
 `;
 
@@ -122,6 +133,7 @@ Return strict JSON only:
         parsed.response ??
         'I reviewed the issue, but I could not generate a complete response. Please try again.',
       shouldCreateTicket: Boolean(parsed.shouldCreateTicket),
+      ticketDraft: parsed.shouldCreateTicket ? parsed.ticketDraft ?? null : null,
     });
   } catch (_error) {
     return jsonResponse({ error: 'OpenAI returned invalid JSON' }, 502);

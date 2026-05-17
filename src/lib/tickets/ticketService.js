@@ -1,8 +1,23 @@
 import { supabase } from '../supabase';
 
-export function generateTicketNumber() {
-  const segment = Math.random().toString(36).slice(2, 8).toUpperCase();
-  return `TK-${segment}`;
+function getTicketPrefix(payload = {}) {
+  const text = `${payload.title ?? ''} ${payload.description ?? ''} ${payload.category ?? ''}`.toLowerCase();
+  const requestWords = ['setup', 'create', 'request', 'access', 'new', 'onboard', 'install'];
+  return requestWords.some((word) => text.includes(word)) ? 'SR' : 'INC';
+}
+
+export async function generateTicketNumber(payload) {
+  const prefix = getTicketPrefix(payload);
+  const { data } = await supabase
+    .from('tickets')
+    .select('ticket_number')
+    .like('ticket_number', `${prefix}-%`)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const lastNumber = Number(data?.ticket_number?.split('-')[1] ?? 1000);
+  return `${prefix}-${lastNumber + 1}`;
 }
 
 export async function fetchTickets(userId) {
@@ -57,20 +72,38 @@ export async function fetchOpenTicketCount(userId) {
 }
 
 export async function createTicket(userId, payload) {
+  const ticketNumber = await generateTicketNumber(payload);
   const { data, error } = await supabase
     .from('tickets')
     .insert({
       user_id: userId,
-      ticket_number: generateTicketNumber(),
+      ticket_number: ticketNumber,
       title: payload.title.trim(),
       description: payload.description?.trim() || null,
       status: 'open',
       priority: payload.priority ?? 'medium',
       category: payload.category || null,
       requester_name: payload.requester_name?.trim() || null,
+      department: payload.department || null,
+      ai_summary: payload.ai_summary || null,
+      ai_suggested_category: payload.ai_suggested_category || payload.category || null,
+      ai_suggested_priority: payload.ai_suggested_priority || payload.priority || null,
+      ai_reasoning: payload.ai_reasoning || null,
+      ai_summary_generated_at: payload.ai_summary ? new Date().toISOString() : null,
     })
     .select()
     .single();
+
+  if (data && !error) {
+    await supabase.from('ticket_activity').insert({
+      ticket_id: data.id,
+      user_id: userId,
+      type: 'system',
+      message: 'created ticket',
+      actor_name: payload.requester_name ?? 'AI Assistant',
+      actor_email: payload.requester_email ?? null,
+    });
+  }
 
   return { data, error };
 }

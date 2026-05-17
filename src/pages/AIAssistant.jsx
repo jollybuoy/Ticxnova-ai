@@ -10,7 +10,14 @@ import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { useAIAssistant } from '../hooks/useAIAssistant';
 
 export default function AIAssistant() {
-  const { messages, loading, sendMessage, clearConversation } = useAIAssistant();
+  const {
+    messages,
+    loading,
+    creatingTicketId,
+    sendMessage,
+    clearConversation,
+    createTicketFromMessage,
+  } = useAIAssistant();
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -50,7 +57,12 @@ export default function AIAssistant() {
               <div className="min-h-0 flex-1 overflow-y-auto px-4 py-6 sm:px-6">
                 <div className="mx-auto max-w-4xl space-y-6">
                   {messages.map((message) => (
-                    <ChatMessage key={message.id} message={message} />
+                    <ChatMessage
+                      key={message.id}
+                      message={message}
+                      onCreateTicket={createTicketFromMessage}
+                      creatingTicket={creatingTicketId === message.id}
+                    />
                   ))}
                   {loading && <TypingIndicator />}
                   <div ref={messagesEndRef} />
