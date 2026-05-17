@@ -1,7 +1,7 @@
 export const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard' },
   { id: 'tickets', label: 'Tickets', icon: 'Ticket', path: '/tickets', showOpenBadge: true },
-  { id: 'ai-assistant', label: 'AI Assistant', icon: 'Bot', path: '/dashboard' },
+  { id: 'ai-assistant', label: 'AI Assistant', icon: 'Bot', path: '/ai-assistant' },
   { id: 'devices', label: 'Devices', icon: 'Monitor', path: '/dashboard' },
   { id: 'users', label: 'Users', icon: 'Users', path: '/dashboard' },
   { id: 'knowledge', label: 'Knowledge Base', icon: 'BookOpen', path: '/dashboard' },

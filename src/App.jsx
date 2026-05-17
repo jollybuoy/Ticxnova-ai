@@ -7,6 +7,7 @@ import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 import TicketDetails from './pages/TicketDetails';
+import AIAssistant from './pages/AIAssistant';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -44,6 +45,14 @@ function AnimatedRoutes() {
           element={
             <ProtectedRoute>
               <TicketDetails />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/ai-assistant"
+          element={
+            <ProtectedRoute>
+              <AIAssistant />
             </ProtectedRoute>
           }
         />
