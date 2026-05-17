@@ -31,6 +31,8 @@ import {
   ChevronDown,
   Calendar,
   Sparkles,
+  PanelLeft,
+  PanelLeftClose,
 } from 'lucide-react';
 
 const icons = {
@@ -66,6 +68,8 @@ const icons = {
   ChevronDown,
   Calendar,
   Sparkles,
+  PanelLeft,
+  PanelLeftClose,
 };
 
 export function Icon({ name, className = '', size = 18, ...props }) {

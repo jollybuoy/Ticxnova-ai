@@ -19,37 +19,39 @@ export default function Dashboard() {
       <DashboardHeader />
       <MetricsGrid metrics={metrics} />
 
-      <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-7">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-7">
           <TicketsChart />
         </div>
-        <div className="lg:col-span-2">
+        <div className="xl:col-span-2">
           <DonutChartCard
             title="Tickets by Category"
             data={ticketsByCategory}
             total={23}
+            delay={0.12}
           />
         </div>
-        <div className="lg:col-span-3">
+        <div className="xl:col-span-3">
           <AIInsights />
         </div>
-      </div>
+      </section>
 
-      <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-5">
+      <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        <div className="xl:col-span-5">
           <RecentTickets />
         </div>
-        <div className="lg:col-span-3">
+        <div className="xl:col-span-3">
           <DonutChartCard
             title="Devices Status"
             data={devicesStatus}
             total={142}
+            delay={0.18}
           />
         </div>
-        <div className="lg:col-span-4">
+        <div className="xl:col-span-4">
           <TopUsers />
         </div>
-      </div>
+      </section>
 
       <AutomationOverview />
     </DashboardLayout>

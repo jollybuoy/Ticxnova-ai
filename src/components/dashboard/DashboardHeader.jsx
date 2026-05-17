@@ -3,25 +3,28 @@ import { Icon } from '../ui/IconMap';
 
 export function DashboardHeader() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: -8 }}
+    <motion.header
+      initial={{ opacity: 0, y: -12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
+      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
     >
       <div>
-        <h2 className="text-2xl font-bold text-white">Dashboard</h2>
-        <p className="mt-1 text-sm text-gray-500">
-          Welcome back, Admin! Here&apos;s what&apos;s happening with your IT environment.
+        <p className="text-label mb-2">Overview</p>
+        <h1 className="text-display">Dashboard</h1>
+        <p className="text-body mt-2 max-w-xl">
+          Welcome back, Admin. Here&apos;s what&apos;s happening across your IT environment today.
         </p>
       </div>
       <motion.button
         type="button"
-        whileHover={{ scale: 1.02, borderColor: 'rgba(139,92,246,0.4)' }}
-        className="flex items-center gap-2 self-start rounded-lg border border-white/10 bg-surface-card/60 px-4 py-2.5 text-sm text-gray-300"
+        whileHover={{ scale: 1.02, borderColor: 'rgba(124,108,240,0.4)' }}
+        whileTap={{ scale: 0.98 }}
+        className="glass focus-ring flex items-center gap-2.5 self-start rounded-xl px-4 py-3 text-sm text-zinc-300 transition-colors duration-200"
       >
-        <Icon name="Calendar" size={16} className="text-gray-500" />
-        May 1 – May 31, 2024
+        <Icon name="Calendar" size={16} className="text-zinc-500" />
+        <span className="font-medium">May 1 – May 31, 2024</span>
       </motion.button>
-    </motion.div>
+    </motion.header>
   );
 }

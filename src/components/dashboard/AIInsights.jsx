@@ -1,68 +1,73 @@
 import { motion } from 'framer-motion';
 import { Card, CardBody, CardHeader } from '../ui/Card';
+import { Button } from '../ui/Button';
 import { Icon } from '../ui/IconMap';
 import { aiInsights } from '../../data/dummyData';
 
 const alertStyles = {
-  success: 'text-green-400',
-  warning: 'text-yellow-400',
-  orange: 'text-orange-400',
+  success: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
+  warning: 'bg-amber-500/10 text-amber-400 ring-amber-500/20',
+  orange: 'bg-orange-500/10 text-orange-400 ring-orange-500/20',
 };
 
 export function AIInsights() {
   return (
-    <Card className="h-full min-h-[320px]">
+    <Card className="h-full min-h-[360px]" delay={0.15}>
       <CardHeader
         title="AI Insights"
+        subtitle="Powered by Ticxnova intelligence"
         action={
           <motion.button
             type="button"
-            whileHover={{ color: '#a78bfa' }}
-            className="text-xs font-medium text-accent-purple"
+            whileHover={{ x: 2 }}
+            className="text-xs font-medium text-violet-400 transition-colors hover:text-violet-300"
           >
-            View all
+            View all →
           </motion.button>
         }
       />
-      <CardBody className="space-y-4">
+      <CardBody className="space-y-5">
         <motion.div
           whileHover={{ scale: 1.01 }}
-          className="rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-500/20 to-violet-600/10 p-4"
+          transition={{ type: 'spring', stiffness: 400, damping: 28 }}
+          className="relative overflow-hidden rounded-2xl border border-violet-500/25 bg-gradient-to-br from-violet-600/25 via-indigo-600/15 to-transparent p-5 shadow-inner shadow-violet-500/10"
         >
-          <div className="mb-2 flex items-center gap-2">
-            <Icon name="Sparkles" size={16} className="text-accent-purple" />
-            <span className="text-xs font-semibold text-purple-300">Featured Insight</span>
+          <div className="absolute -right-8 -top-8 h-24 w-24 rounded-full bg-violet-500/20 blur-2xl" />
+          <div className="relative">
+            <div className="mb-3 flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/30 ring-1 ring-violet-400/30">
+                <Icon name="Sparkles" size={14} className="text-violet-300" />
+              </span>
+              <span className="text-label normal-case text-violet-300">Featured</span>
+            </div>
+            <h4 className="text-sm font-semibold leading-snug text-white">
+              {aiInsights.featured.title}
+            </h4>
+            <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+              {aiInsights.featured.description}
+            </p>
+            <Button variant="primary" className="mt-4 w-full text-xs">
+              {aiInsights.featured.action}
+            </Button>
           </div>
-          <h4 className="text-sm font-semibold text-white">{aiInsights.featured.title}</h4>
-          <p className="mt-1 text-xs leading-relaxed text-gray-400">
-            {aiInsights.featured.description}
-          </p>
-          <motion.button
-            type="button"
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.98 }}
-            className="mt-3 rounded-lg bg-accent-purple px-3 py-1.5 text-xs font-medium text-white shadow-md shadow-purple-500/25"
-          >
-            {aiInsights.featured.action}
-          </motion.button>
         </motion.div>
 
-        <ul className="space-y-3">
+        <ul className="space-y-2">
           {aiInsights.alerts.map((alert, i) => (
             <motion.li
               key={alert.text}
-              initial={{ opacity: 0, x: 8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 + i * 0.05 }}
-              whileHover={{ x: 4 }}
-              className="flex items-start gap-2.5 text-xs text-gray-300"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + i * 0.06 }}
+              whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.03)' }}
+              className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
             >
-              <Icon
-                name={alert.icon}
-                size={14}
-                className={`mt-0.5 shrink-0 ${alertStyles[alert.type]}`}
-              />
-              <span>{alert.text}</span>
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ring-1 ${alertStyles[alert.type]}`}
+              >
+                <Icon name={alert.icon} size={14} />
+              </span>
+              <span className="text-xs leading-snug text-zinc-300">{alert.text}</span>
             </motion.li>
           ))}
         </ul>

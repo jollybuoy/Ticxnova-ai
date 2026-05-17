@@ -1,13 +1,26 @@
 import { motion } from 'framer-motion';
 
-export function Card({ children, className = '', hover = true, ...props }) {
+const cardMotion = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
+};
+
+export function Card({ children, className = '', hover = true, delay = 0, ...props }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-      whileHover={hover ? { y: -2, transition: { duration: 0.2 } } : undefined}
-      className={`rounded-xl border border-white/10 bg-surface-card/80 backdrop-blur-sm ${className}`}
+      {...cardMotion}
+      transition={{ ...cardMotion.transition, delay }}
+      whileHover={
+        hover
+          ? {
+              y: -3,
+              boxShadow: '0 16px 48px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.1)',
+              transition: { duration: 0.25, ease: 'easeOut' },
+            }
+          : undefined
+      }
+      className={`glass-card overflow-hidden ${className}`}
       {...props}
     >
       {children}
@@ -15,17 +28,20 @@ export function Card({ children, className = '', hover = true, ...props }) {
   );
 }
 
-export function CardHeader({ title, action, className = '' }) {
+export function CardHeader({ title, subtitle, action, className = '' }) {
   return (
     <motion.div
-      className={`flex items-center justify-between border-b border-white/5 px-5 py-4 ${className}`}
+      className={`flex items-start justify-between gap-4 border-b border-white/[0.06] px-6 py-5 ${className}`}
     >
-      <h3 className="text-sm font-semibold text-white">{title}</h3>
+      <div>
+        <h3 className="text-sm font-semibold tracking-tight text-white">{title}</h3>
+        {subtitle && <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>}
+      </div>
       {action}
     </motion.div>
   );
 }
 
 export function CardBody({ children, className = '' }) {
-  return <motion.div className={`p-5 ${className}`}>{children}</motion.div>;
+  return <div className={`px-6 py-5 ${className}`}>{children}</div>;
 }

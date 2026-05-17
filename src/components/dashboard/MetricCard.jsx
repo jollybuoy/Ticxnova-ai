@@ -4,21 +4,24 @@ import { Icon } from '../ui/IconMap';
 
 export function MetricCard({ metric, index = 0 }) {
   return (
-    <Card className="p-4">
+    <Card className="group p-6" delay={index * 0.06}>
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
+        initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.05 }}
+        transition={{ delay: index * 0.06, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       >
         <motion.div
-          className={`inline-flex h-10 w-10 items-center justify-center rounded-lg ${metric.iconBg}`}
-          whileHover={{ rotate: 5, scale: 1.08 }}
+          className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl ${metric.iconBg} ring-1 ring-white/10`}
+          whileHover={{ scale: 1.08, rotate: 4 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
         >
-          <Icon name={metric.icon} className={metric.iconColor} size={20} />
+          <Icon name={metric.icon} className={metric.iconColor} size={22} />
         </motion.div>
-        <p className="mt-3 text-xs font-medium text-gray-500">{metric.label}</p>
-        <p className="mt-1 text-2xl font-bold text-white">{metric.value}</p>
-        <p className={`mt-1 text-xs font-medium ${metric.changeColor}`}>{metric.change}</p>
+        <p className="text-label">{metric.label}</p>
+        <p className="mt-2 text-3xl font-semibold tracking-tight text-white tabular-nums">
+          {metric.value}
+        </p>
+        <p className={`mt-2 text-xs font-medium ${metric.changeColor}`}>{metric.change}</p>
       </motion.div>
     </Card>
   );
@@ -26,7 +29,7 @@ export function MetricCard({ metric, index = 0 }) {
 
 export function MetricsGrid({ metrics }) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
       {metrics.map((metric, i) => (
         <MetricCard key={metric.id} metric={metric} index={i} />
       ))}
