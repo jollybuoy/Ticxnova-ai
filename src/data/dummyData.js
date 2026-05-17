@@ -2,7 +2,7 @@ export const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: 'LayoutDashboard', path: '/dashboard' },
   { id: 'tickets', label: 'Tickets', icon: 'Ticket', path: '/tickets', showOpenBadge: true },
   { id: 'ai-assistant', label: 'AI Assistant', icon: 'Bot', path: '/ai-assistant' },
-  { id: 'assets', label: 'Asset Overview', icon: 'BarChart3', path: '/assets' },
+  { id: 'assets', label: 'Assets', icon: 'BarChart3', path: '/assets' },
   { id: 'devices', label: 'Devices', icon: 'Monitor', path: '/devices' },
 ];
 
