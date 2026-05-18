@@ -11,9 +11,11 @@ import {
   updateTicketFields,
 } from '../lib/tickets/ticketService';
 import { getUserDisplayName, getUserEmail } from '../lib/user';
+import { useTenant } from './useTenant';
 
 export function useTickets() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const userId = user?.id;
 
   const [tickets, setTickets] = useState([]);
@@ -28,7 +30,7 @@ export function useTickets() {
     }
 
     setLoading(true);
-    const { data, error } = await fetchTickets(userId);
+    const { data, error } = await fetchTickets(userId, tenantId);
     if (error) {
       toast.error(getTicketErrorMessage(error));
       setTickets([]);
@@ -36,7 +38,7 @@ export function useTickets() {
       setTickets(data);
     }
     setLoading(false);
-  }, [userId]);
+  }, [tenantId, userId]);
 
   useEffect(() => {
     loadTickets();
@@ -75,7 +77,7 @@ export function useTickets() {
     async (payload) => {
       if (!userId) return { success: false };
       setMutating(true);
-      const { data, error } = await createTicket(userId, payload);
+      const { data, error } = await createTicket(userId, { ...payload, tenant_id: tenantId });
       setMutating(false);
 
       if (error) {
@@ -87,7 +89,7 @@ export function useTickets() {
       toast.success('Ticket created successfully');
       return { success: true, data };
     },
-    [userId],
+    [tenantId, userId],
   );
 
   const handleUpdateStatus = useCallback(

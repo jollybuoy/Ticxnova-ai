@@ -2,15 +2,18 @@ import { supabase } from '../supabase';
 
 const colors = ['#8b5cf6', '#60a5fa', '#34d399', '#fbbf24', '#f87171', '#fb923c'];
 
-export async function fetchAnalyticsData(userId) {
+export async function fetchAnalyticsData(userId, tenantId) {
+  const ticketQuery = supabase.from('tickets').select('*').order('created_at', { ascending: false });
+  const deviceQuery = supabase.from('devices').select('*').order('created_at', { ascending: false });
+  const linkQuery = supabase
+    .from('ticket_devices')
+    .select('device_id, ticket_id, created_at, devices(*), tickets(*)')
+    .order('created_at', { ascending: false });
+
   const [ticketsResult, devicesResult, linksResult] = await Promise.all([
-    supabase.from('tickets').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-    supabase.from('devices').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-    supabase
-      .from('ticket_devices')
-      .select('device_id, ticket_id, created_at, devices(*), tickets(*)')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false }),
+    tenantId ? ticketQuery.eq('tenant_id', tenantId) : ticketQuery.eq('user_id', userId),
+    tenantId ? deviceQuery.eq('tenant_id', tenantId) : deviceQuery.eq('user_id', userId),
+    tenantId ? linkQuery.eq('tenant_id', tenantId) : linkQuery.eq('user_id', userId),
   ]);
 
   return {

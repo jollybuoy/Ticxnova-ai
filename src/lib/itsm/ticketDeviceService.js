@@ -26,12 +26,15 @@ export async function fetchDeviceTickets(deviceId) {
   };
 }
 
-export async function fetchAssetIncidentLinks(userId) {
-  const { data, error } = await supabase
+export async function fetchAssetIncidentLinks(userId, tenantId) {
+  let query = supabase
     .from('ticket_devices')
     .select('device_id, ticket_id, created_at, devices(*), tickets(*)')
-    .eq('user_id', userId)
     .order('created_at', { ascending: false });
+
+  query = tenantId ? query.eq('tenant_id', tenantId) : query.eq('user_id', userId);
+
+  const { data, error } = await query;
 
   return { data: data ?? [], error };
 }
@@ -59,6 +62,7 @@ export async function linkTicketDevices(userId, ticketId, deviceIds = [], actor 
         ticket_id: ticketId,
         device_id: deviceId,
         user_id: userId,
+        tenant_id: actor.tenantId || undefined,
         relationship_type: index === 0 ? 'primary_asset' : 'affected_asset',
         created_by_name: actor.name,
         created_by_email: actor.email,

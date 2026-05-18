@@ -5,23 +5,27 @@ export function generateAssetTag() {
   return `ASSET-${suffix}`;
 }
 
-export async function fetchDevices(userId) {
-  const { data, error } = await supabase
+export async function fetchDevices(userId, tenantId) {
+  let query = supabase
     .from('devices')
     .select('*')
-    .eq('user_id', userId)
     .order('created_at', { ascending: false });
+
+  query = tenantId ? query.eq('tenant_id', tenantId) : query.eq('user_id', userId);
+
+  const { data, error } = await query;
 
   return { data: data ?? [], error };
 }
 
-export async function fetchDeviceById(userId, deviceId) {
-  const { data, error } = await supabase
+export async function fetchDeviceById(userId, deviceId, tenantId) {
+  let query = supabase
     .from('devices')
     .select('*')
-    .eq('user_id', userId)
     .eq('id', deviceId)
-    .single();
+  query = tenantId ? query.eq('tenant_id', tenantId) : query.eq('user_id', userId);
+
+  const { data, error } = await query.single();
 
   return { data, error };
 }
@@ -51,6 +55,7 @@ export async function createDevice(userId, payload, actor) {
     .from('devices')
     .insert({
       user_id: userId,
+      tenant_id: payload.tenant_id || undefined,
       asset_tag: payload.asset_tag?.trim() || generateAssetTag(),
       name: payload.name.trim(),
       device_type: payload.device_type || 'Laptop',

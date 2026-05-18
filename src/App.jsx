@@ -18,6 +18,9 @@ const TicketAnalytics = lazy(() => import('./pages/reports/TicketAnalytics'));
 const DeviceAnalytics = lazy(() => import('./pages/reports/DeviceAnalytics'));
 const AIInsightsReport = lazy(() => import('./pages/reports/AIInsightsReport'));
 const SLAReports = lazy(() => import('./pages/reports/SLAReports'));
+const OrganizationSettings = lazy(() => import('./pages/admin/OrganizationSettings'));
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
+const RolesPermissions = lazy(() => import('./pages/admin/RolesPermissions'));
 
 function RouteLoader() {
   return (
@@ -136,6 +139,30 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <SLAReports />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/organization"
+            element={
+              <ProtectedRoute>
+                <OrganizationSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <ProtectedRoute>
+                <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/roles"
+            element={
+              <ProtectedRoute>
+                <RolesPermissions />
               </ProtectedRoute>
             }
           />

@@ -10,9 +10,12 @@ export function Sidebar({ open, collapsed, onClose }) {
   const width = collapsed ? 'w-[72px]' : 'w-64';
   const openTicketCount = useOpenTicketCount();
   const location = useLocation();
-  const [expandedItems, setExpandedItems] = useState(() =>
-    location.pathname.startsWith('/reports') ? new Set(['reports']) : new Set(),
-  );
+  const [expandedItems, setExpandedItems] = useState(() => {
+    const activeSections = navItems
+      .filter((item) => item.children?.length && location.pathname.startsWith(item.path))
+      .map((item) => item.id);
+    return new Set(activeSections);
+  });
 
   const toggleExpanded = (itemId) => {
     setExpandedItems((current) => {

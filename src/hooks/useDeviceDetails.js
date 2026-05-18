@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { useTenant } from './useTenant';
 import { getUserDisplayName, getUserEmail } from '../lib/user';
 import {
   addDeviceNote,
@@ -16,6 +17,7 @@ import { linkTicketDevices } from '../lib/itsm/ticketDeviceService';
 
 export function useDeviceDetails(deviceId) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const userId = user?.id;
   const [device, setDevice] = useState(null);
   const [notes, setNotes] = useState([]);
@@ -33,7 +35,7 @@ export function useDeviceDetails(deviceId) {
     if (!userId || !deviceId) return;
     setLoading(true);
     const [deviceResult, notesResult, activityResult, ticketsResult] = await Promise.all([
-      fetchDeviceById(userId, deviceId),
+      fetchDeviceById(userId, deviceId, tenantId),
       fetchDeviceNotes(deviceId),
       fetchDeviceActivity(deviceId),
       fetchDeviceTickets(deviceId),
@@ -52,7 +54,7 @@ export function useDeviceDetails(deviceId) {
       setRelatedTickets(ticketsResult.data ?? []);
     }
     setLoading(false);
-  }, [deviceId, userId]);
+  }, [deviceId, tenantId, userId]);
 
   useEffect(() => {
     loadDevice();
@@ -120,7 +122,7 @@ export function useDeviceDetails(deviceId) {
     async (ticketId) => {
       if (!ticketId || !userId || !deviceId) return { success: false };
       setMutating(true);
-      const { error } = await linkTicketDevices(userId, ticketId, [deviceId], actor);
+      const { error } = await linkTicketDevices(userId, ticketId, [deviceId], { ...actor, tenantId });
       setMutating(false);
       if (error) {
         toast.error(getTicketDeviceErrorMessage(error));
@@ -131,7 +133,7 @@ export function useDeviceDetails(deviceId) {
       toast.success('Service request attached to device');
       return { success: true };
     },
-    [actor, deviceId, userId],
+    [actor, deviceId, tenantId, userId],
   );
 
   return {

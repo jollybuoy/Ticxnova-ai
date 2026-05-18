@@ -22,23 +22,27 @@ export async function generateTicketNumber(payload) {
   return `${prefix}-${lastNumber + 1}`;
 }
 
-export async function fetchTickets(userId) {
-  const { data, error } = await supabase
+export async function fetchTickets(userId, tenantId) {
+  let query = supabase
     .from('tickets')
     .select('*')
-    .eq('user_id', userId)
     .order('created_at', { ascending: false });
+
+  query = tenantId ? query.eq('tenant_id', tenantId) : query.eq('user_id', userId);
+
+  const { data, error } = await query;
 
   return { data: data ?? [], error };
 }
 
-export async function fetchTicketById(userId, ticketId) {
-  const { data, error } = await supabase
+export async function fetchTicketById(userId, ticketId, tenantId) {
+  let query = supabase
     .from('tickets')
     .select('*')
-    .eq('user_id', userId)
     .eq('id', ticketId)
-    .single();
+  query = tenantId ? query.eq('tenant_id', tenantId) : query.eq('user_id', userId);
+
+  const { data, error } = await query.single();
 
   return { data, error };
 }
@@ -79,6 +83,7 @@ export async function createTicket(userId, payload) {
     .from('tickets')
     .insert({
       user_id: userId,
+      tenant_id: payload.tenant_id || undefined,
       ticket_number: ticketNumber,
       title: payload.title.trim(),
       description: payload.description?.trim() || null,
@@ -111,6 +116,7 @@ export async function createTicket(userId, payload) {
       await linkTicketDevices(userId, data.id, payload.device_ids, {
         name: payload.requester_name ?? 'System',
         email: payload.requester_email ?? null,
+        tenantId: payload.tenant_id,
       });
     }
   }
@@ -161,7 +167,7 @@ export async function updateTicketFields(userId, ticket, updates, actor) {
     .from('tickets')
     .update(updates)
     .eq('id', ticket.id)
-    .eq('user_id', userId)
+    .eq(ticket.tenant_id ? 'tenant_id' : 'user_id', ticket.tenant_id || userId)
     .select()
     .single();
 

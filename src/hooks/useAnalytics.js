@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { useTenant } from './useTenant';
 import {
   applyReportFilters,
   buildAnalytics,
@@ -11,6 +12,7 @@ import { defaultReportFilters } from '../lib/reports/filterDefaults';
 
 export function useAnalytics(filters = defaultReportFilters) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const userId = user?.id;
   const [rawData, setRawData] = useState({ tickets: [], devices: [], links: [] });
   const [loading, setLoading] = useState(true);
@@ -18,7 +20,7 @@ export function useAnalytics(filters = defaultReportFilters) {
   const loadAnalytics = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { tickets, devices, links, error } = await fetchAnalyticsData(userId);
+    const { tickets, devices, links, error } = await fetchAnalyticsData(userId, tenantId);
     if (error) {
       toast.error(error.message ?? 'Unable to load analytics data');
       setRawData({ tickets: [], devices: [], links: [] });
@@ -26,7 +28,7 @@ export function useAnalytics(filters = defaultReportFilters) {
       setRawData({ tickets, devices, links });
     }
     setLoading(false);
-  }, [userId]);
+  }, [tenantId, userId]);
 
   useEffect(() => {
     const task = window.setTimeout(() => {

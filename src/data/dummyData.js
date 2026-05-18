@@ -17,6 +17,17 @@ export const navItems = [
       { id: 'sla-reports', label: 'SLA Reports', path: '/reports/sla' },
     ],
   },
+  {
+    id: 'admin',
+    label: 'Admin',
+    icon: 'Settings',
+    path: '/admin',
+    children: [
+      { id: 'organization-settings', label: 'Organization Settings', path: '/admin/organization' },
+      { id: 'user-management', label: 'User Management', path: '/admin/users' },
+      { id: 'roles-permissions', label: 'Roles & Permissions', path: '/admin/roles' },
+    ],
+  },
 ];
 
 export const metrics = [

@@ -14,6 +14,7 @@ import {
   getTicketDeviceErrorMessage,
   linkTicketDevices,
 } from '../lib/itsm/ticketDeviceService';
+import { useTenant } from './useTenant';
 
 function uniqueDevices(devices) {
   return [...new Map(devices.map((device) => [device.id, device])).values()];
@@ -21,6 +22,7 @@ function uniqueDevices(devices) {
 
 export function useDevices() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const userId = user?.id;
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +36,7 @@ export function useDevices() {
   const loadDevices = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { data, error } = await fetchDevices(userId);
+    const { data, error } = await fetchDevices(userId, tenantId);
     if (error) {
       toast.error(getDeviceErrorMessage(error));
       setDevices([]);
@@ -42,7 +44,7 @@ export function useDevices() {
       setDevices(uniqueDevices(data));
     }
     setLoading(false);
-  }, [userId]);
+  }, [tenantId, userId]);
 
   useEffect(() => {
     loadDevices();
@@ -66,7 +68,7 @@ export function useDevices() {
   const handleCreate = useCallback(
     async (payload) => {
       setMutating(true);
-      const { data, error } = await createDevice(userId, payload, actor);
+      const { data, error } = await createDevice(userId, { ...payload, tenant_id: tenantId }, actor);
       if (error) {
         setMutating(false);
         toast.error(getDeviceErrorMessage(error));
@@ -77,7 +79,7 @@ export function useDevices() {
           userId,
           payload.service_request_id,
           [data.id],
-          actor,
+          { ...actor, tenantId },
         );
         if (linkError) {
           await deleteDevice(userId, data.id);
@@ -91,7 +93,7 @@ export function useDevices() {
       toast.success('Device added');
       return { success: true, data };
     },
-    [actor, userId],
+    [actor, tenantId, userId],
   );
 
   const handleUpdate = useCallback(

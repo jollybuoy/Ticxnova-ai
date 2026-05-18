@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { useAuth } from './useAuth';
+import { useTenant } from './useTenant';
 import {
   fetchAssetIncidentLinks,
   getTicketDeviceErrorMessage,
@@ -8,6 +9,7 @@ import {
 
 export function useAssetIncidents() {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const userId = user?.id;
   const [links, setLinks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,7 @@ export function useAssetIncidents() {
   const loadLinks = useCallback(async () => {
     if (!userId) return;
     setLoading(true);
-    const { data, error } = await fetchAssetIncidentLinks(userId);
+    const { data, error } = await fetchAssetIncidentLinks(userId, tenantId);
     if (error) {
       toast.error(getTicketDeviceErrorMessage(error));
       setLinks([]);
@@ -23,7 +25,7 @@ export function useAssetIncidents() {
       setLinks(data);
     }
     setLoading(false);
-  }, [userId]);
+  }, [tenantId, userId]);
 
   useEffect(() => {
     loadLinks();

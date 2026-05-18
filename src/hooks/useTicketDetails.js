@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { useTenant } from './useTenant';
 import { getUserDisplayName, getUserEmail } from '../lib/user';
 import {
   addTicketComment,
@@ -20,6 +21,7 @@ import {
 
 export function useTicketDetails(ticketId) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const userId = user?.id;
   const [ticket, setTicket] = useState(null);
   const [comments, setComments] = useState([]);
@@ -41,7 +43,7 @@ export function useTicketDetails(ticketId) {
 
     setLoading(true);
     const [ticketResult, commentsResult, activityResult, devicesResult] = await Promise.all([
-      fetchTicketById(userId, ticketId),
+      fetchTicketById(userId, ticketId, tenantId),
       fetchTicketComments(userId, ticketId),
       fetchTicketActivity(ticketId),
       fetchTicketDevices(ticketId),
@@ -73,7 +75,7 @@ export function useTicketDetails(ticketId) {
     }
 
     setLoading(false);
-  }, [ticketId, userId]);
+  }, [tenantId, ticketId, userId]);
 
   useEffect(() => {
     loadTicket();
