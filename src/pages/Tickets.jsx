@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { TicketsToolbar } from '../components/tickets/TicketsToolbar';
 import { TicketsTable } from '../components/tickets/TicketsTable';
@@ -12,6 +12,7 @@ const PAGE_SIZE = 8;
 
 export default function Tickets() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const {
     tickets,
     loading,
@@ -21,9 +22,10 @@ export default function Tickets() {
     deleteTicket,
   } = useTickets();
 
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') ?? 'all');
+  const [priorityFilter, setPriorityFilter] = useState(() => searchParams.get('priority') ?? 'all');
+  const [typeFilter] = useState(() => searchParams.get('type') ?? 'all');
   const [page, setPage] = useState(1);
   const [createOpen, setCreateOpen] = useState(false);
   const [ticketToDelete, setTicketToDelete] = useState(null);
@@ -33,17 +35,20 @@ export default function Tickets() {
     return tickets.filter((ticket) => {
       const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter;
       const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-      if (!matchesStatus || !matchesPriority) return false;
+      const matchesType = typeFilter === 'all' || ticket.ticket_type === typeFilter;
+      if (!matchesStatus || !matchesPriority || !matchesType) return false;
       if (!query) return true;
       return (
         ticket.title?.toLowerCase().includes(query) ||
         ticket.ticket_number?.toLowerCase().includes(query) ||
         ticket.requester_name?.toLowerCase().includes(query) ||
+        ticket.requester_email?.toLowerCase().includes(query) ||
+        ticket.department?.toLowerCase().includes(query) ||
         ticket.category?.toLowerCase().includes(query) ||
         ticket.description?.toLowerCase().includes(query)
       );
     });
-  }, [tickets, search, statusFilter, priorityFilter]);
+  }, [tickets, search, statusFilter, priorityFilter, typeFilter]);
 
   const counts = useMemo(() => getTicketCounts(tickets), [tickets]);
   const totalPages = Math.max(1, Math.ceil(filteredTickets.length / PAGE_SIZE));

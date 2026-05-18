@@ -6,10 +6,10 @@ export const TICKET_STATUSES = [
 ];
 
 export const TICKET_PRIORITIES = [
-  { value: 'low', label: 'Low', badge: 'slate' },
-  { value: 'medium', label: 'Medium', badge: 'blue' },
-  { value: 'high', label: 'High', badge: 'yellow' },
-  { value: 'urgent', label: 'Urgent', badge: 'red' },
+  { value: 'urgent', label: 'P1 - Critical', badge: 'red' },
+  { value: 'high', label: 'P2 - High', badge: 'yellow' },
+  { value: 'medium', label: 'P3 - Medium', badge: 'blue' },
+  { value: 'low', label: 'P4 - Low', badge: 'slate' },
 ];
 
 export const TICKET_TYPES = [

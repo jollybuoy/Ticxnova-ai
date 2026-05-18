@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
@@ -23,6 +23,7 @@ export function useTicketDetails(ticketId) {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const userId = user?.id;
+  const channelId = useRef(crypto.randomUUID());
   const [ticket, setTicket] = useState(null);
   const [comments, setComments] = useState([]);
   const [activity, setActivity] = useState([]);
@@ -85,7 +86,7 @@ export function useTicketDetails(ticketId) {
     if (!ticketId || !userId) return undefined;
 
     const channel = supabase
-      .channel(`ticket-details:${ticketId}`)
+      .channel(`ticket-details:${ticketId}:${channelId.current}`)
       .on(
         'postgres_changes',
         {

@@ -7,17 +7,19 @@ import {
   XAxis,
   YAxis,
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardHeader } from '../ui/Card';
 import { ChartTooltip } from '../ui/ChartTooltip';
-import { ticketsTrend } from '../../data/dummyData';
 
-export function TicketsChart() {
+export function TicketsChart({ data = [] }) {
+  const navigate = useNavigate();
+  const maxTickets = Math.max(5, ...data.map((item) => item.tickets));
   return (
-    <Card className="h-full min-h-[360px]" delay={0.1}>
+    <Card className="h-full min-h-[360px] cursor-pointer" delay={0.1} onClick={() => navigate('/reports/tickets')}>
       <CardHeader title="Tickets Overview" subtitle="Volume over the last 30 days" />
       <CardBody className="h-[280px] pt-0">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={ticketsTrend} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
             <defs>
               <linearGradient id="ticketGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#7c6cf0" stopOpacity={0.45} />
@@ -44,7 +46,7 @@ export function TicketsChart() {
               tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
               axisLine={false}
               tickLine={false}
-              domain={[0, 50]}
+              domain={[0, maxTickets]}
               dx={-4}
             />
             <Tooltip

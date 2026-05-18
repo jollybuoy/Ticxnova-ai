@@ -92,6 +92,7 @@ export async function createTicket(userId, payload) {
       priority: payload.priority ?? 'medium',
       category: payload.category || null,
       requester_name: payload.requester_name?.trim() || null,
+      requester_email: payload.requester_email?.trim() || null,
       department: payload.department || null,
       ai_summary: payload.ai_summary || null,
       ai_suggested_category: payload.ai_suggested_category || payload.category || null,

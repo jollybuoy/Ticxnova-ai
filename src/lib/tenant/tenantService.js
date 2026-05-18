@@ -8,31 +8,22 @@ export const RBAC_ROLES = [
   { value: 'read_only', label: 'Read Only', description: 'Auditor access with no write permissions.' },
 ];
 
-const PUBLIC_EMAIL_DOMAINS = new Set([
-  'gmail.com',
-  'googlemail.com',
-  'outlook.com',
-  'hotmail.com',
-  'live.com',
-  'msn.com',
-  'yahoo.com',
-  'icloud.com',
-  'me.com',
-  'aol.com',
-  'proton.me',
-  'protonmail.com',
-]);
-
-function getEmailDomain(email) {
-  return email.split('@')[1]?.toLowerCase() ?? '';
-}
-
 function isFunctionUnavailable(error) {
   return (
     error?.name === 'FunctionsFetchError' ||
     error?.name === 'FunctionsHttpError' ||
     error?.message?.toLowerCase().includes('failed to send a request')
   );
+}
+
+function normalizeCreatedUsers(data) {
+  return {
+    ...data,
+    invited: (data?.invited ?? []).map((user) => ({
+      ...user,
+      temporary_password: user.temporary_password,
+    })),
+  };
 }
 
 export async function fetchTenantContext(userId) {
@@ -117,6 +108,7 @@ export async function inviteTenantUser(tenantId, payload) {
     body: {
       tenantId,
       emails: payload.emails,
+      users: payload.users,
       role: payload.role,
       department: payload.department?.trim() || null,
       redirectTo: `${window.location.origin}/login`,
@@ -124,74 +116,16 @@ export async function inviteTenantUser(tenantId, payload) {
   });
 
   if (error && isFunctionUnavailable(error)) {
-    const fallback = await stageTenantInvites(tenantId, payload);
     return {
-      ...fallback,
-      functionUnavailable: true,
-      functionError: error,
+      data: null,
+      error: {
+        ...error,
+        message: 'User provisioning service is not deployed. Deploy the invite-user Edge Function to create users.',
+      },
     };
   }
 
-  return { data, error };
-}
-
-async function stageTenantInvites(tenantId, payload) {
-  const emails = [...new Set((payload.emails ?? []).map((email) => email.trim().toLowerCase()).filter(Boolean))];
-  const { data: tenant, error: tenantError } = await supabase
-    .from('tenants')
-    .select('domain')
-    .eq('id', tenantId)
-    .maybeSingle();
-
-  if (tenantError) return { data: null, error: tenantError };
-
-  const tenantDomain = tenant?.domain?.trim().toLowerCase();
-  const rejected = [];
-  const accepted = [];
-
-  for (const email of emails) {
-    const domain = getEmailDomain(email);
-    if (!tenantDomain) {
-      rejected.push({ email, reason: 'Organization domain is not configured.' });
-    } else if (PUBLIC_EMAIL_DOMAINS.has(domain)) {
-      rejected.push({ email, reason: 'Public email domains are not allowed for tenant users.' });
-    } else if (domain !== tenantDomain) {
-      rejected.push({ email, reason: `Email must use the organization domain: ${tenantDomain}.` });
-    } else {
-      accepted.push(email);
-    }
-  }
-
-  if (accepted.length === 0) {
-    return {
-      data: { invited: [], rejected, deliveryMode: 'staged' },
-      error: null,
-    };
-  }
-
-  const { data: invited, error } = await supabase
-    .from('tenant_users')
-    .upsert(
-      accepted.map((email) => ({
-        tenant_id: tenantId,
-        email,
-        role: payload.role,
-        department: payload.department?.trim() || null,
-        is_active: true,
-        invited_at: new Date().toISOString(),
-      })),
-      { onConflict: 'tenant_id,email' },
-    )
-    .select();
-
-  return {
-    data: {
-      invited: invited ?? [],
-      rejected,
-      deliveryMode: 'staged',
-    },
-    error,
-  };
+  return { data: normalizeCreatedUsers(data), error };
 }
 
 export async function updateTenantUser(userId, updates) {
@@ -201,6 +135,43 @@ export async function updateTenantUser(userId, updates) {
     .eq('id', userId)
     .select()
     .single();
+
+  return { data, error };
+}
+
+export async function adminUpdateTenantUser(tenantId, tenantUserId, updates) {
+  const { data, error } = await supabase.functions.invoke('user-admin', {
+    body: {
+      action: 'update',
+      tenantId,
+      tenantUserId,
+      updates,
+    },
+  });
+
+  return { data: data?.user ?? null, error };
+}
+
+export async function adminDeleteTenantUser(tenantId, tenantUserId) {
+  const { data, error } = await supabase.functions.invoke('user-admin', {
+    body: {
+      action: 'delete',
+      tenantId,
+      tenantUserId,
+    },
+  });
+
+  return { data, error };
+}
+
+export async function adminResetTenantUserPassword(tenantId, tenantUserId) {
+  const { data, error } = await supabase.functions.invoke('user-admin', {
+    body: {
+      action: 'reset_password',
+      tenantId,
+      tenantUserId,
+    },
+  });
 
   return { data, error };
 }
@@ -249,7 +220,7 @@ export async function uploadTenantLogo(tenantId, file) {
 export function getTenantErrorMessage(error) {
   if (!error) return 'Something went wrong.';
   if (isFunctionUnavailable(error)) {
-    return 'Invite email service is not deployed or reachable. Deploy the invite-user Edge Function.';
+    return 'User provisioning service is not deployed or reachable. Deploy the invite-user Edge Function.';
   }
   if (error.code === '42P01') return 'Tenant tables not found. Run supabase/multi-tenant-rbac.sql.';
   if (error.code === '42703') return 'Tenant schema is incomplete. Re-run supabase/multi-tenant-rbac.sql.';

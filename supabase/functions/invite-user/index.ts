@@ -23,6 +23,7 @@ const blockedPublicDomains = new Set([
   'protonmail.com',
 ]);
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const passwordAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@$%';
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -34,18 +35,49 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-function normalizeEmails(value: unknown): string[] {
-  const values = Array.isArray(value) ? value : [value];
-  const raw = values
+function normalizeUsers(payload: Record<string, unknown>): Array<{ email: string; full_name: string | null; department: string | null }> {
+  if (Array.isArray(payload.users)) {
+    const seen = new Set<string>();
+    return payload.users
+      .map((item) => {
+        const record = item as Record<string, unknown>;
+        return {
+          email: String(record.email ?? '').trim().toLowerCase(),
+          full_name: record.full_name ? String(record.full_name).trim() : null,
+          department: record.department ? String(record.department).trim() : null,
+        };
+      })
+      .filter((item) => {
+        if (!item.email || seen.has(item.email)) return false;
+        seen.add(item.email);
+        return true;
+      })
+      .slice(0, 250);
+  }
+
+  const values = Array.isArray(payload.emails ?? payload.email) ? payload.emails ?? payload.email : [payload.emails ?? payload.email];
+  const seen = new Set<string>();
+  return values
     .flatMap((item) => String(item ?? '').split(/[\s,;]+/))
     .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-
-  return [...new Set(raw)].slice(0, 250);
+    .filter((email) => {
+      if (!email || seen.has(email)) return false;
+      seen.add(email);
+      return true;
+    })
+    .slice(0, 250)
+    .map((email) => ({ email, full_name: null, department: null }));
 }
 
 function emailDomain(email: string) {
   return email.split('@')[1]?.toLowerCase() ?? '';
+}
+
+function generateTemporaryPassword(length = 14) {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  const password = Array.from(bytes, (byte) => passwordAlphabet[byte % passwordAlphabet.length]).join('');
+  return `${password}9!`;
 }
 
 serve(async (req) => {
@@ -74,11 +106,11 @@ serve(async (req) => {
 
   const payload = await req.json().catch(() => ({}));
   const tenantId = String(payload.tenantId ?? '');
-  const emails = normalizeEmails(payload.emails ?? payload.email);
+  const users = normalizeUsers(payload);
   const role = String(payload.role ?? 'employee');
-  const department = payload.department ? String(payload.department).trim() : null;
+  const defaultDepartment = payload.department ? String(payload.department).trim() : null;
 
-  if (!tenantId || emails.length === 0 || !allowedRoles.includes(role)) {
+  if (!tenantId || users.length === 0 || !allowedRoles.includes(role)) {
     return jsonResponse({ error: 'Invalid invitation payload.' }, 400);
   }
 
@@ -105,58 +137,85 @@ serve(async (req) => {
   if (tenantError || !tenant) return jsonResponse({ error: 'Tenant not found.' }, 404);
 
   const tenantDomain = String(tenant.domain ?? '').trim().toLowerCase();
-  if (!tenantDomain) {
+  const roleRequiresTenantDomain = role !== 'org_admin';
+
+  if (roleRequiresTenantDomain && !tenantDomain) {
     return jsonResponse({
       error: 'Set an organization domain before inviting users.',
       invited: [],
-      rejected: emails.map((email) => ({ email, reason: 'Organization domain is not configured.' })),
+      rejected: users.map((item) => ({ email: item.email, reason: 'Organization domain is not configured.' })),
     });
   }
 
-  if (blockedPublicDomains.has(tenantDomain)) {
+  if (roleRequiresTenantDomain && blockedPublicDomains.has(tenantDomain)) {
     return jsonResponse({
       error: 'Organization domain cannot be a public email provider.',
       invited: [],
-      rejected: emails.map((email) => ({ email, reason: `${tenantDomain} is not allowed for tenant invitations.` })),
+      rejected: users.map((item) => ({ email: item.email, reason: `${tenantDomain} is not allowed for tenant invitations.` })),
     });
   }
-
-  const redirectTo = payload.redirectTo
-    ? String(payload.redirectTo)
-    : `${req.headers.get('origin') ?? ''}/login`;
 
   const invited = [];
   const rejected = [];
 
-  for (const email of emails) {
+  for (const item of users) {
+    const email = item.email;
+    const fullName = item.full_name;
+    const department = item.department || defaultDepartment;
     const domain = emailDomain(email);
     if (!emailPattern.test(email)) {
       rejected.push({ email, reason: 'Invalid email address.' });
       continue;
     }
 
-    if (blockedPublicDomains.has(domain)) {
+    if (roleRequiresTenantDomain && blockedPublicDomains.has(domain)) {
       rejected.push({ email, reason: 'Public email domains are not allowed for tenant users.' });
       continue;
     }
 
-    if (domain !== tenantDomain) {
+    if (roleRequiresTenantDomain && domain !== tenantDomain) {
       rejected.push({ email, reason: `Email must use the organization domain: ${tenantDomain}.` });
       continue;
     }
 
-    const { data: invite, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
-      redirectTo,
-      data: {
+    const temporaryPassword = generateTemporaryPassword();
+    const { data: created, error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password: temporaryPassword,
+      email_confirm: true,
+      user_metadata: {
         tenant_id: tenantId,
+        full_name: fullName,
+        name: fullName,
         role,
         department,
+        must_reset_password: true,
       },
     });
 
-    if (inviteError) {
-      rejected.push({ email, reason: inviteError.message });
+    if (createError) {
+      rejected.push({ email, reason: createError.message });
       continue;
+    }
+
+    const userId = created.user?.id ?? null;
+
+    if (userId) {
+      const { error: profileError } = await adminClient
+        .from('profiles')
+        .upsert({
+          id: userId,
+          tenant_id: tenantId,
+          email,
+          full_name: fullName,
+          role,
+          department,
+        });
+
+      if (profileError) {
+        rejected.push({ email, reason: profileError.message });
+        continue;
+      }
     }
 
     const { data: tenantUser, error: memberError } = await adminClient
@@ -164,12 +223,14 @@ serve(async (req) => {
       .upsert(
         {
           tenant_id: tenantId,
-          user_id: invite.user?.id ?? null,
+          user_id: userId,
           email,
+          full_name: fullName,
           role,
           department,
           is_active: true,
           invited_at: new Date().toISOString(),
+          joined_at: new Date().toISOString(),
         },
         { onConflict: 'tenant_id,email' },
       )
@@ -181,14 +242,19 @@ serve(async (req) => {
       continue;
     }
 
-    invited.push(tenantUser);
+    invited.push({
+      ...tenantUser,
+      temporary_password: temporaryPassword,
+      must_reset_password: true,
+    });
   }
 
   return jsonResponse({
     invited,
     rejected,
-    total: emails.length,
+    total: users.length,
     successCount: invited.length,
     rejectedCount: rejected.length,
+    deliveryMode: 'temporary_password',
   });
 });

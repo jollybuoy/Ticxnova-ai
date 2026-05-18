@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ShieldCheck, TriangleAlert, Wrench } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -35,10 +36,11 @@ function StatCard({ icon: Icon, label, value, tone }) {
 }
 
 export default function Devices() {
+  const [searchParams] = useSearchParams();
   const { devices, loading, mutating, createDevice, updateDevice, deleteDevice } = useDevices();
   const { tickets } = useTickets();
-  const [query, setQuery] = useState('');
-  const [status, setStatus] = useState('all');
+  const [query, setQuery] = useState(() => searchParams.get('search') ?? '');
+  const [status, setStatus] = useState(() => searchParams.get('status') ?? 'all');
   const [type, setType] = useState('all');
   const [view, setView] = useState('table');
   const [page, setPage] = useState(1);

@@ -3,7 +3,14 @@ import { Icon } from '../ui/IconMap';
 import { useAuth } from '../../hooks/useAuth';
 import { getUserDisplayName } from '../../lib/user';
 
-export function DashboardHeader() {
+const ranges = [
+  { value: '7', label: 'Last 7 days' },
+  { value: '30', label: 'Last 30 days' },
+  { value: '90', label: 'Last 90 days' },
+  { value: 'all', label: 'All time' },
+];
+
+export function DashboardHeader({ dateRange, onDateRangeChange }) {
   const { user } = useAuth();
   const name = getUserDisplayName(user);
 
@@ -22,15 +29,23 @@ export function DashboardHeader() {
           today.
         </p>
       </div>
-      <motion.button
-        type="button"
+      <motion.label
         whileHover={{ scale: 1.02, borderColor: 'rgba(124,108,240,0.4)' }}
-        whileTap={{ scale: 0.98 }}
         className="glass focus-ring flex items-center gap-2.5 self-start rounded-xl px-4 py-3 text-sm text-zinc-300 transition-colors duration-200"
       >
         <Icon name="Calendar" size={16} className="text-zinc-500" />
-        <span className="font-medium">May 1 – May 31, 2024</span>
-      </motion.button>
+        <select
+          value={dateRange}
+          onChange={(event) => onDateRangeChange(event.target.value)}
+          className="bg-transparent font-medium text-zinc-200 outline-none"
+        >
+          {ranges.map((range) => (
+            <option key={range.value} value={range.value} className="bg-zinc-900">
+              {range.label}
+            </option>
+          ))}
+        </select>
+      </motion.label>
     </motion.header>
   );
 }

@@ -5,6 +5,7 @@ import { Select } from '../ui/Select';
 import { Textarea } from '../ui/Textarea';
 import { Button } from '../ui/Button';
 import { DEVICE_STATUSES, DEVICE_TYPES } from '../../lib/devices/constants';
+import { useTenantDirectory } from '../../hooks/useTenantDirectory';
 
 const emptyForm = {
   asset_tag: '',
@@ -32,13 +33,27 @@ export function DeviceFormModal({
   serviceRequestOptions = [],
 }) {
   const [form, setForm] = useState(emptyForm);
+  const { departmentOptions, usersForDepartment } = useTenantDirectory();
+  const departmentUserOptions = usersForDepartment(form.department);
 
   useEffect(() => {
-    if (device) setForm({ ...emptyForm, ...device });
-    else setForm(emptyForm);
+    const task = window.setTimeout(() => {
+      if (device) setForm({ ...emptyForm, ...device });
+      else setForm(emptyForm);
+    }, 0);
+    return () => window.clearTimeout(task);
   }, [device, open]);
 
   const set = (field) => (event) => setForm((prev) => ({ ...prev, [field]: event.target.value }));
+  const setAssignedUser = (event) => {
+    const email = event.target.value;
+    const user = departmentUserOptions.find((item) => item.value === email);
+    setForm((prev) => ({
+      ...prev,
+      assigned_user: user?.full_name || user?.email || email,
+      department: user?.department || prev.department,
+    }));
+  };
 
   const submit = async (event) => {
     event.preventDefault();
@@ -86,8 +101,30 @@ export function DeviceFormModal({
           <Select label="Device type" value={form.device_type} onChange={set('device_type')} options={DEVICE_TYPES} disabled={loading} />
           <Select label="Health status" value={form.health_status} onChange={set('health_status')} options={DEVICE_STATUSES} disabled={loading} />
           <Input label="Serial number" value={form.serial_number ?? ''} onChange={set('serial_number')} disabled={loading} />
-          <Input label="Assigned user" value={form.assigned_user ?? ''} onChange={set('assigned_user')} disabled={loading} />
-          <Input label="Department" value={form.department ?? ''} onChange={set('department')} disabled={loading} />
+          <Select
+            label="Department"
+            value={form.department ?? ''}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, department: event.target.value, assigned_user: '' }))
+            }
+            options={[
+              { value: '', label: departmentOptions.length ? 'Select department' : 'No departments created' },
+              ...departmentOptions,
+            ]}
+            disabled={loading || departmentOptions.length === 0}
+          />
+          <Select
+            label="Assigned user"
+            value={
+              departmentUserOptions.find((item) => item.full_name === form.assigned_user || item.email === form.assigned_user)?.value || ''
+            }
+            onChange={setAssignedUser}
+            options={[
+              { value: '', label: form.department ? 'Select assigned user' : 'Select department first' },
+              ...departmentUserOptions,
+            ]}
+            disabled={loading || !form.department || departmentUserOptions.length === 0}
+          />
           <Input label="Location" value={form.location ?? ''} onChange={set('location')} disabled={loading} />
           <Input label="Manufacturer" value={form.manufacturer ?? ''} onChange={set('manufacturer')} disabled={loading} />
           <Input label="Model" value={form.model ?? ''} onChange={set('model')} disabled={loading} />

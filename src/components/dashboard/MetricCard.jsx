@@ -1,10 +1,21 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Icon } from '../ui/IconMap';
 
 export function MetricCard({ metric, index = 0 }) {
+  const navigate = useNavigate();
   return (
-    <Card className="group p-6" delay={index * 0.06}>
+    <Card
+      className={`group p-6 ${metric.href ? 'cursor-pointer' : ''}`}
+      delay={index * 0.06}
+      role={metric.href ? 'button' : undefined}
+      tabIndex={metric.href ? 0 : undefined}
+      onClick={() => metric.href && navigate(metric.href)}
+      onKeyDown={(event) => {
+        if (metric.href && (event.key === 'Enter' || event.key === ' ')) navigate(metric.href);
+      }}
+    >
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}

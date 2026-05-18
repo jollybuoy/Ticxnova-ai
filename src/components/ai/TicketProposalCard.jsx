@@ -7,6 +7,7 @@ import {
   TICKET_PRIORITIES,
   TICKET_TYPES,
 } from '../../lib/tickets/constants';
+import { useTenantDirectory } from '../../hooks/useTenantDirectory';
 
 function Detail({ icon: Icon, label, value }) {
   return (
@@ -30,9 +31,11 @@ export function TicketProposalCard({
   loading,
 }) {
   const [form, setForm] = useState(draft ?? {});
+  const { departmentOptions } = useTenantDirectory();
 
   useEffect(() => {
-    setForm(draft ?? {});
+    const task = window.setTimeout(() => setForm(draft ?? {}), 0);
+    return () => window.clearTimeout(task);
   }, [draft]);
 
   if (!draft && !created) return null;
@@ -150,11 +153,18 @@ export function TicketProposalCard({
             </label>
             <label>
               <p className="text-label mb-1">Department</p>
-              <input
+              <select
                 value={form.department ?? ''}
                 onChange={update('department')}
                 className="w-full rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-sm text-white outline-none focus:border-blue-500/40"
-              />
+              >
+                <option value="" className="bg-zinc-900">Select department</option>
+                {departmentOptions.map((department) => (
+                  <option key={department.value} value={department.value} className="bg-zinc-900">
+                    {department.label}
+                  </option>
+                ))}
+              </select>
             </label>
           </div>
           <ConfirmationActions onConfirm={() => onConfirm(form)} loading={loading} />

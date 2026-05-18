@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { MetricsGrid } from '../components/dashboard/MetricCard';
@@ -7,53 +8,57 @@ import { AIInsights } from '../components/dashboard/AIInsights';
 import { RecentTickets } from '../components/dashboard/RecentTickets';
 import { TopUsers } from '../components/dashboard/TopUsers';
 import { AutomationOverview } from '../components/dashboard/AutomationOverview';
-import {
-  metrics,
-  ticketsByCategory,
-  devicesStatus,
-} from '../data/dummyData';
+import { useDashboardData } from '../hooks/useDashboardData';
 
 export default function Dashboard() {
+  const [dateRange, setDateRange] = useState('30');
+  const dashboard = useDashboardData(dateRange);
+
   return (
     <DashboardLayout>
-      <DashboardHeader />
-      <MetricsGrid metrics={metrics} />
+      <DashboardHeader dateRange={dateRange} onDateRangeChange={setDateRange} />
+      {dashboard.loading && (
+        <div className="glass-card px-5 py-3 text-sm text-zinc-400">Loading live dashboard data...</div>
+      )}
+      <MetricsGrid metrics={dashboard.metrics} />
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         <div className="xl:col-span-7">
-          <TicketsChart />
+          <TicketsChart data={dashboard.ticketsTrend} />
         </div>
         <div className="xl:col-span-2">
           <DonutChartCard
             title="Tickets by Category"
-            data={ticketsByCategory}
-            total={23}
+            data={dashboard.ticketsByCategory}
+            total={dashboard.ticketsByCategory.reduce((sum, item) => sum + item.value, 0)}
+            href="/reports/tickets"
             delay={0.12}
           />
         </div>
         <div className="xl:col-span-3">
-          <AIInsights />
+          <AIInsights insights={dashboard.aiInsights} />
         </div>
       </section>
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
         <div className="xl:col-span-5">
-          <RecentTickets />
+          <RecentTickets tickets={dashboard.recentTickets} />
         </div>
         <div className="xl:col-span-3">
           <DonutChartCard
             title="Devices Status"
-            data={devicesStatus}
-            total={142}
+            data={dashboard.devicesStatus}
+            total={dashboard.devicesStatus.reduce((sum, item) => sum + item.value, 0)}
+            href="/devices"
             delay={0.18}
           />
         </div>
         <div className="xl:col-span-4">
-          <TopUsers />
+          <TopUsers users={dashboard.topUsers} />
         </div>
       </section>
 
-      <AutomationOverview />
+      <AutomationOverview automation={dashboard.automation} />
     </DashboardLayout>
   );
 }

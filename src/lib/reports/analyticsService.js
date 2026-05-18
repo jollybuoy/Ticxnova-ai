@@ -1,6 +1,12 @@
 import { supabase } from '../supabase';
 
 const colors = ['#8b5cf6', '#60a5fa', '#34d399', '#fbbf24', '#f87171', '#fb923c'];
+const priorityLabels = {
+  urgent: 'P1 - Critical',
+  high: 'P2 - High',
+  medium: 'P3 - Medium',
+  low: 'P4 - Low',
+};
 
 export async function fetchAnalyticsData(userId, tenantId) {
   const ticketQuery = supabase.from('tickets').select('*').order('created_at', { ascending: false });
@@ -113,7 +119,10 @@ export function buildAnalytics(data) {
   const departments = groupCount(tickets, 'department');
   const technicians = groupCount(tickets, 'assignee_name', 'Unassigned engineer');
   const categories = groupCount(tickets, 'category', 'Other');
-  const priorities = groupCount(tickets, 'priority');
+  const priorities = groupCount(tickets, 'priority').map((item) => ({
+    ...item,
+    name: priorityLabels[item.name] ?? item.name,
+  }));
   const deviceTypes = groupCount(devices, 'device_type');
   const health = groupCount(devices, 'health_status');
 
@@ -180,7 +189,12 @@ export function buildAnalytics(data) {
     },
     sla: {
       breachedTickets,
-      responseTimes: priorities.map((item) => ({ name: item.name, hours: item.name === 'urgent' ? 2 : item.name === 'high' ? 6 : 12 })),
+      responseTimes: [
+        { name: 'P1 - Critical', hours: 2 },
+        { name: 'P2 - High', hours: 6 },
+        { name: 'P3 - Medium', hours: 12 },
+        { name: 'P4 - Low', hours: 24 },
+      ],
       resolutionTimes: trendByDay(resolvedTickets, 'updated_at', 'hours').map((item) => ({ ...item, hours: Math.max(2, item.hours * 3) })),
       technicianPerformance: technicians.map((item) => ({ name: item.name, compliance: Math.max(70, 100 - item.value * 4) })),
       complianceTrend: trendByDay(tickets, 'created_at', 'compliance').map((item) => ({ ...item, compliance: Math.max(80, slaCompliance - item.compliance) })),

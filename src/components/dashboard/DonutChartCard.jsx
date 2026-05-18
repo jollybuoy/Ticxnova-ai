@@ -1,5 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardHeader } from '../ui/Card';
 
 function DonutLegend({ items }) {
@@ -27,11 +28,21 @@ function DonutLegend({ items }) {
   );
 }
 
-export function DonutChartCard({ title, data, total, totalLabel = 'Total', delay = 0 }) {
+export function DonutChartCard({ title, data, total, totalLabel = 'Total', delay = 0, href }) {
+  const navigate = useNavigate();
   return (
-    <Card className="h-full min-h-[360px]" delay={delay}>
+    <Card
+      className={`h-full min-h-[360px] ${href ? 'cursor-pointer' : ''}`}
+      delay={delay}
+      onClick={() => href && navigate(href)}
+    >
       <CardHeader title={title} />
       <CardBody>
+        {data.length === 0 ? (
+          <div className="flex min-h-[250px] items-center justify-center text-sm text-zinc-500">
+            No data available yet.
+          </div>
+        ) : (
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
           <div className="relative h-48 w-48 shrink-0">
             <ResponsiveContainer width="100%" height="100%">
@@ -62,6 +73,7 @@ export function DonutChartCard({ title, data, total, totalLabel = 'Total', delay
           </div>
           <DonutLegend items={data} />
         </div>
+        )}
       </CardBody>
     </Card>
   );

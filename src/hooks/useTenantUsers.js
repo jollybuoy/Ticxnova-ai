@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
+  adminDeleteTenantUser,
+  adminResetTenantUserPassword,
+  adminUpdateTenantUser,
   fetchRoles,
   fetchTenantUsers,
   getTenantErrorMessage,
@@ -53,18 +56,11 @@ export function useTenantUsers() {
           ...prev.filter((item) => !invited.some((invitedUser) => invitedUser.id === item.id)),
         ]);
       }
-      if (data?.deliveryMode === 'staged') {
-        toast.error('Invite email service is not deployed. Users were staged in the directory only.');
-      }
       if (rejected.length > 0) {
-        toast.error(`${rejected.length} invitation${rejected.length === 1 ? '' : 's'} rejected`);
+        toast.error(`${rejected.length} user${rejected.length === 1 ? '' : 's'} rejected`);
       }
       if (invited.length > 0) {
-        toast.success(
-          `${invited.length} invitation${invited.length === 1 ? '' : 's'} ${
-            data?.deliveryMode === 'staged' ? 'staged' : 'sent'
-          }`,
-        );
+        toast.success(`${invited.length} user${invited.length === 1 ? '' : 's'} created`);
       }
       return { success: true, data };
     },
@@ -73,7 +69,7 @@ export function useTenantUsers() {
 
   const updateUser = useCallback(async (userId, updates) => {
     setMutating(true);
-    const { data, error } = await updateTenantUser(userId, updates);
+      const { data, error } = await updateTenantUser(userId, updates);
     setMutating(false);
     if (error) {
       toast.error(getTenantErrorMessage(error));
@@ -83,6 +79,56 @@ export function useTenantUsers() {
     toast.success('User updated');
     return { success: true, data };
   }, []);
+
+  const adminUpdateUser = useCallback(
+    async (userId, updates) => {
+      if (!tenantId) return { success: false };
+      setMutating(true);
+      const { data, error } = await adminUpdateTenantUser(tenantId, userId, updates);
+      setMutating(false);
+      if (error) {
+        toast.error(getTenantErrorMessage(error));
+        return { success: false };
+      }
+      setUsers((prev) => prev.map((item) => (item.id === data.id ? data : item)));
+      toast.success('User account updated');
+      return { success: true, data };
+    },
+    [tenantId],
+  );
+
+  const deleteUser = useCallback(
+    async (userId) => {
+      if (!tenantId) return { success: false };
+      setMutating(true);
+      const { error } = await adminDeleteTenantUser(tenantId, userId);
+      setMutating(false);
+      if (error) {
+        toast.error(getTenantErrorMessage(error));
+        return { success: false };
+      }
+      setUsers((prev) => prev.filter((item) => item.id !== userId));
+      toast.success('User account deleted');
+      return { success: true };
+    },
+    [tenantId],
+  );
+
+  const resetPassword = useCallback(
+    async (userId) => {
+      if (!tenantId) return { success: false };
+      setMutating(true);
+      const { data, error } = await adminResetTenantUserPassword(tenantId, userId);
+      setMutating(false);
+      if (error) {
+        toast.error(getTenantErrorMessage(error));
+        return { success: false };
+      }
+      toast.success('Temporary password generated');
+      return { success: true, data };
+    },
+    [tenantId],
+  );
 
   return useMemo(
     () => ({
@@ -94,7 +140,22 @@ export function useTenantUsers() {
       refetch: load,
       inviteUser,
       updateUser,
+      adminUpdateUser,
+      deleteUser,
+      resetPassword,
     }),
-    [inviteUser, load, loading, mutating, role, roles, updateUser, users],
+    [
+      adminUpdateUser,
+      deleteUser,
+      inviteUser,
+      load,
+      loading,
+      mutating,
+      resetPassword,
+      role,
+      roles,
+      updateUser,
+      users,
+    ],
   );
 }

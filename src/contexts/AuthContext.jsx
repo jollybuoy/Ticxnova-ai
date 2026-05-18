@@ -131,6 +131,20 @@ export function AuthProvider({ children }) {
     [runAuthAction],
   );
 
+  const updatePassword = useCallback(
+    async (password, metadata = {}) => {
+      return runAuthAction(async () => {
+        const { data, error } = await supabase.auth.updateUser({ password, data: metadata });
+        if (error) {
+          return { success: false, message: getAuthErrorMessage(error), data: null };
+        }
+        setUser(data.user ?? null);
+        return { success: true, message: null, data };
+      });
+    },
+    [runAuthAction],
+  );
+
   const value = useMemo(
     () => ({
       user,
@@ -143,6 +157,7 @@ export function AuthProvider({ children }) {
       signOut,
       signInWithMicrosoft,
       resetPassword,
+      updatePassword,
     }),
     [
       user,
@@ -154,6 +169,7 @@ export function AuthProvider({ children }) {
       signOut,
       signInWithMicrosoft,
       resetPassword,
+      updatePassword,
     ],
   );
 

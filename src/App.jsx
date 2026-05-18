@@ -21,6 +21,7 @@ const SLAReports = lazy(() => import('./pages/reports/SLAReports'));
 const OrganizationSettings = lazy(() => import('./pages/admin/OrganizationSettings'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const RolesPermissions = lazy(() => import('./pages/admin/RolesPermissions'));
+const FirstLoginPasswordReset = lazy(() => import('./pages/FirstLoginPasswordReset'));
 
 function RouteLoader() {
   return (
@@ -51,6 +52,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/first-login-reset"
+            element={
+              <ProtectedRoute allowPasswordReset>
+                <FirstLoginPasswordReset />
               </ProtectedRoute>
             }
           />

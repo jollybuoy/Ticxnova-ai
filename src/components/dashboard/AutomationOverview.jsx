@@ -1,13 +1,20 @@
 import { motion } from 'framer-motion';
 import { Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
-import { automation } from '../../data/dummyData';
 
-export function AutomationOverview() {
+export function AutomationOverview({ automation }) {
+  const navigate = useNavigate();
+  const liveAutomation = automation ?? {
+    activeWorkflows: 0,
+    executedToday: 0,
+    successRate: '100%',
+    nextWorkflow: { name: 'No queued workflow', time: 'all clear' },
+  };
   const stats = [
-    { label: 'Active Workflows', value: automation.activeWorkflows },
-    { label: 'Executed Today', value: automation.executedToday },
-    { label: 'Success Rate', value: automation.successRate },
+    { label: 'Service Requests', value: liveAutomation.activeWorkflows },
+    { label: 'Created Today', value: liveAutomation.executedToday },
+    { label: 'Resolution Rate', value: liveAutomation.successRate },
   ];
 
   return (
@@ -41,14 +48,15 @@ export function AutomationOverview() {
           <div>
             <p className="text-label">Next Workflow</p>
             <p className="mt-1 text-sm font-semibold text-white">
-              {automation.nextWorkflow.name}
+              {liveAutomation.nextWorkflow.name}
               <span className="ml-1 font-normal text-zinc-400">
-                {automation.nextWorkflow.time}
+                {liveAutomation.nextWorkflow.time}
               </span>
             </p>
           </div>
           <motion.button
             type="button"
+            onClick={() => navigate('/tickets?type=service_request')}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-600/30 ring-1 ring-white/20"

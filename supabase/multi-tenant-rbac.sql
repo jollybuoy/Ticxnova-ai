@@ -39,6 +39,9 @@ create table if not exists public.tenant_users (
   unique (tenant_id, email)
 );
 
+alter table public.tenant_users
+  add column if not exists full_name text;
+
 create table if not exists public.roles (
   id uuid primary key default gen_random_uuid(),
   tenant_id uuid references public.tenants (id) on delete cascade,
@@ -53,6 +56,10 @@ create table if not exists public.roles (
 alter table public.tenants
   add column if not exists logo_url text,
   add column if not exists brand_color text default '#7c3aed';
+
+alter table public.profiles
+  add column if not exists must_reset_password boolean not null default false,
+  add column if not exists password_reset_at timestamptz;
 
 create index if not exists tenants_domain_idx on public.tenants (lower(domain));
 create index if not exists profiles_tenant_idx on public.profiles (tenant_id);
@@ -119,8 +126,8 @@ security definer
 set search_path = public
 as $$
   select case
-    -- Platform super admins are outside tenant invitation rules.
-    when target_role = 'super_admin' then true
+    -- Admin accounts may use any login email; regular users must use the tenant domain.
+    when target_role in ('super_admin', 'org_admin') then true
     else exists (
       select 1
       from public.tenants t
@@ -221,10 +228,11 @@ begin
     email = excluded.email,
     full_name = coalesce(public.profiles.full_name, excluded.full_name);
 
-  insert into public.tenant_users (tenant_id, user_id, email, role, joined_at)
-  values (new_tenant_id, target_user_id, lower(target_email), 'org_admin', now())
+  insert into public.tenant_users (tenant_id, user_id, email, full_name, role, joined_at)
+  values (new_tenant_id, target_user_id, lower(target_email), target_full_name, 'org_admin', now())
   on conflict (tenant_id, email) do update set
     user_id = excluded.user_id,
+    full_name = coalesce(public.tenant_users.full_name, excluded.full_name),
     is_active = true,
     joined_at = coalesce(public.tenant_users.joined_at, now());
 
@@ -238,7 +246,52 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  metadata_tenant_id uuid;
+  metadata_role text;
+  metadata_department text;
 begin
+  metadata_tenant_id := nullif(new.raw_user_meta_data->>'tenant_id', '')::uuid;
+  metadata_role := coalesce(nullif(new.raw_user_meta_data->>'role', ''), 'employee');
+  metadata_department := nullif(new.raw_user_meta_data->>'department', '');
+
+  if metadata_tenant_id is not null then
+    insert into public.profiles (id, tenant_id, email, full_name, role, department)
+    values (
+      new.id,
+      metadata_tenant_id,
+      lower(new.email),
+      coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+      metadata_role,
+      metadata_department
+    )
+    on conflict (id) do update set
+      tenant_id = excluded.tenant_id,
+      email = excluded.email,
+      role = excluded.role,
+      department = excluded.department;
+
+    insert into public.tenant_users (tenant_id, user_id, email, full_name, role, department, joined_at)
+    values (
+      metadata_tenant_id,
+      new.id,
+      lower(new.email),
+      coalesce(new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'name'),
+      metadata_role,
+      metadata_department,
+      now()
+    )
+    on conflict (tenant_id, email) do update set
+      user_id = excluded.user_id,
+      full_name = excluded.full_name,
+      role = excluded.role,
+      department = excluded.department,
+      is_active = true,
+      joined_at = coalesce(public.tenant_users.joined_at, now());
+
+    return new;
+  end if;
+
   perform public.ensure_user_tenant(
     new.id,
     new.email,
@@ -320,6 +373,7 @@ create policy "Org admins manage branding assets" on storage.objects
 
 -- Tenant-aware columns for existing and future operational tables.
 alter table public.tickets add column if not exists tenant_id uuid references public.tenants (id) on delete cascade;
+alter table public.tickets add column if not exists requester_email text;
 alter table public.devices add column if not exists tenant_id uuid references public.tenants (id) on delete cascade;
 alter table public.ticket_comments add column if not exists tenant_id uuid references public.tenants (id) on delete cascade;
 alter table public.ticket_activity add column if not exists tenant_id uuid references public.tenants (id) on delete cascade;
@@ -511,10 +565,12 @@ create policy "Org admins manage custom roles" on public.roles
 
 -- Tenant-aware operational RLS. Existing user-owned rows remain accessible after backfill.
 drop policy if exists "Users read own tickets" on public.tickets;
+drop policy if exists "Tenant members read tickets" on public.tickets;
 create policy "Tenant members read tickets" on public.tickets
   for select using (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users insert own tickets" on public.tickets;
+drop policy if exists "Tenant members insert tickets" on public.tickets;
 create policy "Tenant members insert tickets" on public.tickets
   for insert with check (
     public.is_tenant_member(tenant_id)
@@ -522,6 +578,7 @@ create policy "Tenant members insert tickets" on public.tickets
   );
 
 drop policy if exists "Users update own tickets" on public.tickets;
+drop policy if exists "Tenant staff update tickets" on public.tickets;
 create policy "Tenant staff update tickets" on public.tickets
   for update using (
     public.is_tenant_member(tenant_id)
@@ -530,6 +587,7 @@ create policy "Tenant staff update tickets" on public.tickets
   with check (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users delete own tickets" on public.tickets;
+drop policy if exists "Tenant admins delete tickets" on public.tickets;
 create policy "Tenant admins delete tickets" on public.tickets
   for delete using (
     public.is_tenant_member(tenant_id)
@@ -537,10 +595,12 @@ create policy "Tenant admins delete tickets" on public.tickets
   );
 
 drop policy if exists "Users read own devices" on public.devices;
+drop policy if exists "Tenant members read devices" on public.devices;
 create policy "Tenant members read devices" on public.devices
   for select using (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users insert own devices" on public.devices;
+drop policy if exists "Tenant staff insert devices" on public.devices;
 create policy "Tenant staff insert devices" on public.devices
   for insert with check (
     public.is_tenant_member(tenant_id)
@@ -548,6 +608,7 @@ create policy "Tenant staff insert devices" on public.devices
   );
 
 drop policy if exists "Users update own devices" on public.devices;
+drop policy if exists "Tenant staff update devices" on public.devices;
 create policy "Tenant staff update devices" on public.devices
   for update using (
     public.is_tenant_member(tenant_id)
@@ -556,6 +617,7 @@ create policy "Tenant staff update devices" on public.devices
   with check (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users delete own devices" on public.devices;
+drop policy if exists "Tenant admins delete devices" on public.devices;
 create policy "Tenant admins delete devices" on public.devices
   for delete using (
     public.is_tenant_member(tenant_id)
@@ -564,42 +626,52 @@ create policy "Tenant admins delete devices" on public.devices
 
 -- Child tables inherit tenant access through tenant_id.
 drop policy if exists "Users read comments on own tickets" on public.ticket_comments;
+drop policy if exists "Tenant members read ticket comments" on public.ticket_comments;
 create policy "Tenant members read ticket comments" on public.ticket_comments
   for select using (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users insert comments on own tickets" on public.ticket_comments;
+drop policy if exists "Tenant staff insert ticket comments" on public.ticket_comments;
 create policy "Tenant staff insert ticket comments" on public.ticket_comments
   for insert with check (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users read activity on own tickets" on public.ticket_activity;
+drop policy if exists "Tenant members read ticket activity" on public.ticket_activity;
 create policy "Tenant members read ticket activity" on public.ticket_activity
   for select using (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users insert activity on own tickets" on public.ticket_activity;
+drop policy if exists "Tenant staff insert ticket activity" on public.ticket_activity;
 create policy "Tenant staff insert ticket activity" on public.ticket_activity
   for insert with check (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users read notes on own devices" on public.device_notes;
+drop policy if exists "Tenant members read device notes" on public.device_notes;
 create policy "Tenant members read device notes" on public.device_notes
   for select using (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users insert notes on own devices" on public.device_notes;
+drop policy if exists "Tenant staff insert device notes" on public.device_notes;
 create policy "Tenant staff insert device notes" on public.device_notes
   for insert with check (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users read activity on own devices" on public.device_activity;
+drop policy if exists "Tenant members read device activity" on public.device_activity;
 create policy "Tenant members read device activity" on public.device_activity
   for select using (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users insert activity on own devices" on public.device_activity;
+drop policy if exists "Tenant staff insert device activity" on public.device_activity;
 create policy "Tenant staff insert device activity" on public.device_activity
   for insert with check (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users read ticket device links" on public.ticket_devices;
+drop policy if exists "Tenant members read ticket device links" on public.ticket_devices;
 create policy "Tenant members read ticket device links" on public.ticket_devices
   for select using (public.is_tenant_member(tenant_id));
 
 drop policy if exists "Users insert ticket device links" on public.ticket_devices;
+drop policy if exists "Tenant staff insert ticket device links" on public.ticket_devices;
 create policy "Tenant staff insert ticket device links" on public.ticket_devices
   for insert with check (
     public.is_tenant_member(tenant_id)
@@ -607,6 +679,7 @@ create policy "Tenant staff insert ticket device links" on public.ticket_devices
   );
 
 drop policy if exists "Users delete ticket device links" on public.ticket_devices;
+drop policy if exists "Tenant staff delete ticket device links" on public.ticket_devices;
 create policy "Tenant staff delete ticket device links" on public.ticket_devices
   for delete using (
     public.is_tenant_member(tenant_id)

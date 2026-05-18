@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Bot, ShieldCheck, Sparkles, Trash2, Zap } from 'lucide-react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { ChatInput } from '../components/ai/ChatInput';
@@ -20,11 +21,21 @@ export default function AIAssistant() {
     prepareTicketProposal,
     declineTicketProposal,
   } = useAIAssistant();
+  const [searchParams, setSearchParams] = useSearchParams();
   const messagesEndRef = useRef(null);
+  const initialPromptSent = useRef(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    const prompt = searchParams.get('prompt');
+    if (!prompt || initialPromptSent.current) return;
+    initialPromptSent.current = true;
+    sendMessage(prompt);
+    setSearchParams({}, { replace: true });
+  }, [searchParams, sendMessage, setSearchParams]);
 
   return (
     <DashboardLayout>

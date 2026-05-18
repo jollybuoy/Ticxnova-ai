@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardBody, CardHeader } from '../ui/Card';
 import { Button } from '../ui/Button';
 import { Icon } from '../ui/IconMap';
-import { aiInsights } from '../../data/dummyData';
 
 const alertStyles = {
   success: 'bg-emerald-500/10 text-emerald-400 ring-emerald-500/20',
@@ -10,7 +10,16 @@ const alertStyles = {
   orange: 'bg-orange-500/10 text-orange-400 ring-orange-500/20',
 };
 
-export function AIInsights() {
+export function AIInsights({ insights }) {
+  const navigate = useNavigate();
+  const aiInsights = insights ?? {
+    featured: {
+      title: 'No ticket trend detected yet',
+      description: 'Create tickets and connect devices to unlock operational AI insights.',
+      action: 'Open Reports',
+    },
+    alerts: [],
+  };
   return (
     <Card className="h-full min-h-[360px]" delay={0.15}>
       <CardHeader
@@ -46,7 +55,7 @@ export function AIInsights() {
             <p className="mt-2 text-xs leading-relaxed text-zinc-400">
               {aiInsights.featured.description}
             </p>
-            <Button variant="primary" className="mt-4 w-full text-xs">
+            <Button variant="primary" className="mt-4 w-full text-xs" onClick={() => navigate('/reports/ai-insights')}>
               {aiInsights.featured.action}
             </Button>
           </div>

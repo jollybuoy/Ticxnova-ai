@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Icon } from '../ui/IconMap';
 import { NavBadge } from '../ui/Badge';
@@ -10,6 +10,8 @@ export function Sidebar({ open, collapsed, onClose }) {
   const width = collapsed ? 'w-[72px]' : 'w-64';
   const openTicketCount = useOpenTicketCount();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [aiPrompt, setAiPrompt] = useState('');
   const [expandedItems, setExpandedItems] = useState(() => {
     const activeSections = navItems
       .filter((item) => item.children?.length && location.pathname.startsWith(item.path))
@@ -24,6 +26,14 @@ export function Sidebar({ open, collapsed, onClose }) {
       else next.add(itemId);
       return next;
     });
+  };
+
+  const submitAiPrompt = (event) => {
+    event.preventDefault();
+    const query = aiPrompt.trim();
+    setAiPrompt('');
+    onClose();
+    navigate(query ? `/ai-assistant?prompt=${encodeURIComponent(query)}` : '/ai-assistant');
   };
 
   return (
@@ -188,10 +198,12 @@ export function Sidebar({ open, collapsed, onClose }) {
                   Online
                 </span>
               </div>
-              <div className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2">
+              <form onSubmit={submitAiPrompt} className="flex items-center gap-2 rounded-lg border border-white/10 bg-black/30 px-3 py-2">
                 <input
                   type="text"
                   placeholder="Ask me anything..."
+                  value={aiPrompt}
+                  onChange={(event) => setAiPrompt(event.target.value)}
                   className="flex-1 bg-transparent text-xs text-zinc-300 outline-none placeholder:text-zinc-600"
                 />
                 <motion.button
@@ -202,7 +214,7 @@ export function Sidebar({ open, collapsed, onClose }) {
                 >
                   <Icon name="Send" size={14} />
                 </motion.button>
-              </div>
+              </form>
             </div>
           </div>
         )}

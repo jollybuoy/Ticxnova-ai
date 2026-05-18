@@ -7,8 +7,15 @@ const rangeOptions = [
   { value: 'all', label: 'All time' },
 ];
 
-function optionsFrom(values, fallback) {
-  return [{ value: 'all', label: fallback }, ...values.map((value) => ({ value, label: value }))];
+const priorityLabels = {
+  urgent: 'P1 - Critical',
+  high: 'P2 - High',
+  medium: 'P3 - Medium',
+  low: 'P4 - Low',
+};
+
+function optionsFrom(values, fallback, labels = {}) {
+  return [{ value: 'all', label: fallback }, ...values.map((value) => ({ value, label: labels[value] ?? value }))];
 }
 
 export function ReportFilters({ filters, onChange, options }) {
@@ -19,7 +26,7 @@ export function ReportFilters({ filters, onChange, options }) {
       <Select label="Date range" value={filters.dateRange} onChange={set('dateRange')} options={rangeOptions} />
       <Select label="Department" value={filters.department} onChange={set('department')} options={optionsFrom(options.departments, 'All departments')} />
       <Select label="Device type" value={filters.deviceType} onChange={set('deviceType')} options={optionsFrom(options.deviceTypes, 'All device types')} />
-      <Select label="Priority" value={filters.priority} onChange={set('priority')} options={optionsFrom(options.priorities, 'All priorities')} />
+      <Select label="Priority" value={filters.priority} onChange={set('priority')} options={optionsFrom(options.priorities, 'All priorities', priorityLabels)} />
       <Select label="Category" value={filters.category} onChange={set('category')} options={optionsFrom(options.categories, 'All categories')} />
       <Select label="Technician" value={filters.technician} onChange={set('technician')} options={optionsFrom(options.technicians, 'All technicians')} />
     </div>

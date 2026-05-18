@@ -10,6 +10,7 @@ import {
   getTicketTypeForCategory,
 } from '../../lib/tickets/constants';
 import { DeviceSelector, suggestTicketCategory } from '../itsm/DeviceSelector';
+import { useTenantDirectory } from '../../hooks/useTenantDirectory';
 
 const emptyForm = {
   title: '',
@@ -17,12 +18,15 @@ const emptyForm = {
   priority: 'medium',
   category: TICKET_CATEGORIES[0],
   requester_name: '',
+  requester_email: '',
   department: '',
   device_ids: [],
 };
 
 export function CreateTicketModal({ open, onClose, onCreate, loading }) {
   const [form, setForm] = useState(emptyForm);
+  const { departmentOptions, usersForDepartment } = useTenantDirectory();
+  const departmentUserOptions = usersForDepartment(form.department);
 
   const handleClose = () => {
     setForm(emptyForm);
@@ -42,6 +46,16 @@ export function CreateTicketModal({ open, onClose, onCreate, loading }) {
   };
 
   const set = (field) => (e) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const setRequester = (event) => {
+    const email = event.target.value;
+    const user = departmentUserOptions.find((item) => item.value === email);
+    setForm((f) => ({
+      ...f,
+      requester_email: email,
+      requester_name: user?.full_name || user?.email || '',
+      department: user?.department || f.department,
+    }));
+  };
 
   const handleDeviceSelection = (deviceIds) => {
     setForm((f) => ({ ...f, device_ids: deviceIds }));
@@ -95,20 +109,38 @@ export function CreateTicketModal({ open, onClose, onCreate, loading }) {
             disabled={loading}
           />
         </div>
-        <Input
-          label="Requester name"
-          placeholder="Who reported this issue?"
-          value={form.requester_name}
-          onChange={set('requester_name')}
-          disabled={loading}
-        />
-        <Input
-          label="Department"
-          placeholder="Auto-filled from selected device when available"
-          value={form.department}
-          onChange={set('department')}
-          disabled={loading}
-        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Select
+            label="Department"
+            value={form.department}
+            onChange={(event) =>
+              setForm((f) => ({
+                ...f,
+                department: event.target.value,
+                requester_email: '',
+                requester_name: '',
+              }))
+            }
+            options={[
+              { value: '', label: departmentOptions.length ? 'Select department' : 'No departments created' },
+              ...departmentOptions,
+            ]}
+            disabled={loading || departmentOptions.length === 0}
+          />
+          <Select
+            label="Requester"
+            value={form.requester_email}
+            onChange={setRequester}
+            options={[
+              {
+                value: '',
+                label: form.department ? 'Select requester' : 'Select department first',
+              },
+              ...departmentUserOptions,
+            ]}
+            disabled={loading || !form.department || departmentUserOptions.length === 0}
+          />
+        </div>
         <DeviceSelector
           selectedIds={form.device_ids}
           onChange={handleDeviceSelection}

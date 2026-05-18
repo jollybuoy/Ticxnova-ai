@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
@@ -24,6 +24,7 @@ export function useDevices() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const userId = user?.id;
+  const channelId = useRef(crypto.randomUUID());
   const [devices, setDevices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
@@ -53,7 +54,7 @@ export function useDevices() {
   useEffect(() => {
     if (!userId) return undefined;
     const channel = supabase
-      .channel(`devices:${userId}`)
+      .channel(`devices:${userId}:${channelId.current}`)
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'devices', filter: `user_id=eq.${userId}` },

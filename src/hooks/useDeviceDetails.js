@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
@@ -19,6 +19,7 @@ export function useDeviceDetails(deviceId) {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const userId = user?.id;
+  const channelId = useRef(crypto.randomUUID());
   const [device, setDevice] = useState(null);
   const [notes, setNotes] = useState([]);
   const [activity, setActivity] = useState([]);
@@ -63,7 +64,7 @@ export function useDeviceDetails(deviceId) {
   useEffect(() => {
     if (!deviceId) return undefined;
     const channel = supabase
-      .channel(`device-details:${deviceId}`)
+      .channel(`device-details:${deviceId}:${channelId.current}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'devices', filter: `id=eq.${deviceId}` }, (payload) => {
         if (payload.eventType === 'DELETE') setDevice(null);
         else setDevice(payload.new);
