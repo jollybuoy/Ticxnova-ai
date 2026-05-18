@@ -42,8 +42,12 @@ export default function RolesPermissions() {
   const [saving, setSaving] = useState(false);
   const canManage = canManageUsers(role);
 
-  const systemRoles = useMemo(() => roles.filter((item) => item.is_system), [roles]);
-  const customRoles = useMemo(() => roles.filter((item) => !item.is_system), [roles]);
+  const uniqueRoles = useMemo(
+    () => [...new Map(roles.map((item) => [`${item.tenant_id ?? 'system'}:${item.name}`, item])).values()],
+    [roles],
+  );
+  const systemRoles = useMemo(() => uniqueRoles.filter((item) => item.is_system), [uniqueRoles]);
+  const customRoles = useMemo(() => uniqueRoles.filter((item) => !item.is_system), [uniqueRoles]);
 
   const updatePermission = (key, value) => {
     setForm((current) => ({

@@ -60,13 +60,14 @@ export function AuthProvider({ children }) {
   );
 
   const signUp = useCallback(
-    async (email, password) => {
+    async (email, password, metadata = {}) => {
       return runAuthAction(async () => {
         const { data, error } = await supabase.auth.signUp({
           email: email.trim(),
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/dashboard`,
+            data: metadata,
           },
         });
         if (error) {

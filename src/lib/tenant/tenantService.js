@@ -103,6 +103,17 @@ export async function fetchTenantUsers(tenantId) {
   return { data: data ?? [], error };
 }
 
+function dedupeRoles(roles) {
+  return [
+    ...new Map(
+      roles.map((role) => [
+        `${role.tenant_id ?? 'system'}:${role.name}`,
+        role,
+      ]),
+    ).values(),
+  ];
+}
+
 export async function inviteTenantUser(tenantId, payload) {
   const { data, error } = await supabase.functions.invoke('invite-user', {
     body: {
@@ -184,7 +195,7 @@ export async function fetchRoles(tenantId) {
     .order('is_system', { ascending: false })
     .order('name', { ascending: true });
 
-  return { data: data ?? [], error };
+  return { data: dedupeRoles(data ?? []), error };
 }
 
 export async function createCustomRole(tenantId, payload) {

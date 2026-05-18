@@ -6,16 +6,19 @@ import { Icon } from '../ui/IconMap';
 import { Spinner } from '../ui/Spinner';
 import { useAuth } from '../../hooks/useAuth';
 import { useTickets } from '../../hooks/useTickets';
+import { useTenant } from '../../hooks/useTenant';
 import { getUserDisplayName, getUserInitials, getUserEmail } from '../../lib/user';
 
 export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
   const navigate = useNavigate();
   const { user, signOut, actionLoading } = useAuth();
   const { tickets } = useTickets();
+  const { role } = useTenant();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [dismissedNotifications, setDismissedNotifications] = useState(() => new Set());
   const [signingOut, setSigningOut] = useState(false);
 
   const displayName = getUserDisplayName(user);
@@ -33,7 +36,9 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
       );
     })
     .filter((ticket) => ['open', 'in_progress', 'pending'].includes(ticket.status))
+    .filter((ticket) => !dismissedNotifications.has(ticket.id))
     .slice(0, 5);
+  const profileTarget = ['super_admin', 'org_admin'].includes(role) ? '/admin/organization' : '/profile';
 
   const submitSearch = (event) => {
     event.preventDefault();
@@ -164,6 +169,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
                     type="button"
                     onClick={() => {
                       setNotificationsOpen(false);
+                      setDismissedNotifications((current) => new Set(current).add(ticket.id));
                       navigate(`/tickets/${ticket.id}`);
                     }}
                     className="block w-full border-b border-white/[0.04] px-4 py-3 text-left last:border-0 hover:bg-white/[0.04]"
@@ -225,7 +231,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
                     role="menuitem"
                     onClick={() => {
                       setMenuOpen(false);
-                      navigate('/admin/organization');
+                      navigate(profileTarget);
                     }}
                     className="flex w-full items-center gap-2 px-4 py-2.5 text-sm text-zinc-300 transition-colors hover:bg-white/5 hover:text-white"
                   >

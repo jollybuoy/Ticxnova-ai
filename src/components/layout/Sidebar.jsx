@@ -5,15 +5,19 @@ import { Icon } from '../ui/IconMap';
 import { NavBadge } from '../ui/Badge';
 import { navItems } from '../../data/dummyData';
 import { useOpenTicketCount } from '../../hooks/useOpenTicketCount';
+import { useTenant } from '../../hooks/useTenant';
 
 export function Sidebar({ open, collapsed, onClose }) {
   const width = collapsed ? 'w-[72px]' : 'w-64';
   const openTicketCount = useOpenTicketCount();
   const location = useLocation();
   const navigate = useNavigate();
+  const { role } = useTenant();
   const [aiPrompt, setAiPrompt] = useState('');
+  const isAdmin = ['super_admin', 'org_admin'].includes(role);
+  const visibleNavItems = navItems.filter((item) => item.id !== 'admin' || isAdmin);
   const [expandedItems, setExpandedItems] = useState(() => {
-    const activeSections = navItems
+    const activeSections = visibleNavItems
       .filter((item) => item.children?.length && location.pathname.startsWith(item.path))
       .map((item) => item.id);
     return new Set(activeSections);
@@ -79,7 +83,7 @@ export function Sidebar({ open, collapsed, onClose }) {
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-          {navItems.map((item, i) => {
+          {visibleNavItems.map((item, i) => {
             const badge =
               item.showOpenBadge && openTicketCount > 0 ? openTicketCount : null;
             const hasChildren = Boolean(item.children?.length);

@@ -6,6 +6,12 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { GuestRoute } from './components/auth/GuestRoute';
 
 const Login = lazy(() => import('./pages/Login'));
+const MarketingHome = lazy(() => import('./pages/marketing/Home'));
+const MarketingFeatures = lazy(() => import('./pages/marketing/Features'));
+const MarketingPricing = lazy(() => import('./pages/marketing/Pricing'));
+const MarketingAbout = lazy(() => import('./pages/marketing/About'));
+const MarketingContact = lazy(() => import('./pages/marketing/Contact'));
+const MarketingGetStarted = lazy(() => import('./pages/marketing/GetStarted'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Tickets = lazy(() => import('./pages/Tickets'));
 const TicketDetails = lazy(() => import('./pages/TicketDetails'));
@@ -22,6 +28,7 @@ const OrganizationSettings = lazy(() => import('./pages/admin/OrganizationSettin
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const RolesPermissions = lazy(() => import('./pages/admin/RolesPermissions'));
 const FirstLoginPasswordReset = lazy(() => import('./pages/FirstLoginPasswordReset'));
+const Profile = lazy(() => import('./pages/Profile'));
 
 function RouteLoader() {
   return (
@@ -38,7 +45,13 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Suspense fallback={<RouteLoader />}>
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/" element={<MarketingHome />} />
+          <Route path="/features" element={<MarketingFeatures />} />
+          <Route path="/pricing" element={<MarketingPricing />} />
+          <Route path="/about" element={<MarketingAbout />} />
+          <Route path="/contact" element={<MarketingContact />} />
+          <Route path="/get-started" element={<MarketingGetStarted />} />
+          <Route path="/app" element={<Navigate to="/dashboard" replace />} />
           <Route
             path="/login"
             element={
@@ -154,7 +167,7 @@ function AnimatedRoutes() {
           <Route
             path="/admin/organization"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['super_admin', 'org_admin']}>
                 <OrganizationSettings />
               </ProtectedRoute>
             }
@@ -162,7 +175,7 @@ function AnimatedRoutes() {
           <Route
             path="/admin/users"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['super_admin', 'org_admin']}>
                 <UserManagement />
               </ProtectedRoute>
             }
@@ -170,8 +183,16 @@ function AnimatedRoutes() {
           <Route
             path="/admin/roles"
             element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRoles={['super_admin', 'org_admin']}>
                 <RolesPermissions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             }
           />

@@ -3,7 +3,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../hooks/useTenant';
 import { AuthLoadingScreen } from './AuthLoadingScreen';
 
-export function ProtectedRoute({ children, allowPasswordReset = false }) {
+export function ProtectedRoute({ children, allowPasswordReset = false, allowedRoles }) {
   const { initializing, isAuthenticated, user } = useAuth();
   const { profile } = useTenant();
   const location = useLocation();
@@ -17,6 +17,10 @@ export function ProtectedRoute({ children, allowPasswordReset = false }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  if (allowedRoles?.length && profile?.role && !allowedRoles.includes(profile.role)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   if (mustResetPassword && !allowPasswordReset) {
