@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Bot, ShieldCheck, Sparkles, Trash2, Zap } from 'lucide-react';
+import { BookOpen, Bot, ShieldCheck, Sparkles, Trash2, Zap } from 'lucide-react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { ChatInput } from '../components/ai/ChatInput';
 import { ChatMessage } from '../components/ai/ChatMessage';
@@ -110,6 +110,11 @@ export default function AIAssistant() {
                     icon: Zap,
                     title: 'Ticket handoff',
                     body: 'Flags unresolved issues and prompts when a ticket should be created.',
+                  },
+                  {
+                    icon: BookOpen,
+                    title: 'Knowledge base aware',
+                    body: 'Searches your organization KB first and prioritizes published runbooks in answers.',
                   },
                 ].map((item) => (
                   <div key={item.title} className="flex gap-3">

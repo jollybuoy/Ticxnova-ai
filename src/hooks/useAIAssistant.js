@@ -282,6 +282,8 @@ export function useAIAssistant() {
             ? normalizeTicketDraft(data.ticketDraft, trimmed)
             : null,
           proposalReady: false,
+          kbGrounded: Boolean(data.kbGrounded),
+          kbSources: data.kbSources ?? [],
         }),
       ]);
     },

@@ -1,4 +1,9 @@
 import { supabase } from '../supabase';
+import {
+  formatKbContextForPrompt,
+  getKbSourceSummaries,
+  searchKbArticles,
+} from './kbRetrieval';
 
 function slugify(value) {
   return String(value || '')
@@ -94,6 +99,24 @@ export async function updateKbArticle(tenantId, articleId, payload) {
     .single();
 
   return { data, error };
+}
+
+/**
+ * Client-side KB search (tenant-scoped). Primary AI retrieval runs in the ai-assistant edge function.
+ * @param {string} tenantId
+ * @param {string} query
+ */
+export async function searchKbArticlesForTenant(tenantId, query, options = {}) {
+  const { data, error } = await listKbArticles(tenantId, { status: 'published' });
+  if (error) return { matches: [], sources: [], context: '', error };
+
+  const matches = searchKbArticles(data, query, options);
+  return {
+    matches,
+    sources: getKbSourceSummaries(matches),
+    context: formatKbContextForPrompt(matches),
+    error: null,
+  };
 }
 
 export async function deleteKbArticle(tenantId, articleId) {

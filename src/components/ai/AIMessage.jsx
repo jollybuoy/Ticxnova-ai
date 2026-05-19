@@ -1,4 +1,4 @@
-import { Bot } from 'lucide-react';
+import { BookOpen, Bot } from 'lucide-react';
 import { TicketProposalCard } from './TicketProposalCard';
 import { ConfirmationActions } from './ConfirmationActions';
 
@@ -18,6 +18,19 @@ export function AIMessage({
             : 'glass-card text-zinc-200'
         }`}
       >
+        {message.kbGrounded && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 border-b border-white/[0.06] pb-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-medium text-emerald-200">
+              <BookOpen size={12} />
+              Answer based on your organization knowledge base
+            </span>
+            {message.kbSources?.length > 0 && (
+              <span className="text-[11px] text-zinc-500">
+                Sources: {message.kbSources.map((source) => source.title).join(' · ')}
+              </span>
+            )}
+          </div>
+        )}
         <p className="whitespace-pre-wrap text-sm leading-relaxed">{message.content}</p>
       </div>
 
