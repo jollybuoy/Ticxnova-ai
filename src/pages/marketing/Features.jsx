@@ -9,18 +9,20 @@ import {
   MicrosoftStrip,
   StoryWorkflow,
   TenantVisual,
-  WorkflowGraphic,
 } from '../../components/marketing/MarketingLayout';
+import { AiWorkflowShowcase } from '../../components/marketing/AiWorkflowShowcase';
 import { marketingFeatures } from '../../components/marketing/marketingData';
 
 export default function Features() {
   return (
     <MarketingLayout>
+      <AiWorkflowShowcase />
+
       <MarketingSection
-        eyebrow="Features"
+        eyebrow="Platform"
         title="AI, tickets, devices, analytics, and automation in one platform"
-        description="Explore the public product story. These are premium visual showcases, not duplicated backend modules."
-        className="pt-28"
+        description="Explore the full Ticxnova capability map — premium visual showcases of the modules powering your IT operations workspace."
+        className="pt-4 sm:pt-8"
       >
         <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {marketingFeatures.map((feature) => (
@@ -32,7 +34,7 @@ export default function Features() {
       <MarketingSection
         eyebrow="Product Story"
         title="A unified operating flow from user signal to executive insight"
-        description="The public website now explains the platform as a complete operational system, not just a feature list."
+        description="Six connected stages show how Ticxnova turns fragmented support into one intelligent operating system."
       >
         <StoryWorkflow />
       </MarketingSection>
@@ -45,17 +47,14 @@ export default function Features() {
         <AiIdentityPanel />
       </MarketingSection>
 
-      <MarketingSection eyebrow="AI Workflow" title="From issue to resolution path">
-        <div className="grid gap-8 lg:grid-cols-2">
-          <AiChatPreview />
-          <WorkflowGraphic />
-        </div>
+      <MarketingSection eyebrow="AI Assistant" title="Conversational support that creates structured outcomes">
+        <AiChatPreview />
       </MarketingSection>
 
       <MarketingSection
         eyebrow="Operations"
         title="Showcase dashboards for every stakeholder"
-        description="Visual-only dashboards communicate ticket trends, device alerts, AI analytics, SLA indicators, and technician activity without touching backend logic."
+        description="Visual-only dashboards communicate ticket trends, device alerts, AI analytics, SLA indicators, and technician activity."
       >
         <DashboardMockup dense />
       </MarketingSection>
@@ -71,6 +70,7 @@ export default function Features() {
       <MarketingSection eyebrow="Architecture" title="Visualizing tenant isolation">
         <TenantVisual />
       </MarketingSection>
+
       <FinalCTA />
     </MarketingLayout>
   );
