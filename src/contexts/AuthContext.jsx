@@ -1,6 +1,7 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getAuthErrorMessage } from '../lib/authErrors';
+import { tryFinalizePendingWorkspace } from '../lib/tenant/onboardingService';
 
 export const AuthContext = createContext(null);
 
@@ -33,6 +34,11 @@ export function AuthProvider({ children }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!session?.user) return;
+    void tryFinalizePendingWorkspace(session.user);
+  }, [session?.user?.id]);
 
   const runAuthAction = useCallback(async (action) => {
     setActionLoading(true);

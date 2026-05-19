@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
@@ -16,6 +16,7 @@ const MODES = {
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, signUp, signInWithMicrosoft, resetPassword, actionLoading } = useAuth();
 
   const [mode, setMode] = useState(MODES.signin);
@@ -23,6 +24,20 @@ export function LoginForm() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  useEffect(() => {
+    const redirectState = location.state;
+    if (!redirectState) return;
+
+    if (redirectState.email) {
+      setEmail(redirectState.email);
+    }
+    if (redirectState.message) {
+      setSuccess(redirectState.message);
+    }
+
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location.pathname, location.state, navigate]);
 
   const isSignIn = mode === MODES.signin;
   const isSignUp = mode === MODES.signup;
