@@ -12,6 +12,7 @@ import { Button } from '../ui/Button';
 
 const navItems = [
   { to: '/admin/dashboard', label: 'Command Center', icon: LayoutDashboard },
+  { to: '/admin/verifications', label: 'Domain Approvals', icon: Shield },
   { to: '/admin/workspaces', label: 'Workspaces & Domains', icon: Building2 },
   { to: '/admin/users', label: 'All Users', icon: Users },
   { to: '/admin/profile', label: 'Admin Profile', icon: UserCog },

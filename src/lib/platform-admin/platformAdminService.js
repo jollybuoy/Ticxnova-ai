@@ -59,6 +59,22 @@ export async function deletePlatformWorkspace(tenantId) {
   });
 }
 
+export async function fetchPlatformVerifications() {
+  return invokePlatformAdmin({ action: 'list_verifications' });
+}
+
+export async function approvePlatformVerification(tenantId) {
+  return invokePlatformAdmin({ action: 'approve_verification', tenantId });
+}
+
+export async function rejectPlatformVerification(tenantId, reason) {
+  return invokePlatformAdmin({ action: 'reject_verification', tenantId, reason });
+}
+
+export async function manualVerifyPlatformDomain(tenantId) {
+  return invokePlatformAdmin({ action: 'manual_verify_domain', tenantId });
+}
+
 export function formatPlatformError(error) {
   if (!error) return 'Something went wrong.';
   const message = error.message ?? '';

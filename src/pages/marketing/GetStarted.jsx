@@ -156,7 +156,9 @@ export default function GetStarted() {
       }
 
       if (result.needsEmailConfirmation || !result.data?.session) {
-        toast.success('Account created. Check your email to confirm your account, then sign in.');
+        toast.success(
+          'Account created. Confirm your email, sign in, then verify your organization domain to unlock the workspace.',
+        );
         navigate('/login', {
           replace: true,
           state: {

@@ -35,6 +35,8 @@ const PlatformAdminDashboard = lazy(() => import('./pages/platform-admin/Platfor
 const PlatformAdminWorkspaces = lazy(() => import('./pages/platform-admin/PlatformAdminWorkspaces'));
 const PlatformAdminUsers = lazy(() => import('./pages/platform-admin/PlatformAdminUsers'));
 const PlatformAdminProfile = lazy(() => import('./pages/platform-admin/PlatformAdminProfile'));
+const PlatformAdminVerifications = lazy(() => import('./pages/platform-admin/PlatformAdminVerifications'));
+const VerifyDomain = lazy(() => import('./pages/VerifyDomain'));
 const FirstLoginPasswordReset = lazy(() => import('./pages/FirstLoginPasswordReset'));
 const Profile = lazy(() => import('./pages/Profile'));
 
@@ -81,6 +83,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute allowPasswordReset>
                 <FirstLoginPasswordReset />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/verify-domain"
+            element={
+              <ProtectedRoute allowDomainVerification>
+                <VerifyDomain />
               </ProtectedRoute>
             }
           />
@@ -172,6 +182,8 @@ function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route path="/platform-admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/platform-admin/*" element={<Navigate to="/admin/dashboard" replace />} />
           <Route
             path="/admin/login"
             element={
@@ -183,6 +195,7 @@ function AnimatedRoutes() {
           <Route path="/admin" element={<PlatformAdminRoute />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<PlatformAdminDashboard />} />
+            <Route path="verifications" element={<PlatformAdminVerifications />} />
             <Route path="workspaces" element={<PlatformAdminWorkspaces />} />
             <Route path="users" element={<PlatformAdminUsers />} />
             <Route path="profile" element={<PlatformAdminProfile />} />

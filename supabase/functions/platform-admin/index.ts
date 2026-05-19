@@ -387,6 +387,117 @@ serve(async (req) => {
     return jsonResponse({ user: profile, is_active: isActive });
   }
 
+  if (action === 'list_verifications') {
+    const { data: tenants, error: tenantsError } = await adminClient
+      .from('tenants')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (tenantsError) return jsonResponse({ error: tenantsError.message }, 400);
+
+    const { data: profiles } = await adminClient
+      .from('profiles')
+      .select('id, tenant_id, email, full_name, role, created_at');
+
+    const all = tenants ?? [];
+    const pending = all.filter(
+      (t) =>
+        !t.domain_verified &&
+        ['pending_domain_verification', 'under_review'].includes(String(t.verification_status)),
+    );
+    const verified = all.filter((t) => t.domain_verified && t.verification_status === 'verified');
+    const rejected = all.filter((t) => t.verification_status === 'rejected');
+
+    const domainMap = new Map<string, typeof all>();
+    for (const tenant of all) {
+      const key = String(tenant.domain ?? '').toLowerCase();
+      if (!key) continue;
+      const group = domainMap.get(key) ?? [];
+      group.push(tenant);
+      domainMap.set(key, group);
+    }
+
+    const duplicate_domains = [...domainMap.entries()]
+      .filter(([, group]) => group.length > 1)
+      .map(([domain, group]) => ({
+        domain,
+        count: group.length,
+        workspaces: group.map((tenant) => {
+          const admins = (profiles ?? []).filter(
+            (p) =>
+              p.tenant_id === tenant.id &&
+              ['super_admin', 'org_admin'].includes(String(p.role)),
+          );
+          return {
+            id: tenant.id,
+            company_name: tenant.company_name,
+            verification_status: tenant.verification_status,
+            domain_verified: tenant.domain_verified,
+            created_at: tenant.created_at,
+            admin_emails: admins.map((a) => a.email),
+          };
+        }),
+      }));
+
+    const enrich = (tenant: (typeof all)[number]) => {
+      const admins = (profiles ?? []).filter(
+        (p) =>
+          p.tenant_id === tenant.id && ['super_admin', 'org_admin'].includes(String(p.role)),
+      );
+      return {
+        ...tenant,
+        days_since_created: daysSince(tenant.created_at),
+        admin_emails: admins.map((a) => a.email),
+      };
+    };
+
+    return jsonResponse({
+      pending: pending.map(enrich),
+      duplicate_domains,
+      verified: verified.map(enrich),
+      rejected: rejected.map(enrich),
+    });
+  }
+
+  if (action === 'approve_verification' || action === 'manual_verify_domain') {
+    const tenantId = String(payload.tenantId ?? '');
+    if (!tenantId) return jsonResponse({ error: 'tenantId is required.' }, 400);
+
+    const { data: activation, error: activationError } = await adminClient.rpc(
+      'activate_tenant_domain',
+      {
+        target_tenant_id: tenantId,
+        target_method: 'platform_admin',
+        target_approved_by: user.id,
+      },
+    );
+
+    if (activationError) return jsonResponse({ error: activationError.message }, 400);
+    if (activation?.success === false) {
+      return jsonResponse({ error: activation.message }, 400);
+    }
+
+    return jsonResponse({ success: true, activation });
+  }
+
+  if (action === 'reject_verification') {
+    const tenantId = String(payload.tenantId ?? '');
+    const reason = String(payload.reason ?? 'Rejected by platform administrator.');
+    if (!tenantId) return jsonResponse({ error: 'tenantId is required.' }, 400);
+
+    const { data: result, error: rejectError } = await adminClient.rpc(
+      'reject_tenant_verification',
+      {
+        target_tenant_id: tenantId,
+        target_reason: reason,
+        target_rejected_by: user.id,
+      },
+    );
+
+    if (rejectError) return jsonResponse({ error: rejectError.message }, 400);
+    return jsonResponse({ success: true, result });
+  }
+
   if (action === 'delete_workspace') {
     const tenantId = String(payload.tenantId ?? '');
     if (!tenantId) return jsonResponse({ error: 'tenantId is required.' }, 400);
