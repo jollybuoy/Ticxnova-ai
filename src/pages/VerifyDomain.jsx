@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { BackgroundMesh } from '../components/layout/BackgroundMesh';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../hooks/useAuth';
+import { usePlanAccess } from '../hooks/usePlanAccess';
 import { useTenant } from '../hooks/useTenant';
 import {
   fetchMyDomainVerification,
@@ -52,6 +53,7 @@ export default function VerifyDomain() {
   const navigate = useNavigate();
   const { signOut } = useAuth();
   const { tenant, refetch } = useTenant();
+  const { trial } = usePlanAccess();
   const [info, setInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
@@ -149,6 +151,16 @@ export default function VerifyDomain() {
             Your account is active. Complete domain verification to unlock tickets, devices, reports,
             and the AI assistant for your workspace.
           </p>
+          {tenant?.subscription_status === 'trialing' && !trial.isExpired && (
+            <p className="mx-auto mt-3 max-w-xl text-sm text-cyan-200/90">
+              Your 7-day free trial started when you created this account
+              {trial.startedAt
+                ? ` on ${new Date(trial.startedAt).toLocaleDateString()}`
+                : ''}
+              . {trial.daysRemaining} day{trial.daysRemaining === 1 ? '' : 's'} remaining
+              {trial.endsAt ? ` (ends ${new Date(trial.endsAt).toLocaleDateString()})` : ''}.
+            </p>
+          )}
         </motion.div>
 
         {loading && (

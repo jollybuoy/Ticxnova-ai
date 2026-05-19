@@ -20,8 +20,11 @@ export function TrialBanner() {
       <div className="flex items-center gap-3 text-sm">
         <Clock size={18} />
         <span>
-          <strong>{planLabel}</strong> trial — {trial.daysRemaining} day
-          {trial.daysRemaining === 1 ? '' : 's'} remaining
+          <strong>{planLabel}</strong> — {trial.daysRemaining} day
+          {trial.daysRemaining === 1 ? '' : 's'} left in your 7-day trial
+          {trial.endsAt
+            ? ` (ends ${new Date(trial.endsAt).toLocaleDateString()})`
+            : ''}
         </span>
       </div>
       <Link

@@ -20,17 +20,22 @@ alter table public.tenants
   add constraint tenants_subscription_status_check
   check (subscription_status in ('trialing', 'active', 'expired', 'suspended', 'past_due'));
 
--- Backfill existing tenants as active (grandfather)
+-- Backfill: trial window is always 7 days from account (workspace) created_at
 update public.tenants
 set
   subscription_status = case
     when subscription_status in ('trialing', 'active', 'expired', 'suspended', 'past_due') then subscription_status
     else 'active'
   end,
-  trial_started_at = coalesce(trial_started_at, created_at),
-  trial_ends_at = coalesce(trial_ends_at, created_at + interval '7 days')
-where subscription_status is null
-   or trial_started_at is null;
+  trial_started_at = created_at,
+  trial_ends_at = created_at + interval '7 days'
+where trial_started_at is null
+   or trial_ends_at is null
+   or trial_started_at <> created_at
+   or trial_ends_at <> created_at + interval '7 days';
+
+-- Grandfather existing workspaces created before this migration (optional: keep active)
+-- New signups after deploy use subscription_status = 'trialing' from provision_workspace.
 
 -- New workspaces: start 7-day trial (patch provision_workspace)
 create or replace function public.start_tenant_trial(target_tenant_id uuid)
@@ -40,12 +45,12 @@ security definer
 set search_path = public
 as $$
 begin
-  update public.tenants
+  update public.tenants t
   set
-    trial_started_at = now(),
-    trial_ends_at = now() + interval '7 days',
+    trial_started_at = t.created_at,
+    trial_ends_at = t.created_at + interval '7 days',
     subscription_status = 'trialing'
-  where id = target_tenant_id;
+  where t.id = target_tenant_id;
 end;
 $$;
 
@@ -109,8 +114,6 @@ begin
     verification_token,
     verification_requested_at,
     is_active,
-    trial_started_at,
-    trial_ends_at,
     subscription_status,
     billing_email
   )
@@ -123,12 +126,17 @@ begin
     token_value,
     now(),
     true,
-    now(),
-    now() + interval '7 days',
     'trialing',
     normalized_email
   )
   returning id into new_tenant_id;
+
+  -- 7-day trial from account creation (tenants.created_at), not domain verification
+  update public.tenants t
+  set
+    trial_started_at = t.created_at,
+    trial_ends_at = t.created_at + interval '7 days'
+  where t.id = new_tenant_id;
 
   insert into public.profiles (id, tenant_id, email, full_name, role, department)
   values (
@@ -176,6 +184,8 @@ set search_path = public
 as $$
 declare
   t public.tenants%rowtype;
+  trial_start timestamptz;
+  trial_end timestamptz;
   days_left integer;
   is_expired boolean;
   can_use_app boolean;
@@ -185,17 +195,20 @@ begin
     return jsonb_build_object('found', false);
   end if;
 
+  trial_start := coalesce(t.trial_started_at, t.created_at);
+  trial_end := coalesce(t.trial_ends_at, t.created_at + interval '7 days');
+
   if t.subscription_status = 'active' then
     is_expired := false;
   elsif t.subscription_status in ('expired', 'suspended') then
     is_expired := true;
-  elsif t.trial_ends_at is not null and t.trial_ends_at < now() then
+  elsif trial_end < now() then
     is_expired := true;
   else
     is_expired := false;
   end if;
 
-  days_left := greatest(0, ceil(extract(epoch from (coalesce(t.trial_ends_at, now()) - now())) / 86400.0)::integer);
+  days_left := greatest(0, ceil(extract(epoch from (trial_end - now())) / 86400.0)::integer);
 
   can_use_app := not is_expired
     and t.is_active = true
@@ -206,8 +219,9 @@ begin
     'found', true,
     'subscription_plan', t.subscription_plan,
     'subscription_status', t.subscription_status,
-    'trial_started_at', t.trial_started_at,
-    'trial_ends_at', t.trial_ends_at,
+    'trial_started_at', trial_start,
+    'trial_ends_at', trial_end,
+    'account_created_at', t.created_at,
     'trial_days_remaining', days_left,
     'is_trial_expired', is_expired,
     'can_use_app', can_use_app,

@@ -34,7 +34,8 @@ export default function BillingSettings() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-white">Billing & plans</h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-400">
-              Manage your workspace plan, trial, and future Stripe subscription.
+              Your free trial is 7 days from the date your workspace was created. Upgrade anytime
+              to keep access after it ends.
             </p>
           </div>
           <PlanBadge />
@@ -52,12 +53,18 @@ export default function BillingSettings() {
             </p>
           </div>
           <div>
-            <p className="text-xs text-zinc-500">Trial</p>
+            <p className="text-xs text-zinc-500">Trial (from account created)</p>
             <p className="mt-1 text-lg font-semibold text-white">
               {trial.isExpired
                 ? 'Expired'
                 : `${trial.daysRemaining} day${trial.daysRemaining === 1 ? '' : 's'} left`}
             </p>
+            {trial.startedAt && (
+              <p className="mt-1 text-xs text-zinc-500">
+                Started {new Date(trial.startedAt).toLocaleDateString()}
+                {trial.endsAt ? ` · ends ${new Date(trial.endsAt).toLocaleDateString()}` : ''}
+              </p>
+            )}
           </div>
         </div>
 

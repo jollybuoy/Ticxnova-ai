@@ -4,6 +4,11 @@ import {
   PLAN_LABELS,
   PLANS,
 } from './planConfig';
+import {
+  getTrialDaysRemaining,
+  getTrialEndsAt,
+  getTrialStartedAt,
+} from './trialDates';
 
 export function normalizePlan(plan) {
   const normalized = String(plan || 'starter').toLowerCase();
@@ -32,15 +37,16 @@ export function getTrialState(tenant) {
       daysRemaining: 0,
       canUseApp: false,
       isReadOnly: false,
+      startedAt: null,
+      endsAt: null,
     };
   }
 
   const status = tenant.subscription_status ?? 'trialing';
-  const endsAt = tenant.trial_ends_at ? new Date(tenant.trial_ends_at) : null;
+  const startedAt = getTrialStartedAt(tenant);
+  const endsAt = getTrialEndsAt(tenant);
+  const daysRemaining = getTrialDaysRemaining(tenant);
   const now = Date.now();
-  const daysRemaining = endsAt
-    ? Math.max(0, Math.ceil((endsAt.getTime() - now) / 86_400_000))
-    : 0;
 
   const isExpired =
     status === 'expired' ||
@@ -55,6 +61,7 @@ export function getTrialState(tenant) {
     daysRemaining,
     canUseApp: !isExpired || isActivePaid,
     isReadOnly: isExpired && !isActivePaid,
+    startedAt,
     endsAt,
   };
 }
