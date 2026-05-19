@@ -17,7 +17,14 @@ const MODES = {
 export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, signInWithMicrosoft, resetPassword, actionLoading } = useAuth();
+  const { signIn, signUp, signInWithMicrosoft, resetPassword, actionLoading, isAuthenticated } =
+    useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const redirectTo = location.state?.from ?? '/dashboard';
+    navigate(redirectTo, { replace: true });
+  }, [isAuthenticated, location.state?.from, navigate]);
 
   const [mode, setMode] = useState(MODES.signin);
   const [email, setEmail] = useState('');
@@ -81,16 +88,13 @@ export function LoginForm() {
         switchMode(MODES.signin);
         return;
       }
-      navigate('/dashboard', { replace: true });
       return;
     }
 
     const result = await signIn(email, password);
     if (!result.success) {
       setError(result.message);
-      return;
     }
-    navigate('/dashboard', { replace: true });
   };
 
   const handleMicrosoft = async () => {

@@ -1,21 +1,19 @@
 import { Link } from 'react-router-dom';
-import { Clock, Sparkles } from 'lucide-react';
+import { AlertTriangle, Clock, Sparkles } from 'lucide-react';
 import { usePlanAccess } from '../../hooks/usePlanAccess';
+import { useSubscriptionAccess } from '../../hooks/useSubscriptionAccess';
 import { useTenant } from '../../hooks/useTenant';
 
 export function TrialBanner() {
   const { tenant, loading: tenantLoading } = useTenant();
   const { trial, planLabel, isTrialExpired } = usePlanAccess();
+  const { showReadOnlyBanner, showTrialWarning } = useSubscriptionAccess();
 
-  // Avoid flash while tenant context loads (daysRemaining briefly 0)
-  if (tenantLoading || !tenant) return null;
-
-  // Paid / grandfathered workspaces should not see trial messaging
+  if (tenantLoading || !tenant || showReadOnlyBanner) return null;
   if (tenant.subscription_status !== 'trialing') return null;
-
   if (isTrialExpired) return null;
 
-  const isUrgent = trial.daysRemaining <= 3;
+  const isUrgent = showTrialWarning || trial.daysRemaining <= 3;
 
   return (
     <div
@@ -26,13 +24,12 @@ export function TrialBanner() {
       }`}
     >
       <div className="flex items-center gap-3 text-sm">
-        <Clock size={18} />
+        {isUrgent ? <AlertTriangle size={18} /> : <Clock size={18} />}
         <span>
           <strong>{planLabel}</strong> — {trial.daysRemaining} day
           {trial.daysRemaining === 1 ? '' : 's'} left in your 7-day trial
-          {trial.endsAt
-            ? ` (ends ${new Date(trial.endsAt).toLocaleDateString()})`
-            : ''}
+          {trial.endsAt ? ` (ends ${new Date(trial.endsAt).toLocaleDateString()})` : ''}
+          {isUrgent && ' · Upgrade soon to avoid read-only mode'}
         </span>
       </div>
       <Link

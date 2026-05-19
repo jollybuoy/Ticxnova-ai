@@ -41,6 +41,7 @@ const FirstLoginPasswordReset = lazy(() => import('./pages/FirstLoginPasswordRes
 const Profile = lazy(() => import('./pages/Profile'));
 const KnowledgeBase = lazy(() => import('./pages/KnowledgeBase'));
 const BillingSettings = lazy(() => import('./pages/admin/BillingSettings'));
+const AuditLog = lazy(() => import('./pages/admin/AuditLog'));
 const TrialExpired = lazy(() => import('./pages/TrialExpired'));
 
 function RouteLoader() {
@@ -257,6 +258,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute allowedRoles={['super_admin', 'org_admin']} allowTrialExpired>
                 <BillingSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/audit"
+            element={
+              <ProtectedRoute allowedRoles={['super_admin', 'org_admin']} allowTrialExpired>
+                <AuditLog />
               </ProtectedRoute>
             }
           />

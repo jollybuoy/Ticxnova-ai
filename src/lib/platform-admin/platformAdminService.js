@@ -36,6 +36,14 @@ export async function fetchPlatformUsers(search = '') {
   return invokePlatformAdmin({ action: 'list_users', search });
 }
 
+export async function extendTenantTrial(tenantId, extraDays = 7) {
+  return invokePlatformAdmin({
+    action: 'extend_tenant_trial',
+    tenantId,
+    extraDays,
+  });
+}
+
 export async function setWorkspaceStatus(tenantId, isActive) {
   return invokePlatformAdmin({
     action: 'set_workspace_status',

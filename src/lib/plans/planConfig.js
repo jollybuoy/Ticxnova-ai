@@ -75,4 +75,6 @@ export const ROUTE_FEATURES = {
   '/reports/ai-insights': FEATURES.ADVANCED_ANALYTICS,
   '/reports/sla': FEATURES.SLA_ENGINE,
   '/settings/users': FEATURES.INVITE_USERS,
+  '/settings/audit': FEATURES.AUDIT_LOGS,
+  '/ai-assistant': FEATURES.AI_SUMMARIES,
 };

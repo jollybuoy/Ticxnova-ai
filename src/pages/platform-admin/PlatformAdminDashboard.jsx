@@ -71,6 +71,31 @@ export default function PlatformAdminDashboard() {
             <PlatformAdminStatCard label="Tickets / devices" value={`${summary.total_tickets} / ${summary.total_devices}`} hint={`${summary.signups_last_7_days} signups in 7d`} />
           </section>
 
+          <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <PlatformAdminStatCard
+              label="Trials expiring"
+              value={summary.trials_expiring_soon ?? 0}
+              hint={`${summary.trials_expired ?? 0} expired`}
+              tone="warning"
+            />
+            <PlatformAdminStatCard
+              label="Pending verifications"
+              value={summary.pending_verifications ?? 0}
+              hint="Domains awaiting approval"
+            />
+            <PlatformAdminStatCard
+              label="Active subscriptions"
+              value={summary.active_subscriptions ?? 0}
+              hint="Paid or active status"
+              tone="success"
+            />
+            <PlatformAdminStatCard
+              label="AI usage (est.)"
+              value={summary.ai_usage_placeholder ?? 0}
+              hint="Placeholder for future metering"
+            />
+          </section>
+
           <section className="grid gap-6 xl:grid-cols-12">
             <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 xl:col-span-8">
               <h3 className="text-lg font-semibold text-white">Growth timeline</h3>

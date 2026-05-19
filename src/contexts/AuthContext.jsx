@@ -59,6 +59,11 @@ export function AuthProvider({ children }) {
         if (error) {
           return { success: false, message: getAuthErrorMessage(error), data: null };
         }
+        if (data.session) {
+          setSession(data.session);
+          setUser(data.session.user ?? null);
+          setInitializing(false);
+        }
         return { success: true, message: null, data };
       });
     },
@@ -81,6 +86,11 @@ export function AuthProvider({ children }) {
         }
 
         const needsEmailConfirmation = Boolean(data.user && !data.session);
+        if (data.session) {
+          setSession(data.session);
+          setUser(data.session.user ?? null);
+          setInitializing(false);
+        }
         return {
           success: true,
           message: needsEmailConfirmation

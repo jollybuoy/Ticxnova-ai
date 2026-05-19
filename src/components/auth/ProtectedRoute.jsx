@@ -2,9 +2,13 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../hooks/useTenant';
 import { usePlanAccess } from '../../hooks/usePlanAccess';
-import { usePermissions } from '../../hooks/usePermissions';
 import { ROUTE_FEATURES } from '../../lib/plans/planConfig';
-import { ROUTE_GUARDS } from '../../lib/rbac/modulePermissions';
+import { ROUTE_GUARDS, canAccessModule } from '../../lib/rbac/modulePermissions';
+import {
+  isPathAllowedInReadOnly,
+  isPathBlockedInReadOnly,
+  isTrialExemptPath,
+} from '../../lib/plans/subscriptionEnforcement';
 import { AuthLoadingScreen } from './AuthLoadingScreen';
 import { UpgradePrompt } from '../billing/UpgradePrompt';
 
@@ -17,9 +21,8 @@ export function ProtectedRoute({
   requiredFeature,
 }) {
   const { initializing, isAuthenticated, user } = useAuth();
-  const { profile, tenant } = useTenant();
-  const { canUseFeature, isTrialExpired } = usePlanAccess();
-  const { canAccessModule } = usePermissions();
+  const { profile, tenant, role } = useTenant();
+  const { canUseFeature, isReadOnly } = usePlanAccess();
   const location = useLocation();
   const authMustReset = user?.user_metadata?.must_reset_password;
   const mustResetPassword =
@@ -27,9 +30,8 @@ export function ProtectedRoute({
 
   const routeFeature = requiredFeature ?? ROUTE_FEATURES[location.pathname];
   const routeGuard = ROUTE_GUARDS[location.pathname];
-  const trialExemptPaths = new Set(['/trial-expired', '/settings/billing']);
   const effectiveAllowTrialExpired =
-    allowTrialExpired || trialExemptPaths.has(location.pathname);
+    allowTrialExpired || isTrialExemptPath(location.pathname);
 
   if (initializing) {
     return <AuthLoadingScreen />;
@@ -47,7 +49,7 @@ export function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
-  if (routeGuard?.module && !canAccessModule(routeGuard.module, 'read')) {
+  if (routeGuard?.module && !canAccessModule(role, routeGuard.module, 'read')) {
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -70,8 +72,14 @@ export function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
-  if (domainVerified && isTrialExpired && !effectiveAllowTrialExpired) {
-    return <Navigate to="/trial-expired" replace />;
+  // Read-only (expired trial): allow viewing core routes; block write-heavy modules
+  if (domainVerified && isReadOnly && !effectiveAllowTrialExpired) {
+    if (isPathBlockedInReadOnly(location.pathname)) {
+      return <Navigate to="/trial-expired" replace state={{ from: location.pathname }} />;
+    }
+    if (!isPathAllowedInReadOnly(location.pathname)) {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   const featureToCheck = routeGuard?.feature ?? routeFeature;

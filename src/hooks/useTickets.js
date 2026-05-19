@@ -12,10 +12,15 @@ import {
 } from '../lib/tickets/ticketService';
 import { getUserDisplayName, getUserEmail } from '../lib/user';
 import { useTenant } from './useTenant';
+import { useSubscriptionAccess } from './useSubscriptionAccess';
+import { MODULES } from '../lib/rbac/modulePermissions';
+import { ACTIONS } from '../lib/rbac/actionPermissions';
+import { AUDIT_ACTIONS, AUDIT_MODULES, recordAuditLog } from '../lib/audit/auditService';
 
 export function useTickets() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
+  const { canWrite, canPerformAction } = useSubscriptionAccess();
   const userId = user?.id;
   const channelId = useRef(crypto.randomUUID());
 
@@ -77,6 +82,10 @@ export function useTickets() {
   const handleCreate = useCallback(
     async (payload) => {
       if (!userId) return { success: false };
+      if (!canWrite(MODULES.TICKETS, ACTIONS.CREATE)) {
+        toast.error('You cannot create tickets in the current workspace mode.');
+        return { success: false };
+      }
       setMutating(true);
       const { data, error } = await createTicket(userId, { ...payload, tenant_id: tenantId });
       setMutating(false);
@@ -87,15 +96,30 @@ export function useTickets() {
       }
 
       setTickets((prev) => [data, ...prev]);
+      void recordAuditLog({
+        tenantId,
+        actorId: userId,
+        actorEmail: getUserEmail(user),
+        module: AUDIT_MODULES.TICKETS,
+        action: AUDIT_ACTIONS.CREATED,
+        entityType: 'ticket',
+        entityId: data.id,
+        summary: `Created ticket ${data.ticket_number ?? data.id}`,
+        newValue: { title: data.title, status: data.status },
+      });
       toast.success('Ticket created successfully');
       return { success: true, data };
     },
-    [tenantId, userId],
+    [canWrite, tenantId, user, userId],
   );
 
   const handleUpdateStatus = useCallback(
     async (ticketId, status) => {
       if (!userId) return { success: false };
+      if (!canWrite(MODULES.TICKETS, ACTIONS.UPDATE)) {
+        toast.error('You cannot update tickets in the current workspace mode.');
+        return { success: false };
+      }
       const ticket = tickets.find((item) => item.id === ticketId);
       if (!ticket) return { success: false };
 
@@ -117,15 +141,31 @@ export function useTickets() {
       }
 
       setTickets((prev) => prev.map((t) => (t.id === ticketId ? data : t)));
+      void recordAuditLog({
+        tenantId,
+        actorId: userId,
+        actorEmail: getUserEmail(user),
+        module: AUDIT_MODULES.TICKETS,
+        action: AUDIT_ACTIONS.STATUS_CHANGED,
+        entityType: 'ticket',
+        entityId: ticketId,
+        summary: `Status changed to ${status}`,
+        oldValue: { status: ticket.status },
+        newValue: { status },
+      });
       toast.success('Status updated');
       return { success: true };
     },
-    [tickets, user, userId],
+    [canWrite, tenantId, tickets, user, userId],
   );
 
   const handleDelete = useCallback(
     async (ticketId) => {
       if (!userId) return { success: false };
+      if (!canPerformAction(MODULES.TICKETS, ACTIONS.DELETE)) {
+        toast.error('You do not have permission to delete tickets.');
+        return { success: false };
+      }
       setMutating(true);
       const { error } = await deleteTicket(userId, ticketId);
       setMutating(false);
@@ -136,10 +176,20 @@ export function useTickets() {
       }
 
       setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+      void recordAuditLog({
+        tenantId,
+        actorId: userId,
+        actorEmail: getUserEmail(user),
+        module: AUDIT_MODULES.TICKETS,
+        action: AUDIT_ACTIONS.DELETED,
+        entityType: 'ticket',
+        entityId: ticketId,
+        summary: `Deleted ticket ${ticketId}`,
+      });
       toast.success('Ticket deleted');
       return { success: true };
     },
-    [userId],
+    [canPerformAction, tenantId, user, userId],
   );
 
   const handleSummarize = useCallback(

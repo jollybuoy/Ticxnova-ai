@@ -5,39 +5,29 @@ import { LogOut, UserCog } from 'lucide-react';
 import { Icon } from '../ui/IconMap';
 import { Spinner } from '../ui/Spinner';
 import { useAuth } from '../../hooks/useAuth';
-import { useTickets } from '../../hooks/useTickets';
 import { useTenant } from '../../hooks/useTenant';
+import { useNotifications } from '../../hooks/useNotifications';
+import {
+  NotificationBellButton,
+  NotificationDropdown,
+} from '../notifications/NotificationDropdown';
 import { getUserDisplayName, getUserInitials, getUserEmail } from '../../lib/user';
 
 export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
   const navigate = useNavigate();
   const { user, signOut, actionLoading } = useAuth();
-  const { tickets } = useTickets();
   const { role } = useTenant();
+  const { notifications, unreadCount, loading: notificationsLoading, mutating: notificationsMutating, markRead, markAllRead } =
+    useNotifications();
   const [menuOpen, setMenuOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const [dismissedNotifications, setDismissedNotifications] = useState(() => new Set());
   const [signingOut, setSigningOut] = useState(false);
 
   const displayName = getUserDisplayName(user);
   const initials = getUserInitials(user);
   const email = getUserEmail(user);
-  const relatedTickets = tickets
-    .filter((ticket) => {
-      const userEmail = email?.toLowerCase();
-      const userName = displayName?.toLowerCase();
-      return (
-        ticket.requester_email?.toLowerCase() === userEmail ||
-        ticket.requester_name?.toLowerCase() === userName ||
-        ticket.assignee_email?.toLowerCase() === userEmail ||
-        ticket.assignee_name?.toLowerCase() === userName
-      );
-    })
-    .filter((ticket) => ['open', 'in_progress', 'pending'].includes(ticket.status))
-    .filter((ticket) => !dismissedNotifications.has(ticket.id))
-    .slice(0, 5);
   const profileTarget = ['super_admin', 'org_admin'].includes(role) ? '/settings/organization' : '/profile';
 
   const submitSearch = (event) => {
@@ -114,17 +104,23 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
           <Icon name="HelpCircle" size={20} />
         </motion.button>
 
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.06 }}
-          onClick={() => setNotificationsOpen((open) => !open)}
-          className="relative rounded-xl p-2.5 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
-        >
-          <Icon name="Bell" size={20} />
-          <span className="absolute right-1.5 top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-[#0c1019]">
-            {relatedTickets.length}
-          </span>
-        </motion.button>
+        <div className="relative">
+          <NotificationBellButton
+            open={notificationsOpen}
+            onToggle={() => setNotificationsOpen((open) => !open)}
+            unreadCount={unreadCount}
+          />
+          <NotificationDropdown
+            open={notificationsOpen}
+            onClose={() => setNotificationsOpen(false)}
+            notifications={notifications}
+            unreadCount={unreadCount}
+            loading={notificationsLoading}
+            mutating={notificationsMutating}
+            markRead={markRead}
+            markAllRead={markAllRead}
+          />
+        </div>
         <AnimatePresence>
           {helpOpen && (
             <motion.div
@@ -147,38 +143,6 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
               >
                 Ask AI Assistant
               </button>
-            </motion.div>
-          )}
-          {notificationsOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="glass-strong absolute right-12 top-12 z-50 w-80 overflow-hidden rounded-xl border border-white/10 shadow-xl"
-            >
-              <div className="border-b border-white/[0.06] px-4 py-3">
-                <p className="text-sm font-semibold text-white">Your Notifications</p>
-                <p className="text-xs text-zinc-500">Tickets assigned to or requested by you</p>
-              </div>
-              {relatedTickets.length === 0 ? (
-                <div className="px-4 py-6 text-sm text-zinc-500">No ticket notifications for you.</div>
-              ) : (
-                relatedTickets.map((ticket) => (
-                  <button
-                    key={ticket.id}
-                    type="button"
-                    onClick={() => {
-                      setNotificationsOpen(false);
-                      setDismissedNotifications((current) => new Set(current).add(ticket.id));
-                      navigate(`/tickets/${ticket.id}`);
-                    }}
-                    className="block w-full border-b border-white/[0.04] px-4 py-3 text-left last:border-0 hover:bg-white/[0.04]"
-                  >
-                    <p className="truncate text-sm font-medium text-white">{ticket.title}</p>
-                    <p className="mt-1 text-xs text-zinc-500">{ticket.ticket_number} · {ticket.status}</p>
-                  </button>
-                ))
-              )}
             </motion.div>
           )}
         </AnimatePresence>

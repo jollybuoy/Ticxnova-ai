@@ -1,4 +1,4 @@
-import { memo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { prefetchRoute } from '../../routes/lazyPages';
@@ -10,6 +10,13 @@ import { useTenant } from '../../hooks/useTenant';
 import { usePlanAccess } from '../../hooks/usePlanAccess';
 import { usePermissions } from '../../hooks/usePermissions';
 import { FEATURES } from '../../lib/plans/planConfig';
+
+function isNavSectionActive(pathname, item) {
+  if (!item.children?.length) return false;
+  if (pathname === item.path) return true;
+  const prefix = item.path.endsWith('/') ? item.path : `${item.path}/`;
+  return pathname.startsWith(prefix);
+}
 
 function navItemAllowed(item, { canUseFeature, canAccessModule, isAdmin }) {
   if (item.id === 'admin' && !isAdmin) return false;
@@ -28,33 +35,60 @@ function SidebarComponent({ open, collapsed, onClose }) {
   const { canAccessModule, modules } = usePermissions();
   const [aiPrompt, setAiPrompt] = useState('');
   const isAdmin = ['super_admin', 'org_admin'].includes(role);
-  const visibleNavItems = navItems
-    .filter((item) => navItemAllowed(item, { canUseFeature, canAccessModule, isAdmin }))
-    .map((item) => {
-      if (!item.children?.length) return item;
-      const children = item.children.filter((child) =>
-        navItemAllowed(child, { canUseFeature, canAccessModule, isAdmin }),
-      );
-      if (item.id === 'admin') {
-        const filtered = children.filter((child) => {
-          if (child.path === '/settings/users') {
-            return canAccessModule(modules.USERS, 'read');
+  const visibleNavItems = useMemo(
+    () =>
+      navItems
+        .filter((item) => navItemAllowed(item, { canUseFeature, canAccessModule, isAdmin }))
+        .map((item) => {
+          if (!item.children?.length) return item;
+          const children = item.children.filter((child) =>
+            navItemAllowed(child, { canUseFeature, canAccessModule, isAdmin }),
+          );
+          if (item.id === 'admin') {
+            const filtered = children.filter((child) => {
+              if (child.path === '/settings/users') {
+                return canAccessModule(modules.USERS, 'read');
+              }
+              return true;
+            });
+            return { ...item, children: filtered };
           }
-          return true;
-        });
-        return { ...item, children: filtered };
+          return { ...item, children };
+        })
+        .filter((item) => !item.children?.length || item.children.length > 0),
+    [canAccessModule, canUseFeature, isAdmin, modules.USERS],
+  );
+
+  const activeSectionIds = useMemo(
+    () =>
+      visibleNavItems
+        .filter((item) => isNavSectionActive(location.pathname, item))
+        .map((item) => item.id),
+    [location.pathname, visibleNavItems],
+  );
+
+  const [expandedItems, setExpandedItems] = useState(() => new Set(activeSectionIds));
+
+  useEffect(() => {
+    if (!activeSectionIds.length) return;
+    setExpandedItems((current) => {
+      const next = new Set(current);
+      let changed = false;
+      for (const id of activeSectionIds) {
+        if (!next.has(id)) {
+          next.add(id);
+          changed = true;
+        }
       }
-      return { ...item, children };
-    })
-    .filter((item) => !item.children?.length || item.children.length > 0);
-  const [expandedItems, setExpandedItems] = useState(() => {
-    const activeSections = visibleNavItems
-      .filter((item) => item.children?.length && location.pathname.startsWith(item.path))
-      .map((item) => item.id);
-    return new Set(activeSections);
-  });
+      return changed ? next : current;
+    });
+  }, [activeSectionIds]);
 
   const toggleExpanded = (itemId) => {
+    const item = visibleNavItems.find((entry) => entry.id === itemId);
+    if (item && isNavSectionActive(location.pathname, item)) {
+      return;
+    }
     setExpandedItems((current) => {
       const next = new Set(current);
       if (next.has(itemId)) next.delete(itemId);
@@ -118,8 +152,8 @@ function SidebarComponent({ open, collapsed, onClose }) {
             const badge =
               item.showOpenBadge && openTicketCount > 0 ? openTicketCount : null;
             const hasChildren = Boolean(item.children?.length);
-            const isSectionActive = hasChildren && location.pathname.startsWith(item.path);
-            const isExpanded = expandedItems.has(item.id);
+            const isSectionActive = hasChildren && isNavSectionActive(location.pathname, item);
+            const isExpanded = expandedItems.has(item.id) || isSectionActive;
 
             return (
               <div key={item.id}>
@@ -198,7 +232,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
                   </NavLink>
                 )}
 
-                {!collapsed && hasChildren && isExpanded && (
+                {!collapsed && hasChildren && (isExpanded || isSectionActive) && (
                   <div className="ml-6 mt-1 space-y-1 border-l border-white/[0.06] pl-3">
                     {item.children.map((child) => (
                       <NavLink

@@ -3,9 +3,11 @@ import { supabase } from '../supabase';
 export const NOTIFICATION_TYPES = {
   TICKET_ASSIGNED: 'ticket_assigned',
   TICKET_UPDATED: 'ticket_updated',
+  STATUS_CHANGED: 'status_changed',
   SLA_ALERT: 'sla_alert',
   COMMENT_ADDED: 'comment_added',
   TRIAL_EXPIRING: 'trial_expiring',
+  DOMAIN_APPROVED: 'domain_approved',
   SUBSCRIPTION_UPDATED: 'subscription_updated',
 };
 

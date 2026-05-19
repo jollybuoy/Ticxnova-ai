@@ -98,6 +98,10 @@ export const ROUTE_GUARDS = {
   '/settings/organization': { module: MODULES.ORGANIZATION, roles: ['super_admin', 'org_admin'] },
   '/settings/roles': { module: MODULES.ROLES, roles: ['super_admin', 'org_admin'] },
   '/settings/billing': { module: MODULES.BILLING, roles: ['super_admin', 'org_admin'] },
+  '/settings/audit': { module: MODULES.ORGANIZATION, feature: FEATURES.AUDIT_LOGS, roles: ['super_admin', 'org_admin'] },
   '/knowledge-base': { module: MODULES.KB, feature: FEATURES.KNOWLEDGE_BASE },
   '/reports/sla': { module: MODULES.REPORTS, feature: FEATURES.SLA_ENGINE },
+  '/ai-assistant': { module: MODULES.AI, roles: ['super_admin', 'org_admin', 'technician', 'employee', 'read_only'] },
+  '/tickets': { module: MODULES.TICKETS, roles: ['super_admin', 'org_admin', 'technician', 'employee', 'read_only'] },
+  '/devices': { module: MODULES.DEVICES, roles: ['super_admin', 'org_admin', 'technician', 'employee', 'read_only'] },
 };

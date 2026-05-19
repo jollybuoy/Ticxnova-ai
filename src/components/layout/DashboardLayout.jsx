@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 import { BackgroundMesh } from './BackgroundMesh';
 import { TrialBanner } from '../billing/TrialBanner';
+import { ReadOnlyBanner } from '../billing/ReadOnlyBanner';
 
 export function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -12,12 +12,7 @@ export function DashboardLayout({ children }) {
   return (
     <div className="relative min-h-screen">
       <BackgroundMesh variant="dashboard" />
-      <motion.div
-        className="flex min-h-screen"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-      >
+      <div className="flex min-h-screen">
         <Sidebar
           open={sidebarOpen}
           collapsed={collapsed}
@@ -30,18 +25,14 @@ export function DashboardLayout({ children }) {
             onToggleCollapse={() => setCollapsed((c) => !c)}
           />
           <main className="flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              className="mx-auto max-w-[1600px] space-y-8"
-            >
+            <div className="mx-auto max-w-[1600px] space-y-8">
+              <ReadOnlyBanner />
               <TrialBanner />
               {children}
-            </motion.div>
+            </div>
           </main>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

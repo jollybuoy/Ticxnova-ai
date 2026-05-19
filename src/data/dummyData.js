@@ -28,6 +28,7 @@ export const navItems = [
       { id: 'user-management', label: 'User Management', path: '/settings/users', planFeature: 'invite_users' },
       { id: 'billing', label: 'Billing & Plans', path: '/settings/billing' },
       { id: 'roles-permissions', label: 'Roles & Permissions', path: '/settings/roles' },
+      { id: 'audit-log', label: 'Audit Log', path: '/settings/audit', planFeature: 'audit_logs' },
     ],
   },
 ];

@@ -185,6 +185,31 @@ serve(async (req) => {
       .slice(-30)
       .map(([date, counts]) => ({ date, ...counts }));
 
+    const trialsExpiringSoon = tenants.filter((tenant) => {
+      if (tenant.subscription_status !== 'trialing' || !tenant.trial_ends_at) return false;
+      const ends = new Date(tenant.trial_ends_at).getTime();
+      return ends > now && ends <= now + 3 * day;
+    }).length;
+
+    const trialsExpired = tenants.filter(
+      (tenant) =>
+        tenant.subscription_status === 'expired' ||
+        (tenant.subscription_status === 'trialing' &&
+          tenant.trial_ends_at &&
+          new Date(tenant.trial_ends_at).getTime() < now),
+    ).length;
+
+    const pendingVerifications = tenants.filter(
+      (tenant) =>
+        tenant.verification_status === 'pending' ||
+        tenant.verification_status === 'awaiting_review' ||
+        tenant.domain_verified === false,
+    ).length;
+
+    const activeSubscriptions = tenants.filter(
+      (tenant) => tenant.subscription_status === 'active',
+    ).length;
+
     const recentWorkspaces = tenants.slice(0, 8).map((tenant) => {
       const tenantProfiles = profiles.filter((p) => p.tenant_id === tenant.id);
       const admins = tenantProfiles.filter((p) =>
@@ -216,6 +241,11 @@ serve(async (req) => {
         signups_last_7_days: signups7d,
         signups_last_30_days: signups30d,
         tenant_memberships: tenantUsersRes.data?.length ?? 0,
+        trials_expiring_soon: trialsExpiringSoon,
+        trials_expired: trialsExpired,
+        pending_verifications: pendingVerifications,
+        active_subscriptions: activeSubscriptions,
+        ai_usage_placeholder: 0,
       },
       plan_breakdown: Object.entries(planBreakdown).map(([name, value]) => ({ name, value })),
       growth_timeline: growthTimeline,
@@ -496,6 +526,20 @@ serve(async (req) => {
 
     if (rejectError) return jsonResponse({ error: rejectError.message }, 400);
     return jsonResponse({ success: true, result });
+  }
+
+  if (action === 'extend_tenant_trial') {
+    const tenantId = String(payload.tenantId ?? '');
+    const extraDays = Number(payload.extraDays ?? 7);
+    if (!tenantId) return jsonResponse({ error: 'tenantId is required.' }, 400);
+
+    const { error: extendError } = await adminClient.rpc('extend_tenant_trial', {
+      target_tenant_id: tenantId,
+      extra_days: extraDays,
+    });
+
+    if (extendError) return jsonResponse({ error: extendError.message }, 400);
+    return jsonResponse({ ok: true, tenantId, extraDays });
   }
 
   if (action === 'delete_workspace') {
