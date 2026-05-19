@@ -4,6 +4,10 @@ import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { GuestRoute } from './components/auth/GuestRoute';
+import {
+  PlatformAdminGuestRoute,
+  PlatformAdminRoute,
+} from './components/platform-admin/PlatformAdminRoute';
 
 const Login = lazy(() => import('./pages/Login'));
 const MarketingHome = lazy(() => import('./pages/marketing/Home'));
@@ -27,6 +31,12 @@ const SLAReports = lazy(() => import('./pages/reports/SLAReports'));
 const OrganizationSettings = lazy(() => import('./pages/admin/OrganizationSettings'));
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const RolesPermissions = lazy(() => import('./pages/admin/RolesPermissions'));
+const PlatformAdminLogin = lazy(() => import('./pages/platform-admin/PlatformAdminLogin'));
+const PlatformAdminLayout = lazy(() => import('./components/platform-admin/PlatformAdminLayout'));
+const PlatformAdminDashboard = lazy(() => import('./pages/platform-admin/PlatformAdminDashboard'));
+const PlatformAdminWorkspaces = lazy(() => import('./pages/platform-admin/PlatformAdminWorkspaces'));
+const PlatformAdminUsers = lazy(() => import('./pages/platform-admin/PlatformAdminUsers'));
+const PlatformAdminProfile = lazy(() => import('./pages/platform-admin/PlatformAdminProfile'));
 const FirstLoginPasswordReset = lazy(() => import('./pages/FirstLoginPasswordReset'));
 const Profile = lazy(() => import('./pages/Profile'));
 
@@ -165,7 +175,27 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/admin/organization"
+            path="/admin/login"
+            element={
+              <PlatformAdminGuestRoute>
+                <PlatformAdminLogin />
+              </PlatformAdminGuestRoute>
+            }
+          />
+          <Route path="/admin" element={<PlatformAdminRoute />}>
+            <Route element={<PlatformAdminLayout />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<PlatformAdminDashboard />} />
+              <Route path="workspaces" element={<PlatformAdminWorkspaces />} />
+              <Route path="users" element={<PlatformAdminUsers />} />
+              <Route path="profile" element={<PlatformAdminProfile />} />
+            </Route>
+          </Route>
+          <Route path="/admin/organization" element={<Navigate to="/settings/organization" replace />} />
+          <Route path="/admin/users" element={<Navigate to="/settings/users" replace />} />
+          <Route path="/admin/roles" element={<Navigate to="/settings/roles" replace />} />
+          <Route
+            path="/settings/organization"
             element={
               <ProtectedRoute allowedRoles={['super_admin', 'org_admin']}>
                 <OrganizationSettings />
@@ -173,7 +203,7 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/admin/users"
+            path="/settings/users"
             element={
               <ProtectedRoute allowedRoles={['super_admin', 'org_admin']}>
                 <UserManagement />
@@ -181,7 +211,7 @@ function AnimatedRoutes() {
             }
           />
           <Route
-            path="/admin/roles"
+            path="/settings/roles"
             element={
               <ProtectedRoute allowedRoles={['super_admin', 'org_admin']}>
                 <RolesPermissions />

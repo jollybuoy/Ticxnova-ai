@@ -38,7 +38,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
     .filter((ticket) => ['open', 'in_progress', 'pending'].includes(ticket.status))
     .filter((ticket) => !dismissedNotifications.has(ticket.id))
     .slice(0, 5);
-  const profileTarget = ['super_admin', 'org_admin'].includes(role) ? '/admin/organization' : '/profile';
+  const profileTarget = ['super_admin', 'org_admin'].includes(role) ? '/settings/organization' : '/profile';
 
   const submitSearch = (event) => {
     event.preventDefault();

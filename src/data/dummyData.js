@@ -19,13 +19,13 @@ export const navItems = [
   },
   {
     id: 'admin',
-    label: 'Admin',
+    label: 'Workspace Admin',
     icon: 'Settings',
-    path: '/admin',
+    path: '/settings',
     children: [
-      { id: 'organization-settings', label: 'Organization Settings', path: '/admin/organization' },
-      { id: 'user-management', label: 'User Management', path: '/admin/users' },
-      { id: 'roles-permissions', label: 'Roles & Permissions', path: '/admin/roles' },
+      { id: 'organization-settings', label: 'Organization Settings', path: '/settings/organization' },
+      { id: 'user-management', label: 'User Management', path: '/settings/users' },
+      { id: 'roles-permissions', label: 'Roles & Permissions', path: '/settings/roles' },
     ],
   },
 ];
