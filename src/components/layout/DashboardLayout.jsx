@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 import { BackgroundMesh } from './BackgroundMesh';
@@ -30,19 +30,15 @@ export function DashboardLayout({ children }) {
             onToggleCollapse={() => setCollapsed((c) => !c)}
           />
           <main className="flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key="dashboard-content"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="mx-auto max-w-[1600px] space-y-8"
-              >
-                <TrialBanner />
-                {children}
-              </motion.div>
-            </AnimatePresence>
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="mx-auto max-w-[1600px] space-y-8"
+            >
+              <TrialBanner />
+              {children}
+            </motion.div>
           </main>
         </div>
       </motion.div>

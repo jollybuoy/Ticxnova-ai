@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { prefetchRoute } from '../../routes/lazyPages';
 import { Icon } from '../ui/IconMap';
 import { NavBadge } from '../ui/Badge';
 import { navItems } from '../../data/dummyData';
@@ -17,7 +18,7 @@ function navItemAllowed(item, { canUseFeature, canAccessModule, isAdmin }) {
   return true;
 }
 
-export function Sidebar({ open, collapsed, onClose }) {
+function SidebarComponent({ open, collapsed, onClose }) {
   const width = collapsed ? 'w-[72px]' : 'w-64';
   const openTicketCount = useOpenTicketCount();
   const location = useLocation();
@@ -161,6 +162,8 @@ export function Sidebar({ open, collapsed, onClose }) {
                   <NavLink
                     to={item.path}
                     title={collapsed ? item.label : undefined}
+                    onMouseEnter={() => prefetchRoute(item.path)}
+                    onFocus={() => prefetchRoute(item.path)}
                     onClick={() => {
                       setExpandedItems(new Set());
                       onClose();
@@ -201,6 +204,8 @@ export function Sidebar({ open, collapsed, onClose }) {
                       <NavLink
                         key={child.id}
                         to={child.path}
+                        onMouseEnter={() => prefetchRoute(child.path)}
+                        onFocus={() => prefetchRoute(child.path)}
                         onClick={onClose}
                         end={child.path === item.path}
                         className={({ isActive }) =>
@@ -256,3 +261,5 @@ export function Sidebar({ open, collapsed, onClose }) {
     </>
   );
 }
+
+export const Sidebar = memo(SidebarComponent);

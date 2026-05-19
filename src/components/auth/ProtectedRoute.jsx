@@ -17,7 +17,7 @@ export function ProtectedRoute({
   requiredFeature,
 }) {
   const { initializing, isAuthenticated, user } = useAuth();
-  const { profile, tenant, loading: tenantLoading } = useTenant();
+  const { profile, tenant } = useTenant();
   const { canUseFeature, isTrialExpired } = usePlanAccess();
   const { canAccessModule } = usePermissions();
   const location = useLocation();
@@ -27,8 +27,11 @@ export function ProtectedRoute({
 
   const routeFeature = requiredFeature ?? ROUTE_FEATURES[location.pathname];
   const routeGuard = ROUTE_GUARDS[location.pathname];
+  const trialExemptPaths = new Set(['/trial-expired', '/settings/billing']);
+  const effectiveAllowTrialExpired =
+    allowTrialExpired || trialExemptPaths.has(location.pathname);
 
-  if (initializing || tenantLoading) {
+  if (initializing) {
     return <AuthLoadingScreen />;
   }
 
@@ -67,7 +70,7 @@ export function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
-  if (domainVerified && isTrialExpired && !allowTrialExpired) {
+  if (domainVerified && isTrialExpired && !effectiveAllowTrialExpired) {
     return <Navigate to="/trial-expired" replace />;
   }
 

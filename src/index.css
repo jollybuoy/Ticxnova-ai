@@ -27,6 +27,28 @@
     background-color: var(--color-surface);
   }
 
+  #root {
+    min-height: 100vh;
+    background-color: var(--color-surface);
+  }
+
+  .page-transition-root {
+    will-change: opacity;
+  }
+
+  .page-skeleton {
+    animation: skeleton-fade-in 0.2s ease-out;
+  }
+
+  @keyframes skeleton-fade-in {
+    from {
+      opacity: 0.6;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   input[type="date"] {
     color-scheme: dark;
   }

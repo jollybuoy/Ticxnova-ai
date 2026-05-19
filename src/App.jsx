@@ -1,6 +1,5 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { GuestRoute } from './components/auth/GuestRoute';
@@ -46,19 +45,24 @@ const TrialExpired = lazy(() => import('./pages/TrialExpired'));
 
 function RouteLoader() {
   return (
-    <div className="mesh-dashboard flex min-h-screen items-center justify-center">
-      <div className="glass-card px-6 py-5 text-sm text-zinc-300">Loading Ticxnova-AI...</div>
+    <div className="mesh-dashboard min-h-screen px-6 py-8">
+      <div className="mx-auto max-w-[1600px] animate-pulse space-y-6">
+        <div className="h-10 w-48 rounded-xl bg-white/[0.06]" />
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-28 rounded-2xl bg-white/[0.06]" />
+          ))}
+        </div>
+        <div className="h-72 rounded-2xl bg-white/[0.06]" />
+      </div>
     </div>
   );
 }
 
 function AnimatedRoutes() {
-  const location = useLocation();
-
   return (
-    <AnimatePresence mode="wait">
-      <Suspense fallback={<RouteLoader />}>
-        <Routes location={location} key={location.pathname}>
+    <Suspense fallback={<RouteLoader />}>
+        <Routes>
           <Route path="/" element={<MarketingHome />} />
           <Route path="/features" element={<MarketingFeatures />} />
           <Route path="/pricing" element={<MarketingPricing />} />
@@ -267,7 +271,6 @@ function AnimatedRoutes() {
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </Suspense>
-    </AnimatePresence>
   );
 }
 
