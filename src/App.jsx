@@ -37,6 +37,7 @@ const PlatformAdminUsers = lazy(() => import('./pages/platform-admin/PlatformAdm
 const PlatformAdminProfile = lazy(() => import('./pages/platform-admin/PlatformAdminProfile'));
 const PlatformAdminVerifications = lazy(() => import('./pages/platform-admin/PlatformAdminVerifications'));
 const VerifyDomain = lazy(() => import('./pages/VerifyDomain'));
+const AuthVerify = lazy(() => import('./pages/auth/AuthVerify'));
 const FirstLoginPasswordReset = lazy(() => import('./pages/FirstLoginPasswordReset'));
 const Profile = lazy(() => import('./pages/Profile'));
 
@@ -61,6 +62,7 @@ function AnimatedRoutes() {
           <Route path="/about" element={<MarketingAbout />} />
           <Route path="/contact" element={<MarketingContact />} />
           <Route path="/get-started" element={<MarketingGetStarted />} />
+          <Route path="/auth/verify" element={<AuthVerify />} />
           <Route path="/app" element={<Navigate to="/dashboard" replace />} />
           <Route
             path="/login"

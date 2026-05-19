@@ -72,7 +72,7 @@ export function AuthProvider({ children }) {
           email: email.trim(),
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/dashboard`,
+            emailRedirectTo: `${window.location.origin}/auth/verify`,
             data: metadata,
           },
         });
