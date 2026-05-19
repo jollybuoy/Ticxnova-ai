@@ -40,6 +40,9 @@ const VerifyDomain = lazy(() => import('./pages/VerifyDomain'));
 const AuthVerify = lazy(() => import('./pages/auth/AuthVerify'));
 const FirstLoginPasswordReset = lazy(() => import('./pages/FirstLoginPasswordReset'));
 const Profile = lazy(() => import('./pages/Profile'));
+const KnowledgeBase = lazy(() => import('./pages/KnowledgeBase'));
+const BillingSettings = lazy(() => import('./pages/admin/BillingSettings'));
+const TrialExpired = lazy(() => import('./pages/TrialExpired'));
 
 function RouteLoader() {
   return (
@@ -184,6 +187,22 @@ function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/knowledge-base"
+            element={
+              <ProtectedRoute>
+                <KnowledgeBase />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/trial-expired"
+            element={
+              <ProtectedRoute allowTrialExpired>
+                <TrialExpired />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/platform-admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/platform-admin/*" element={<Navigate to="/admin/dashboard" replace />} />
           <Route
@@ -226,6 +245,14 @@ function AnimatedRoutes() {
             element={
               <ProtectedRoute allowedRoles={['super_admin', 'org_admin']}>
                 <RolesPermissions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/billing"
+            element={
+              <ProtectedRoute allowedRoles={['super_admin', 'org_admin']} allowTrialExpired>
+                <BillingSettings />
               </ProtectedRoute>
             }
           />

@@ -1,21 +1,32 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useTenant } from '../../hooks/useTenant';
-import { workspaceCanAccessApp } from '../../lib/tenant/verificationService';
+import { usePlanAccess } from '../../hooks/usePlanAccess';
+import { usePermissions } from '../../hooks/usePermissions';
+import { ROUTE_FEATURES } from '../../lib/plans/planConfig';
+import { ROUTE_GUARDS } from '../../lib/rbac/modulePermissions';
 import { AuthLoadingScreen } from './AuthLoadingScreen';
+import { UpgradePrompt } from '../billing/UpgradePrompt';
 
 export function ProtectedRoute({
   children,
   allowPasswordReset = false,
   allowDomainVerification = false,
+  allowTrialExpired = false,
   allowedRoles,
+  requiredFeature,
 }) {
   const { initializing, isAuthenticated, user } = useAuth();
   const { profile, tenant, loading: tenantLoading } = useTenant();
+  const { canUseFeature, isTrialExpired } = usePlanAccess();
+  const { canAccessModule } = usePermissions();
   const location = useLocation();
   const authMustReset = user?.user_metadata?.must_reset_password;
   const mustResetPassword =
     typeof authMustReset === 'boolean' ? authMustReset : Boolean(profile?.must_reset_password);
+
+  const routeFeature = requiredFeature ?? ROUTE_FEATURES[location.pathname];
+  const routeGuard = ROUTE_GUARDS[location.pathname];
 
   if (initializing || tenantLoading) {
     return <AuthLoadingScreen />;
@@ -29,6 +40,14 @@ export function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
+  if (routeGuard?.roles?.length && profile?.role && !routeGuard.roles.includes(profile.role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  if (routeGuard?.module && !canAccessModule(routeGuard.module, 'read')) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (mustResetPassword && !allowPasswordReset) {
     return <Navigate to="/first-login-reset" replace />;
   }
@@ -37,15 +56,30 @@ export function ProtectedRoute({
     return <Navigate to="/dashboard" replace />;
   }
 
-  const needsDomainVerification =
-    tenant && profile?.tenant_id && !workspaceCanAccessApp(tenant);
+  const domainVerified =
+    Boolean(tenant?.domain_verified) && tenant?.verification_status === 'verified';
 
-  if (needsDomainVerification && !allowDomainVerification) {
+  if (tenant && profile?.tenant_id && !domainVerified && !allowDomainVerification) {
     return <Navigate to="/verify-domain" replace state={{ from: location.pathname }} />;
   }
 
-  if (allowDomainVerification && workspaceCanAccessApp(tenant)) {
+  if (allowDomainVerification && domainVerified) {
     return <Navigate to="/dashboard" replace />;
+  }
+
+  if (domainVerified && isTrialExpired && !allowTrialExpired) {
+    return <Navigate to="/trial-expired" replace />;
+  }
+
+  const featureToCheck = routeGuard?.feature ?? routeFeature;
+  if (featureToCheck && !canUseFeature(featureToCheck)) {
+    return (
+      <div className="mesh-dashboard flex min-h-screen items-center justify-center p-6">
+        <div className="w-full max-w-lg">
+          <UpgradePrompt feature={featureToCheck} />
+        </div>
+      </div>
+    );
   }
 
   return children;

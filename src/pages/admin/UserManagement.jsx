@@ -8,8 +8,11 @@ import { Modal } from '../../components/ui/Modal';
 import { Select } from '../../components/ui/Select';
 import { Spinner } from '../../components/ui/Spinner';
 import { Textarea } from '../../components/ui/Textarea';
+import { UpgradePrompt } from '../../components/billing/UpgradePrompt';
+import { usePlanAccess } from '../../hooks/usePlanAccess';
 import { useTenant } from '../../hooks/useTenant';
 import { useTenantUsers } from '../../hooks/useTenantUsers';
+import { FEATURES } from '../../lib/plans/planConfig';
 import { RBAC_ROLES, canManageUsers } from '../../lib/tenant/tenantService';
 
 const defaultInvite = {
@@ -61,6 +64,8 @@ export default function UserManagement() {
     resetPassword,
   } = useTenantUsers();
   const { tenant } = useTenant();
+  const { canUseFeature } = usePlanAccess();
+  const canInviteUsers = canUseFeature(FEATURES.INVITE_USERS);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteForm, setInviteForm] = useState(defaultInvite);
   const [inviteResult, setInviteResult] = useState(null);
@@ -156,11 +161,22 @@ export default function UserManagement() {
             Create tenant users, generate temporary passwords, assign roles, and deactivate access.
           </p>
         </div>
-        <Button onClick={() => setInviteOpen(true)} disabled={!canManage}>
+        <Button
+          onClick={() => setInviteOpen(true)}
+          disabled={!canManage || !canInviteUsers}
+        >
           <MailPlus size={17} />
           Create Users
         </Button>
       </div>
+
+      {!canInviteUsers && (
+        <UpgradePrompt
+          feature={FEATURES.INVITE_USERS}
+          title="Invite users on Professional"
+          description="Upgrade to invite technicians and employees to your workspace."
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-3">
         <div className="glass-card p-5">

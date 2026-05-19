@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sidebar } from './Sidebar';
 import { TopNavbar } from './TopNavbar';
 import { BackgroundMesh } from './BackgroundMesh';
+import { TrialBanner } from '../billing/TrialBanner';
 
 export function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -38,6 +39,7 @@ export function DashboardLayout({ children }) {
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 className="mx-auto max-w-[1600px] space-y-8"
               >
+                <TrialBanner />
                 {children}
               </motion.div>
             </AnimatePresence>

@@ -6,6 +6,16 @@ import { NavBadge } from '../ui/Badge';
 import { navItems } from '../../data/dummyData';
 import { useOpenTicketCount } from '../../hooks/useOpenTicketCount';
 import { useTenant } from '../../hooks/useTenant';
+import { usePlanAccess } from '../../hooks/usePlanAccess';
+import { usePermissions } from '../../hooks/usePermissions';
+import { FEATURES } from '../../lib/plans/planConfig';
+
+function navItemAllowed(item, { canUseFeature, canAccessModule, isAdmin }) {
+  if (item.id === 'admin' && !isAdmin) return false;
+  if (item.planFeature && !canUseFeature(item.planFeature)) return false;
+  if (item.path === '/knowledge-base' && !canUseFeature(FEATURES.KNOWLEDGE_BASE)) return false;
+  return true;
+}
 
 export function Sidebar({ open, collapsed, onClose }) {
   const width = collapsed ? 'w-[72px]' : 'w-64';
@@ -13,9 +23,29 @@ export function Sidebar({ open, collapsed, onClose }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { role } = useTenant();
+  const { canUseFeature } = usePlanAccess();
+  const { canAccessModule, modules } = usePermissions();
   const [aiPrompt, setAiPrompt] = useState('');
   const isAdmin = ['super_admin', 'org_admin'].includes(role);
-  const visibleNavItems = navItems.filter((item) => item.id !== 'admin' || isAdmin);
+  const visibleNavItems = navItems
+    .filter((item) => navItemAllowed(item, { canUseFeature, canAccessModule, isAdmin }))
+    .map((item) => {
+      if (!item.children?.length) return item;
+      const children = item.children.filter((child) =>
+        navItemAllowed(child, { canUseFeature, canAccessModule, isAdmin }),
+      );
+      if (item.id === 'admin') {
+        const filtered = children.filter((child) => {
+          if (child.path === '/settings/users') {
+            return canAccessModule(modules.USERS, 'read');
+          }
+          return true;
+        });
+        return { ...item, children: filtered };
+      }
+      return { ...item, children };
+    })
+    .filter((item) => !item.children?.length || item.children.length > 0);
   const [expandedItems, setExpandedItems] = useState(() => {
     const activeSections = visibleNavItems
       .filter((item) => item.children?.length && location.pathname.startsWith(item.path))

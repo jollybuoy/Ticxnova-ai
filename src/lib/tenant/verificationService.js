@@ -1,11 +1,11 @@
 import { supabase } from '../supabase';
+import { canAccessApp } from '../plans/planAccess';
 
 const TENANT_VERIFICATION_FIELDS =
   'id, company_name, domain, subscription_plan, created_at, is_active, verification_status, domain_verified, verification_method, rejected_reason';
 
 export function workspaceCanAccessApp(tenant) {
-  if (!tenant) return false;
-  return Boolean(tenant.domain_verified) && tenant.verification_status === 'verified';
+  return canAccessApp(tenant);
 }
 
 export async function fetchMyDomainVerification() {

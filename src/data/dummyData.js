@@ -4,6 +4,7 @@ export const navItems = [
   { id: 'ai-assistant', label: 'AI Assistant', icon: 'Bot', path: '/ai-assistant' },
   { id: 'assets', label: 'Assets', icon: 'BarChart3', path: '/assets' },
   { id: 'devices', label: 'Devices', icon: 'Monitor', path: '/devices' },
+  { id: 'knowledge-base', label: 'Knowledge Base', icon: 'BookOpen', path: '/knowledge-base', planFeature: 'knowledge_base' },
   {
     id: 'reports',
     label: 'Reports',
@@ -11,10 +12,10 @@ export const navItems = [
     path: '/reports',
     children: [
       { id: 'reports-dashboard', label: 'Reports Dashboard', path: '/reports' },
-      { id: 'ticket-analytics', label: 'Ticket Analytics', path: '/reports/tickets' },
-      { id: 'device-analytics', label: 'Device Analytics', path: '/reports/devices' },
-      { id: 'ai-insights', label: 'AI Insights', path: '/reports/ai-insights' },
-      { id: 'sla-reports', label: 'SLA Reports', path: '/reports/sla' },
+      { id: 'ticket-analytics', label: 'Ticket Analytics', path: '/reports/tickets', planFeature: 'advanced_analytics' },
+      { id: 'device-analytics', label: 'Device Analytics', path: '/reports/devices', planFeature: 'advanced_analytics' },
+      { id: 'ai-insights', label: 'AI Insights', path: '/reports/ai-insights', planFeature: 'advanced_analytics' },
+      { id: 'sla-reports', label: 'SLA Reports', path: '/reports/sla', planFeature: 'sla_engine' },
     ],
   },
   {
@@ -24,7 +25,8 @@ export const navItems = [
     path: '/settings',
     children: [
       { id: 'organization-settings', label: 'Organization Settings', path: '/settings/organization' },
-      { id: 'user-management', label: 'User Management', path: '/settings/users' },
+      { id: 'user-management', label: 'User Management', path: '/settings/users', planFeature: 'invite_users' },
+      { id: 'billing', label: 'Billing & Plans', path: '/settings/billing' },
       { id: 'roles-permissions', label: 'Roles & Permissions', path: '/settings/roles' },
     ],
   },

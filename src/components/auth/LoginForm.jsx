@@ -207,6 +207,12 @@ export function LoginForm() {
               <MicrosoftLogo />
               Sign in with Microsoft
             </Button>
+            {isSignUp && (
+              <p className="mt-3 text-center text-[11px] text-zinc-500">
+                Microsoft sign-in for workspaces is available on the Professional plan after
+                onboarding.
+              </p>
+            )}
           </>
         )}
 
