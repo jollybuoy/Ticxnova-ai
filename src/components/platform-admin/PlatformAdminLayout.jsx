@@ -17,7 +17,7 @@ const navItems = [
   { to: '/admin/profile', label: 'Admin Profile', icon: UserCog },
 ];
 
-export function PlatformAdminLayout() {
+export default function PlatformAdminLayout() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
 

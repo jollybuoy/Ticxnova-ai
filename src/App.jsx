@@ -8,7 +8,6 @@ import {
   PlatformAdminGuestRoute,
   PlatformAdminRoute,
 } from './components/platform-admin/PlatformAdminRoute';
-
 const Login = lazy(() => import('./pages/Login'));
 const MarketingHome = lazy(() => import('./pages/marketing/Home'));
 const MarketingFeatures = lazy(() => import('./pages/marketing/Features'));
@@ -32,7 +31,6 @@ const OrganizationSettings = lazy(() => import('./pages/admin/OrganizationSettin
 const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
 const RolesPermissions = lazy(() => import('./pages/admin/RolesPermissions'));
 const PlatformAdminLogin = lazy(() => import('./pages/platform-admin/PlatformAdminLogin'));
-const PlatformAdminLayout = lazy(() => import('./components/platform-admin/PlatformAdminLayout'));
 const PlatformAdminDashboard = lazy(() => import('./pages/platform-admin/PlatformAdminDashboard'));
 const PlatformAdminWorkspaces = lazy(() => import('./pages/platform-admin/PlatformAdminWorkspaces'));
 const PlatformAdminUsers = lazy(() => import('./pages/platform-admin/PlatformAdminUsers'));
@@ -183,13 +181,11 @@ function AnimatedRoutes() {
             }
           />
           <Route path="/admin" element={<PlatformAdminRoute />}>
-            <Route element={<PlatformAdminLayout />}>
-              <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<PlatformAdminDashboard />} />
-              <Route path="workspaces" element={<PlatformAdminWorkspaces />} />
-              <Route path="users" element={<PlatformAdminUsers />} />
-              <Route path="profile" element={<PlatformAdminProfile />} />
-            </Route>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<PlatformAdminDashboard />} />
+            <Route path="workspaces" element={<PlatformAdminWorkspaces />} />
+            <Route path="users" element={<PlatformAdminUsers />} />
+            <Route path="profile" element={<PlatformAdminProfile />} />
           </Route>
           <Route path="/admin/organization" element={<Navigate to="/settings/organization" replace />} />
           <Route path="/admin/users" element={<Navigate to="/settings/users" replace />} />

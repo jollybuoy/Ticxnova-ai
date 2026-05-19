@@ -1,5 +1,6 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { usePlatformAdminGate } from '../../hooks/usePlatformAdminGate';
+import PlatformAdminLayout from './PlatformAdminLayout';
 
 function PlatformAdminLoading() {
   return (
@@ -25,7 +26,7 @@ export function PlatformAdminRoute() {
     return <Navigate to="/admin/login" replace state={{ reason: 'not_platform_admin' }} />;
   }
 
-  return <Outlet />;
+  return <PlatformAdminLayout />;
 }
 
 export function PlatformAdminGuestRoute({ children }) {
