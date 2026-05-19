@@ -1,7 +1,9 @@
 import { ChevronDown } from 'lucide-react';
 
-export function Select({ label, id, options, className = '', ...props }) {
+export function Select({ label, id, options, className = '', children, ...props }) {
   const selectId = id || label?.toLowerCase().replace(/\s/g, '-');
+  const optionList = Array.isArray(options) ? options : [];
+
   return (
     <div className={className}>
       {label && (
@@ -15,11 +17,13 @@ export function Select({ label, id, options, className = '', ...props }) {
           className="focus-ring w-full appearance-none rounded-xl border border-white/10 bg-black/25 py-3 pl-4 pr-10 text-sm text-white transition-all duration-200 hover:border-white/15 focus:border-violet-500/40 focus:bg-black/40 disabled:opacity-50"
           {...props}
         >
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value} className="bg-zinc-900">
-              {opt.label}
-            </option>
-          ))}
+          {optionList.length > 0
+            ? optionList.map((opt) => (
+                <option key={opt.value} value={opt.value} className="bg-zinc-900">
+                  {opt.label}
+                </option>
+              ))
+            : children}
         </select>
         <ChevronDown
           size={16}

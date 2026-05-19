@@ -1,18 +1,26 @@
 import { Link } from 'react-router-dom';
 import { Clock, Sparkles } from 'lucide-react';
 import { usePlanAccess } from '../../hooks/usePlanAccess';
+import { useTenant } from '../../hooks/useTenant';
 
 export function TrialBanner() {
-  const { trial, planLabel, isTrialExpiring, isTrialExpired } = usePlanAccess();
+  const { tenant, loading: tenantLoading } = useTenant();
+  const { trial, planLabel, isTrialExpired } = usePlanAccess();
+
+  // Avoid flash while tenant context loads (daysRemaining briefly 0)
+  if (tenantLoading || !tenant) return null;
+
+  // Paid / grandfathered workspaces should not see trial messaging
+  if (tenant.subscription_status !== 'trialing') return null;
 
   if (isTrialExpired) return null;
 
-  if (trial.daysRemaining > 3) return null;
+  const isUrgent = trial.daysRemaining <= 3;
 
   return (
     <div
       className={`mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${
-        isTrialExpiring
+        isUrgent
           ? 'border-amber-400/30 bg-amber-500/10 text-amber-100'
           : 'border-cyan-400/20 bg-cyan-500/10 text-cyan-100'
       }`}

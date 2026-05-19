@@ -1,4 +1,6 @@
 import { usePlanAccess } from '../../hooks/usePlanAccess';
+import { useTenant } from '../../hooks/useTenant';
+import { Spinner } from '../ui/Spinner';
 import { UpgradePrompt } from './UpgradePrompt';
 
 export function PlanGate({
@@ -9,7 +11,16 @@ export function PlanGate({
   title,
   description,
 }) {
+  const { loading: tenantLoading } = useTenant();
   const { canUseFeature } = usePlanAccess();
+
+  if (tenantLoading) {
+    return (
+      <div className="flex justify-center py-24">
+        <Spinner />
+      </div>
+    );
+  }
 
   if (canUseFeature(feature)) {
     return children;

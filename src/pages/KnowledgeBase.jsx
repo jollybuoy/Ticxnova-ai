@@ -29,9 +29,22 @@ const emptyArticle = {
   category_id: '',
 };
 
+const STATUS_OPTIONS = [
+  { value: '', label: 'All statuses' },
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+  { value: 'archived', label: 'Archived' },
+];
+
+const ARTICLE_STATUS_OPTIONS = [
+  { value: 'draft', label: 'Draft' },
+  { value: 'published', label: 'Published' },
+  { value: 'archived', label: 'Archived' },
+];
+
 export default function KnowledgeBase() {
   const { user } = useAuth();
-  const { tenantId } = useTenant();
+  const { tenantId, loading: tenantLoading } = useTenant();
   const { canManageModule, modules } = usePermissions();
   const canEdit = canManageModule(modules.KB);
 
@@ -48,7 +61,10 @@ export default function KnowledgeBase() {
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(async () => {
-    if (!tenantId) return;
+    if (!tenantId) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     const [catRes, artRes] = await Promise.all([
       listKbCategories(tenantId),
@@ -129,6 +145,24 @@ export default function KnowledgeBase() {
     load();
   };
 
+  const categoryOptions = useMemo(
+    () => [
+      { value: '', label: 'Uncategorized' },
+      ...categories.map((c) => ({ value: c.id, label: c.name })),
+    ],
+    [categories],
+  );
+
+  if (tenantLoading) {
+    return (
+      <DashboardLayout>
+        <div className="flex justify-center py-24">
+          <Spinner />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   const saveCategory = async () => {
     if (!tenantId || !categoryName.trim()) return;
     setSaving(true);
@@ -189,12 +223,8 @@ export default function KnowledgeBase() {
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-40"
-            >
-              <option value="">All statuses</option>
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </Select>
+              options={STATUS_OPTIONS}
+            />
           </div>
 
           {loading ? (
@@ -270,23 +300,14 @@ export default function KnowledgeBase() {
               label="Category"
               value={form.category_id}
               onChange={(e) => setForm((f) => ({ ...f, category_id: e.target.value }))}
-            >
-              <option value="">Uncategorized</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
+              options={categoryOptions}
+            />
             <Select
               label="Status"
               value={form.status}
               onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
-            >
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
-            </Select>
+              options={ARTICLE_STATUS_OPTIONS}
+            />
             <Textarea
               label="Content"
               rows={10}
