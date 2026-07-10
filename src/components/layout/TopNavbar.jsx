@@ -12,6 +12,7 @@ import {
   NotificationDropdown,
 } from '../notifications/NotificationDropdown';
 import { getUserDisplayName, getUserInitials, getUserEmail } from '../../lib/user';
+import { ThemeSettings } from '../settings/ThemeSettings';
 
 export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
   const navigate = useNavigate();
@@ -89,12 +90,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
         />
       </form>
 
-      <motion.div
-        className="relative ml-auto flex items-center gap-1 sm:gap-2"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-      >
+      <div className="relative ml-auto flex items-center gap-1 sm:gap-2">
         <motion.button
           type="button"
           whileHover={{ scale: 1.06, backgroundColor: 'rgba(255,255,255,0.06)' }}
@@ -202,6 +198,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
                     <UserCog size={16} />
                     Profile & Organization
                   </button>
+                  <ThemeSettings compact />
                   <button
                     type="button"
                     role="menuitem"
@@ -221,7 +218,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
             )}
           </AnimatePresence>
         </div>
-      </motion.div>
+      </div>
     </header>
   );
 }

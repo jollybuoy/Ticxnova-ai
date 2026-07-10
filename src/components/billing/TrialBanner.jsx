@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { AlertTriangle, Clock, Sparkles } from 'lucide-react';
+import { billingPath } from '../../lib/billing/billingPaths';
 import { usePlanAccess } from '../../hooks/usePlanAccess';
 import { useSubscriptionAccess } from '../../hooks/useSubscriptionAccess';
 import { useTenant } from '../../hooks/useTenant';
@@ -33,7 +34,7 @@ export function TrialBanner() {
         </span>
       </div>
       <Link
-        to="/settings/billing"
+        to={billingPath({ checkout: true })}
         className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium hover:bg-white/15"
       >
         <Sparkles size={14} />

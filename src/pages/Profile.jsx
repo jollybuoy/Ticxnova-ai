@@ -1,6 +1,6 @@
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Input } from '../components/ui/Input';
 import { Button } from '../components/ui/Button';
+import { ThemeSettings } from '../components/settings/ThemeSettings';
 import { useTenant } from '../hooks/useTenant';
 import { useAuth } from '../hooks/useAuth';
 import { getUserEmail } from '../lib/user';
@@ -10,7 +10,7 @@ export default function Profile() {
   const { profile, tenant, saveProfile, mutating } = useTenant();
 
   return (
-    <DashboardLayout>
+    <>
       <div>
         <p className="text-sm font-medium uppercase tracking-[0.3em] text-violet-300/80">
           My Account
@@ -20,6 +20,8 @@ export default function Profile() {
           View your workspace identity and update your personal details.
         </p>
       </div>
+
+      <ThemeSettings />
 
       <section className="glass-card max-w-3xl space-y-5 p-6">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -38,6 +40,6 @@ export default function Profile() {
           Refresh Profile
         </Button>
       </section>
-    </DashboardLayout>
+    </>
   );
 }

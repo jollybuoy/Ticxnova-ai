@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { TicketsToolbar } from '../components/tickets/TicketsToolbar';
 import { TicketsTable } from '../components/tickets/TicketsTable';
 import { CreateTicketModal } from '../components/tickets/CreateTicketModal';
@@ -82,7 +81,7 @@ export default function Tickets() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <TicketsToolbar
         search={search}
         onSearchChange={handleSearchChange}
@@ -125,6 +124,6 @@ export default function Tickets() {
         onConfirm={handleDeleteConfirm}
         loading={mutating}
       />
-    </DashboardLayout>
+    </>
   );
 }

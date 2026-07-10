@@ -22,9 +22,7 @@ export function TopUsers({ users = [] }) {
         {users.map((user, i) => (
           <motion.div
             key={user.name}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 + i * 0.05 }}
+            initial={false}
             whileHover={{ x: 6 }}
             className="flex items-center gap-4 rounded-xl px-2 py-1"
             onClick={() => navigate(`/tickets?search=${encodeURIComponent(user.name)}`)}

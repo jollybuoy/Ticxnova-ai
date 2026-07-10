@@ -9,9 +9,7 @@ function DonutLegend({ items }) {
       {items.map((item, i) => (
         <motion.li
           key={item.name}
-          initial={{ opacity: 0, x: 8 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.15 + i * 0.05 }}
+          initial={false}
           whileHover={{ x: 4 }}
           className="flex items-center gap-2.5 text-xs"
         >
@@ -45,7 +43,7 @@ export function DonutChartCard({ title, data, total, totalLabel = 'Total', delay
         ) : (
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start">
           <div className="relative h-48 w-48 shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
               <PieChart>
                 <Pie
                   data={data}
@@ -57,6 +55,7 @@ export function DonutChartCard({ title, data, total, totalLabel = 'Total', delay
                   cornerRadius={4}
                   dataKey="value"
                   stroke="none"
+                  isAnimationActive={false}
                 >
                   {data.map((entry) => (
                     <Cell key={entry.name} fill={entry.color} />

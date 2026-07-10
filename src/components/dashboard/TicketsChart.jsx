@@ -18,7 +18,7 @@ export function TicketsChart({ data = [] }) {
     <Card className="h-full min-h-[360px] cursor-pointer" delay={0.1} onClick={() => navigate('/reports/tickets')}>
       <CardHeader title="Tickets Overview" subtitle="Volume over the last 30 days" />
       <CardBody className="h-[280px] pt-0">
-        <ResponsiveContainer width="100%" height="100%">
+        <ResponsiveContainer width="100%" height="100%" debounce={50}>
           <AreaChart data={data} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
             <defs>
               <linearGradient id="ticketGradient" x1="0" y1="0" x2="0" y2="1">
@@ -60,6 +60,7 @@ export function TicketsChart({ data = [] }) {
               strokeWidth={2.5}
               fill="url(#ticketGradient)"
               dot={false}
+              isAnimationActive={false}
               activeDot={{
                 r: 6,
                 fill: '#a78bfa',

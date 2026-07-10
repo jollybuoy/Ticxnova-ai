@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Building2, Palette, ShieldCheck, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
@@ -89,16 +88,16 @@ export default function OrganizationSettings() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>
         <div className="glass-card flex min-h-[420px] items-center justify-center">
           <Spinner className="h-6 w-6 text-violet-300" />
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.3em] text-violet-300/80">
@@ -258,6 +257,6 @@ export default function OrganizationSettings() {
           </div>
         </div>
       </Modal>
-    </DashboardLayout>
+    </>
   );
 }

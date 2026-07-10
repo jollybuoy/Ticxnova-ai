@@ -16,11 +16,7 @@ export function MetricCard({ metric, index = 0 }) {
         if (metric.href && (event.key === 'Enter' || event.key === ' ')) navigate(metric.href);
       }}
     >
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: index * 0.06, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      >
+      <div>
         <motion.div
           className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl ${metric.iconBg} ring-1 ring-white/10`}
           whileHover={{ scale: 1.08, rotate: 4 }}
@@ -33,7 +29,7 @@ export function MetricCard({ metric, index = 0 }) {
           {metric.value}
         </p>
         <p className={`mt-2 text-xs font-medium ${metric.changeColor}`}>{metric.change}</p>
-      </motion.div>
+      </div>
     </Card>
   );
 }

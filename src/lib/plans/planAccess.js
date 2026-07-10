@@ -29,6 +29,10 @@ export function getUpgradePlanLabel(feature) {
   return PLAN_LABELS[plan] ?? 'Professional';
 }
 
+export function getUpgradePlanKey(feature) {
+  return getMinimumPlanForFeature(feature);
+}
+
 export function getTrialState(tenant) {
   if (!tenant) {
     return {

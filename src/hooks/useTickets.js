@@ -17,6 +17,21 @@ import { MODULES } from '../lib/rbac/modulePermissions';
 import { ACTIONS } from '../lib/rbac/actionPermissions';
 import { AUDIT_ACTIONS, AUDIT_MODULES, recordAuditLog } from '../lib/audit/auditService';
 
+const ticketsCache = { key: null, data: [] };
+
+function ticketsCacheKey(userId, tenantId) {
+  return `${userId ?? ''}:${tenantId ?? ''}`;
+}
+
+function readTicketsCache(userId, tenantId) {
+  return ticketsCache.key === ticketsCacheKey(userId, tenantId) ? ticketsCache.data : [];
+}
+
+function writeTicketsCache(userId, tenantId, data) {
+  ticketsCache.key = ticketsCacheKey(userId, tenantId);
+  ticketsCache.data = data;
+}
+
 export function useTickets() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
@@ -24,31 +39,46 @@ export function useTickets() {
   const userId = user?.id;
   const channelId = useRef(crypto.randomUUID());
 
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tickets, setTickets] = useState(() => readTicketsCache(userId, tenantId));
+  const [loading, setLoading] = useState(() => readTicketsCache(userId, tenantId).length === 0);
   const [mutating, setMutating] = useState(false);
 
-  const loadTickets = useCallback(async () => {
+  const loadTickets = useCallback(async (options = {}) => {
+    const { background = false } = options;
     if (!userId) {
       setTickets([]);
       setLoading(false);
+      ticketsCache.key = null;
+      ticketsCache.data = [];
       return;
     }
 
-    setLoading(true);
+    if (!background && readTicketsCache(userId, tenantId).length === 0) {
+      setLoading(true);
+    }
+
     const { data, error } = await fetchTickets(userId, tenantId);
     if (error) {
       toast.error(getTicketErrorMessage(error));
       setTickets([]);
+      writeTicketsCache(userId, tenantId, []);
     } else {
       setTickets(data);
+      writeTicketsCache(userId, tenantId, data);
     }
     setLoading(false);
   }, [tenantId, userId]);
 
   useEffect(() => {
+    const cached = readTicketsCache(userId, tenantId);
+    if (cached.length) {
+      setTickets(cached);
+      setLoading(false);
+      loadTickets({ background: true });
+      return;
+    }
     loadTickets();
-  }, [loadTickets]);
+  }, [loadTickets, tenantId, userId]);
 
   useEffect(() => {
     if (!userId) return undefined;
@@ -64,7 +94,7 @@ export function useTickets() {
           filter: `user_id=eq.${userId}`,
         },
         () => {
-          loadTickets();
+          loadTickets({ background: true });
         },
       )
       .subscribe();
@@ -95,7 +125,11 @@ export function useTickets() {
         return { success: false };
       }
 
-      setTickets((prev) => [data, ...prev]);
+      setTickets((prev) => {
+        const next = [data, ...prev];
+        writeTicketsCache(userId, tenantId, next);
+        return next;
+      });
       void recordAuditLog({
         tenantId,
         actorId: userId,
@@ -140,7 +174,11 @@ export function useTickets() {
         return { success: false };
       }
 
-      setTickets((prev) => prev.map((t) => (t.id === ticketId ? data : t)));
+      setTickets((prev) => {
+        const next = prev.map((t) => (t.id === ticketId ? data : t));
+        writeTicketsCache(userId, tenantId, next);
+        return next;
+      });
       void recordAuditLog({
         tenantId,
         actorId: userId,
@@ -175,7 +213,11 @@ export function useTickets() {
         return { success: false };
       }
 
-      setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+      setTickets((prev) => {
+        const next = prev.filter((t) => t.id !== ticketId);
+        writeTicketsCache(userId, tenantId, next);
+        return next;
+      });
       void recordAuditLog({
         tenantId,
         actorId: userId,
@@ -202,7 +244,11 @@ export function useTickets() {
         return { success: false };
       }
 
-      setTickets((prev) => prev.map((t) => (t.id === ticket.id ? data : t)));
+      setTickets((prev) => {
+        const next = prev.map((t) => (t.id === ticket.id ? data : t));
+        writeTicketsCache(userId, tenantId, next);
+        return next;
+      });
       toast.success('AI summary saved to ticket');
       return { success: true, data };
     },

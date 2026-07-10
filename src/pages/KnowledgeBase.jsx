@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { BookOpen, Plus, Search, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { PlanGate } from '../components/billing/PlanGate';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -155,11 +154,11 @@ export default function KnowledgeBase() {
 
   if (tenantLoading) {
     return (
-      <DashboardLayout>
+      <>
         <div className="flex justify-center py-24">
           <Spinner />
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
@@ -179,7 +178,7 @@ export default function KnowledgeBase() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <PlanGate
         feature={FEATURES.KNOWLEDGE_BASE}
         title="Knowledge base"
@@ -342,6 +341,6 @@ export default function KnowledgeBase() {
           </div>
         </Modal>
       </PlanGate>
-    </DashboardLayout>
+    </>
   );
 }

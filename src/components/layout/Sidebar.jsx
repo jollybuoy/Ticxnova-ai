@@ -132,16 +132,12 @@ function SidebarComponent({ open, collapsed, onClose }) {
                 <Icon name="Hexagon" size={20} className="text-white" />
               </motion.div>
               {!collapsed && (
-                <motion.div
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  className="min-w-0"
-                >
+                <div className="min-w-0">
                   <h1 className="truncate text-base font-semibold tracking-tight text-white">
                     Ticxnova-AI
                   </h1>
                   <p className="truncate text-[11px] text-zinc-500">IT Management Platform</p>
-                </motion.div>
+                </div>
               )}
             </motion.div>
           </NavLink>
@@ -173,12 +169,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
                         : 'text-zinc-400 hover:bg-white/5 hover:text-white'
                     }`}
                   >
-                    <motion.span
-                      className="flex w-full items-center gap-3"
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.025 }}
-                    >
+                    <span className="flex w-full items-center gap-3">
                       <Icon name={item.icon} size={18} className="shrink-0" />
                       {!collapsed && (
                         <>
@@ -190,7 +181,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
                           />
                         </>
                       )}
-                    </motion.span>
+                    </span>
                   </button>
                 ) : (
                   <NavLink
@@ -198,10 +189,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
                     title={collapsed ? item.label : undefined}
                     onMouseEnter={() => prefetchRoute(item.path)}
                     onFocus={() => prefetchRoute(item.path)}
-                    onClick={() => {
-                      setExpandedItems(new Set());
-                      onClose();
-                    }}
+                    onClick={onClose}
                     className={({ isActive }) =>
                       `group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors duration-200 ${
                         collapsed ? 'justify-center' : ''
@@ -212,12 +200,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
                       }`
                     }
                   >
-                  <motion.span
-                    className="flex w-full items-center gap-3"
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.025 }}
-                  >
+                  <span className="flex w-full items-center gap-3">
                     <Icon name={item.icon} size={18} className="shrink-0" />
                     {!collapsed && (
                       <>
@@ -228,7 +211,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
                     {collapsed && badge != null && (
                       <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500" />
                     )}
-                  </motion.span>
+                  </span>
                   </NavLink>
                 )}
 

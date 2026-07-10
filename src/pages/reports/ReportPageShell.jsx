@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ReportFilters } from '../../components/reports/ReportFilters';
 import { ReportActions } from '../../components/reports/ReportActions';
 import { useAnalytics } from '../../hooks/useAnalytics';
@@ -21,7 +20,7 @@ export function ReportPageShell({ eyebrow, title, description, csvName, exportRo
   const rows = () => exportRows(data, analytics);
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-label">{eyebrow}</p>
@@ -41,6 +40,6 @@ export function ReportPageShell({ eyebrow, title, description, csvName, exportRo
       ) : (
         children({ analytics, data, filters })
       )}
-    </DashboardLayout>
+    </>
   );
 }

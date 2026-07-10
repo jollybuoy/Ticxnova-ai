@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
 import { History, Search } from 'lucide-react';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { PlanGate } from '../../components/billing/PlanGate';
 import { Input } from '../../components/ui/Input';
 import { Select } from '../../components/ui/Select';
@@ -51,7 +50,7 @@ export default function AuditLog() {
   }, [load]);
 
   return (
-    <DashboardLayout>
+    <>
       <PlanGate feature={FEATURES.AUDIT_LOGS}>
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -117,6 +116,6 @@ export default function AuditLog() {
           )}
         </div>
       </PlanGate>
-    </DashboardLayout>
+    </>
   );
 }

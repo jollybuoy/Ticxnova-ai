@@ -65,9 +65,7 @@ export function AIInsights({ insights }) {
           {aiInsights.alerts.map((alert, i) => (
             <motion.li
               key={alert.text}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + i * 0.06 }}
+              initial={false}
               whileHover={{ x: 4, backgroundColor: 'rgba(255,255,255,0.03)' }}
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors"
             >

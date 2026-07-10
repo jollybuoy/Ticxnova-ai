@@ -10,7 +10,6 @@ import {
   Send,
   UserRound,
 } from 'lucide-react';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
@@ -148,17 +147,17 @@ export default function TicketDetails() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>
         <Card hover={false} className="flex min-h-[420px] items-center justify-center">
           <Spinner className="h-8 w-8 text-violet-400" />
         </Card>
-      </DashboardLayout>
+      </>
     );
   }
 
   if (!ticket) {
     return (
-      <DashboardLayout>
+      <>
         <Card hover={false} className="p-8 text-center">
           <h1 className="text-xl font-semibold text-white">Ticket not found</h1>
           <p className="mt-2 text-sm text-zinc-400">
@@ -168,7 +167,7 @@ export default function TicketDetails() {
             Back to tickets
           </Button>
         </Card>
-      </DashboardLayout>
+      </>
     );
   }
 
@@ -184,7 +183,7 @@ export default function TicketDetails() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
@@ -351,6 +350,6 @@ export default function TicketDetails() {
           </aside>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

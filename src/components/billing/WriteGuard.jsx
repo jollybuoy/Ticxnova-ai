@@ -34,7 +34,7 @@ export function WriteGuard({
             <Lock size={16} />
             Trial expired — upgrade to unlock this action.
           </span>
-          <Link to="/settings/billing" className="text-xs font-medium text-violet-300 hover:text-violet-200">
+          <Link to="/trial-expired" className="text-xs font-medium text-violet-300 hover:text-violet-200">
             View plans
           </Link>
         </div>

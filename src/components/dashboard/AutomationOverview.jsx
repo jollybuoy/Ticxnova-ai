@@ -27,9 +27,7 @@ export function AutomationOverview({ automation }) {
             {stats.map((stat, i) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 + i * 0.06 }}
+                initial={false}
                 whileHover={{ y: -2 }}
               >
                 <p className="text-2xl font-semibold tracking-tight text-white tabular-nums">

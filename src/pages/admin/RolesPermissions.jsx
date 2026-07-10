@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react';
 import { KeyRound, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Modal } from '../../components/ui/Modal';
@@ -73,7 +72,7 @@ export default function RolesPermissions() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-sm font-medium uppercase tracking-[0.3em] text-violet-300/80">
@@ -201,6 +200,6 @@ export default function RolesPermissions() {
           </Button>
         </form>
       </Modal>
-    </DashboardLayout>
+    </>
   );
 }

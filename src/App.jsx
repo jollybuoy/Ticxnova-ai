@@ -1,12 +1,16 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { GuestRoute } from './components/auth/GuestRoute';
 import {
   PlatformAdminGuestRoute,
   PlatformAdminRoute,
 } from './components/platform-admin/PlatformAdminRoute';
+import { AppShellLayout } from './layouts/AppShellLayout';
+import { ThemedToaster } from './components/layout/ThemedToaster';
+
 const Login = lazy(() => import('./pages/Login'));
 const MarketingHome = lazy(() => import('./pages/marketing/Home'));
 const MarketingFeatures = lazy(() => import('./pages/marketing/Features'));
@@ -63,44 +67,67 @@ function RouteLoader() {
 function AnimatedRoutes() {
   return (
     <Suspense fallback={<RouteLoader />}>
-        <Routes>
-          <Route path="/" element={<MarketingHome />} />
-          <Route path="/features" element={<MarketingFeatures />} />
-          <Route path="/pricing" element={<MarketingPricing />} />
-          <Route path="/about" element={<MarketingAbout />} />
-          <Route path="/contact" element={<MarketingContact />} />
-          <Route path="/get-started" element={<MarketingGetStarted />} />
-          <Route path="/auth/verify" element={<AuthVerify />} />
-          <Route path="/app" element={<Navigate to="/dashboard" replace />} />
-          <Route
-            path="/login"
-            element={
-              <GuestRoute>
-                <Login />
-              </GuestRoute>
-            }
-          />
+      <Routes>
+        <Route path="/" element={<MarketingHome />} />
+        <Route path="/features" element={<MarketingFeatures />} />
+        <Route path="/pricing" element={<MarketingPricing />} />
+        <Route path="/about" element={<MarketingAbout />} />
+        <Route path="/contact" element={<MarketingContact />} />
+        <Route path="/get-started" element={<MarketingGetStarted />} />
+        <Route path="/auth/verify" element={<AuthVerify />} />
+        <Route path="/app" element={<Navigate to="/dashboard" replace />} />
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <Login />
+            </GuestRoute>
+          }
+        />
+        <Route
+          path="/first-login-reset"
+          element={
+            <ProtectedRoute allowPasswordReset>
+              <FirstLoginPasswordReset />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/verify-domain"
+          element={
+            <ProtectedRoute allowDomainVerification>
+              <VerifyDomain />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/platform-admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/platform-admin/*" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route
+          path="/admin/login"
+          element={
+            <PlatformAdminGuestRoute>
+              <PlatformAdminLogin />
+            </PlatformAdminGuestRoute>
+          }
+        />
+        <Route path="/admin" element={<PlatformAdminRoute />}>
+          <Route index element={<Navigate to="dashboard" replace />} />
+          <Route path="dashboard" element={<PlatformAdminDashboard />} />
+          <Route path="verifications" element={<PlatformAdminVerifications />} />
+          <Route path="workspaces" element={<PlatformAdminWorkspaces />} />
+          <Route path="users" element={<PlatformAdminUsers />} />
+          <Route path="profile" element={<PlatformAdminProfile />} />
+        </Route>
+        <Route path="/admin/organization" element={<Navigate to="/settings/organization" replace />} />
+        <Route path="/admin/users" element={<Navigate to="/settings/users" replace />} />
+        <Route path="/admin/roles" element={<Navigate to="/settings/roles" replace />} />
+
+        <Route element={<AppShellLayout />}>
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/first-login-reset"
-            element={
-              <ProtectedRoute allowPasswordReset>
-                <FirstLoginPasswordReset />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/verify-domain"
-            element={
-              <ProtectedRoute allowDomainVerification>
-                <VerifyDomain />
               </ProtectedRoute>
             }
           />
@@ -208,27 +235,6 @@ function AnimatedRoutes() {
               </ProtectedRoute>
             }
           />
-          <Route path="/platform-admin" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route path="/platform-admin/*" element={<Navigate to="/admin/dashboard" replace />} />
-          <Route
-            path="/admin/login"
-            element={
-              <PlatformAdminGuestRoute>
-                <PlatformAdminLogin />
-              </PlatformAdminGuestRoute>
-            }
-          />
-          <Route path="/admin" element={<PlatformAdminRoute />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<PlatformAdminDashboard />} />
-            <Route path="verifications" element={<PlatformAdminVerifications />} />
-            <Route path="workspaces" element={<PlatformAdminWorkspaces />} />
-            <Route path="users" element={<PlatformAdminUsers />} />
-            <Route path="profile" element={<PlatformAdminProfile />} />
-          </Route>
-          <Route path="/admin/organization" element={<Navigate to="/settings/organization" replace />} />
-          <Route path="/admin/users" element={<Navigate to="/settings/users" replace />} />
-          <Route path="/admin/roles" element={<Navigate to="/settings/roles" replace />} />
           <Route
             path="/settings/organization"
             element={
@@ -278,17 +284,21 @@ function AnimatedRoutes() {
             }
           />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
-        </Routes>
-      </Suspense>
+        </Route>
+      </Routes>
+    </Suspense>
   );
 }
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <AnimatedRoutes />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AnimatedRoutes />
+          <ThemedToaster />
+        </AuthProvider>
+      </ThemeProvider>
     </BrowserRouter>
   );
 }

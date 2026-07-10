@@ -15,12 +15,7 @@ export function DashboardHeader({ dateRange, onDateRangeChange }) {
   const name = getUserDisplayName(user);
 
   return (
-    <motion.header
-      initial={{ opacity: 0, y: -12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"
-    >
+    <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p className="text-label mb-2">Overview</p>
         <h1 className="text-display">Dashboard</h1>
@@ -46,6 +41,6 @@ export function DashboardHeader({ dateRange, onDateRangeChange }) {
           ))}
         </select>
       </motion.label>
-    </motion.header>
+    </header>
   );
 }

@@ -20,13 +20,28 @@ function uniqueDevices(devices) {
   return [...new Map(devices.map((device) => [device.id, device])).values()];
 }
 
+const devicesCache = { key: null, data: [] };
+
+function devicesCacheKey(userId, tenantId) {
+  return `${userId ?? ''}:${tenantId ?? ''}`;
+}
+
+function readDevicesCache(userId, tenantId) {
+  return devicesCache.key === devicesCacheKey(userId, tenantId) ? devicesCache.data : [];
+}
+
+function writeDevicesCache(userId, tenantId, data) {
+  devicesCache.key = devicesCacheKey(userId, tenantId);
+  devicesCache.data = data;
+}
+
 export function useDevices() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const userId = user?.id;
   const channelId = useRef(crypto.randomUUID());
-  const [devices, setDevices] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [devices, setDevices] = useState(() => readDevicesCache(userId, tenantId));
+  const [loading, setLoading] = useState(() => readDevicesCache(userId, tenantId).length === 0);
   const [mutating, setMutating] = useState(false);
 
   const actor = useMemo(
@@ -34,22 +49,37 @@ export function useDevices() {
     [user],
   );
 
-  const loadDevices = useCallback(async () => {
+  const loadDevices = useCallback(async (options = {}) => {
+    const { background = false } = options;
     if (!userId) return;
-    setLoading(true);
+
+    if (!background && readDevicesCache(userId, tenantId).length === 0) {
+      setLoading(true);
+    }
+
     const { data, error } = await fetchDevices(userId, tenantId);
     if (error) {
       toast.error(getDeviceErrorMessage(error));
       setDevices([]);
+      writeDevicesCache(userId, tenantId, []);
     } else {
-      setDevices(uniqueDevices(data));
+      const next = uniqueDevices(data);
+      setDevices(next);
+      writeDevicesCache(userId, tenantId, next);
     }
     setLoading(false);
   }, [tenantId, userId]);
 
   useEffect(() => {
+    const cached = readDevicesCache(userId, tenantId);
+    if (cached.length) {
+      setDevices(cached);
+      setLoading(false);
+      loadDevices({ background: true });
+      return;
+    }
     loadDevices();
-  }, [loadDevices]);
+  }, [loadDevices, tenantId, userId]);
 
   useEffect(() => {
     if (!userId) return undefined;
@@ -58,7 +88,7 @@ export function useDevices() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'devices', filter: `user_id=eq.${userId}` },
-        () => loadDevices(),
+        () => loadDevices({ background: true }),
       )
       .subscribe();
     return () => {
@@ -90,7 +120,11 @@ export function useDevices() {
         }
       }
       setMutating(false);
-      setDevices((prev) => uniqueDevices([data, ...prev]));
+      setDevices((prev) => {
+        const next = uniqueDevices([data, ...prev]);
+        writeDevicesCache(userId, tenantId, next);
+        return next;
+      });
       toast.success('Device added');
       return { success: true, data };
     },
@@ -106,7 +140,11 @@ export function useDevices() {
         toast.error(getDeviceErrorMessage(error));
         return { success: false };
       }
-      setDevices((prev) => prev.map((item) => (item.id === data.id ? data : item)));
+      setDevices((prev) => {
+        const next = prev.map((item) => (item.id === data.id ? data : item));
+        writeDevicesCache(userId, tenantId, next);
+        return next;
+      });
       toast.success('Device updated');
       return { success: true, data };
     },
@@ -122,7 +160,11 @@ export function useDevices() {
         toast.error(getDeviceErrorMessage(error));
         return { success: false };
       }
-      setDevices((prev) => prev.filter((item) => item.id !== deviceId));
+      setDevices((prev) => {
+        const next = prev.filter((item) => item.id !== deviceId);
+        writeDevicesCache(userId, tenantId, next);
+        return next;
+      });
       toast.success('Device deleted');
       return { success: true };
     },

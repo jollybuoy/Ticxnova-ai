@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { ArrowUpRight, CalendarClock, Server, ShieldCheck, TriangleAlert } from 'lucide-react';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { DonutChartCard } from '../components/dashboard/DonutChartCard';
 import { ChartTooltip } from '../components/ui/ChartTooltip';
@@ -48,7 +47,7 @@ export default function AssetOverview() {
   ];
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <p className="text-label">Asset Overview</p>
@@ -202,6 +201,6 @@ export default function AssetOverview() {
           </CardBody>
         </Card>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

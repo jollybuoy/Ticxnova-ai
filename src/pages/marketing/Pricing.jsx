@@ -54,7 +54,7 @@ export default function Pricing() {
               )}
               <div className="mt-6 flex items-end gap-1">
                 <span className="text-4xl font-semibold">{plan.price}</span>
-                {plan.price !== 'Custom' && <span className="mb-1 text-sm text-zinc-500">/mo</span>}
+                {plan.priceNote && <span className="mb-1 text-sm text-zinc-500">{plan.priceNote}</span>}
               </div>
               <ul className="mt-6 space-y-3">
                 {plan.features.map((feature) => (

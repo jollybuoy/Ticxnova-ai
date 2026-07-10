@@ -1,7 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BookOpen, Bot, ShieldCheck, Sparkles, Trash2, Zap } from 'lucide-react';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { ChatInput } from '../components/ai/ChatInput';
 import { ChatMessage } from '../components/ai/ChatMessage';
 import { SuggestedPrompts } from '../components/ai/SuggestedPrompts';
@@ -38,7 +37,7 @@ export default function AIAssistant() {
   }, [searchParams, sendMessage, setSearchParams]);
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex h-[calc(100vh-9rem)] min-h-[680px] flex-col gap-6">
         <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -146,6 +145,6 @@ export default function AIAssistant() {
           </aside>
         </div>
       </div>
-    </DashboardLayout>
+    </>
   );
 }

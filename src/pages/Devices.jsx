@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom';
 import { ShieldCheck, TriangleAlert, Wrench } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { DeviceFormModal } from '../components/devices/DeviceFormModal';
 import { DevicesGrid } from '../components/devices/DevicesGrid';
 import { DevicesTable } from '../components/devices/DevicesTable';
@@ -122,7 +121,7 @@ export default function Devices() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-label">Asset & Device Management</p>
@@ -191,6 +190,6 @@ export default function Devices() {
         loading={mutating}
         serviceRequestOptions={serviceRequestOptions}
       />
-    </DashboardLayout>
+    </>
   );
 }

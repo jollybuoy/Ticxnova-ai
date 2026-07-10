@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { MetricsGrid } from '../components/dashboard/MetricCard';
 import { TicketsChart } from '../components/dashboard/TicketsChart';
@@ -15,11 +14,8 @@ export default function Dashboard() {
   const dashboard = useDashboardData(dateRange);
 
   return (
-    <DashboardLayout>
+    <>
       <DashboardHeader dateRange={dateRange} onDateRangeChange={setDateRange} />
-      {dashboard.loading && (
-        <div className="glass-card px-5 py-3 text-sm text-zinc-400">Loading live dashboard data...</div>
-      )}
       <MetricsGrid metrics={dashboard.metrics} />
 
       <section className="grid grid-cols-1 gap-6 xl:grid-cols-12">
@@ -59,6 +55,6 @@ export default function Dashboard() {
       </section>
 
       <AutomationOverview automation={dashboard.automation} />
-    </DashboardLayout>
+    </>
   );
 }

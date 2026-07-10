@@ -25,19 +25,22 @@ export const marketingFeatures = [
 export const pricingPlans = [
   {
     name: 'Starter',
-    price: '$49',
+    price: '$149',
+    priceNote: 'CAD / mo',
     description: 'For small IT teams starting with AI-assisted service management.',
-    features: ['AI ticketing', 'Device inventory', 'Basic reports', 'Manual users', 'Local authentication'],
+    features: ['AI ticketing', 'Device inventory', 'Basic reports', 'AI summaries', 'Local authentication'],
   },
   {
     name: 'Professional',
-    price: '$149',
+    price: '$499',
+    priceNote: 'CAD / mo',
     description: 'For growing MSPs and Microsoft-heavy organizations.',
     features: ['Microsoft Login', 'Custom SMTP', 'Invite users', 'KB module', 'Advanced reports', 'AI assistant'],
   },
   {
     name: 'Enterprise',
-    price: 'Custom',
+    price: '$999',
+    priceNote: 'CAD / mo',
     description: 'For multi-tenant operations, automation, and advanced governance.',
     featured: true,
     features: ['Multi-domain', 'Microsoft Graph sync', 'Automation workflows', 'SLA engine', 'Advanced RBAC', 'AI analytics', 'Custom branding'],

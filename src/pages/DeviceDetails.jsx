@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, CalendarClock, Cpu, MapPin, PenLine, UserRound } from 'lucide-react';
-import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { Card, CardBody, CardHeader } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Select } from '../components/ui/Select';
@@ -52,22 +51,22 @@ export default function DeviceDetails() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <>
         <div className="glass-card px-6 py-12 text-center text-sm text-zinc-500">Loading device details...</div>
-      </DashboardLayout>
+      </>
     );
   }
 
   if (!device) {
     return (
-      <DashboardLayout>
+      <>
         <div className="glass-card px-6 py-12 text-center">
           <p className="text-sm font-medium text-white">Device not found</p>
           <Button className="mt-4" onClick={() => navigate('/devices')}>
             Back to inventory
           </Button>
         </div>
-      </DashboardLayout>
+      </>
     );
   }
 
@@ -79,7 +78,7 @@ export default function DeviceDetails() {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <Link to="/devices" className="inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-white">
@@ -233,6 +232,6 @@ export default function DeviceDetails() {
         }
         loading={mutating}
       />
-    </DashboardLayout>
+    </>
   );
 }

@@ -16,9 +16,7 @@ export function RecentTickets({ tickets = [] }) {
         {tickets.map((ticket, i) => (
           <motion.div
             key={ticket.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: i * 0.05 }}
+            initial={false}
             whileHover={{ backgroundColor: 'rgba(255,255,255,0.04)' }}
             className="flex items-center gap-4 border-b border-white/[0.04] px-6 py-4 last:border-0"
             onClick={() => navigate(`/tickets?search=${encodeURIComponent(ticket.id)}`)}
