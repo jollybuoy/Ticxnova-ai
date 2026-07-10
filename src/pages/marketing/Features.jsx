@@ -4,9 +4,9 @@ import {
   DashboardMockup,
   FinalCTA,
   GlowCard,
+  IntegrationStrip,
   MarketingLayout,
   MarketingSection,
-  MicrosoftStrip,
   StoryWorkflow,
   TenantVisual,
 } from '../../components/marketing/MarketingLayout';
@@ -60,11 +60,11 @@ export default function Features() {
       </MarketingSection>
 
       <MarketingSection
-        eyebrow="Built For Microsoft Environments"
-        title="Ready for Microsoft-centric organizations"
-        description="Microsoft Login, Entra ID, Outlook, Exchange, Teams, Graph API, and future Intune support are positioned as a core differentiator."
+        eyebrow="Enterprise Integrations"
+        title="Ready for identity-aware organizations"
+        description="Enterprise SSO, directory sync, email intake, messaging workflows, and endpoint management are core to how Ticxnova scales with your stack."
       >
-        <MicrosoftStrip />
+        <IntegrationStrip />
       </MarketingSection>
 
       <MarketingSection eyebrow="Architecture" title="Visualizing tenant isolation">

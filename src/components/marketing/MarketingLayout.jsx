@@ -40,13 +40,13 @@ const particlePositions = [
 ];
 
 const dashboardEvents = [
-  ['AI routed P2 ticket', 'Outlook MFA loop', '12s ago', Ticket],
+  ['AI routed P2 ticket', 'Identity MFA loop', '12s ago', Ticket],
   ['Device alert linked', 'LAP-204 battery risk', '34s ago', HardDrive],
   ['SLA watch started', 'VIP request approaching target', '1m ago', Gauge],
 ];
 
 const workflowSteps = [
-  ['User reports issue', 'A support request starts from email, Teams, portal, or technician intake.', MessageSquare],
+  ['User reports issue', 'A support request starts from email, chat, portal, or technician intake.', MessageSquare],
   ['AI analyzes context', 'Ticxnova evaluates symptoms, history, urgency, and suggested remediation.', BrainCircuit],
   ['Ticket is structured', 'The issue becomes an incident or service request with priority and context.', Ticket],
   ['Device is linked', 'Assets, warranty, health, and incident history are connected to the workflow.', HardDrive],
@@ -111,7 +111,7 @@ export function MarketingLayout({ children }) {
 
       <footer className="relative z-10 border-t border-white/10 px-5 py-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-zinc-500 md:flex-row md:items-center md:justify-between">
-          <p>© {new Date().getFullYear()} Ticxnova. AI-powered Microsoft-centric IT operations.</p>
+          <p>© {new Date().getFullYear()} Ticxnova. AI-powered IT operations platform.</p>
           <div className="flex gap-5">
             <Link to="/pricing" className="hover:text-white">Pricing</Link>
             <Link to="/contact" className="hover:text-white">Contact</Link>
@@ -325,8 +325,8 @@ export function AiChatPreview() {
         <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-xs text-emerald-300">Online</span>
       </div>
       {[
-        ['User', 'Outlook keeps asking for password after MFA.'],
-        ['Ticxnova AI', 'Try token refresh, check Entra sign-in logs, then validate Outlook profile health.'],
+        ['User', 'Email keeps asking for password after MFA.'],
+        ['Ticxnova AI', 'Try token refresh, check identity sign-in logs, then validate mailbox profile health.'],
         ['Ticxnova AI', 'Would you like me to create an incident with P2 priority and affected user context?'],
       ].map(([name, message], index) => (
         <motion.div
@@ -370,11 +370,11 @@ export function TenantVisual() {
   );
 }
 
-export function MicrosoftStrip() {
+export function IntegrationStrip() {
   return (
     <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-        {['Microsoft Login', 'Entra ID', 'Outlook', 'Exchange', 'Teams', 'Graph API', 'Intune future'].map((item, index) => (
+        {['Enterprise SSO', 'Directory sync', 'Email intake', 'Team messaging', 'Calendar workflows', 'Identity federation', 'Endpoint management'].map((item, index) => (
           <motion.div
             key={item}
             initial={{ opacity: 0, y: 14 }}
@@ -389,16 +389,19 @@ export function MicrosoftStrip() {
         ))}
       </div>
       <div className="mt-5 grid gap-3 lg:grid-cols-[1fr_auto_1fr_auto_1fr] lg:items-center">
-        {['Microsoft tenant', 'Ticxnova AI layer', 'IT operations workspace'].map((label, index) => (
+        {['Identity layer', 'Ticxnova AI layer', 'IT operations workspace'].map((label, index) => (
           <div key={label} className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-4 text-center text-sm text-cyan-100">
             {label}
-            <p className="mt-2 text-xs text-cyan-100/60">{['Identity and collaboration', 'Graph-aware automation', 'Tickets, devices, reports'][index]}</p>
+            <p className="mt-2 text-xs text-cyan-100/60">{['Users & access', 'Smart automation', 'Tickets, devices, reports'][index]}</p>
           </div>
         )).flatMap((item, index, array) => (index < array.length - 1 ? [item, <ArrowRight key={`arrow-${index}`} className="mx-auto hidden text-cyan-300 lg:block" />] : [item]))}
       </div>
     </div>
   );
 }
+
+/** @deprecated Use IntegrationStrip */
+export const MicrosoftStrip = IntegrationStrip;
 
 export function WorkflowGraphic() {
   return (
@@ -532,7 +535,7 @@ export function FinalCTA() {
         />
         <h2 className="relative text-4xl font-semibold tracking-tight md:text-6xl">Transform IT Operations With AI</h2>
         <p className="relative mx-auto mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
-          Launch a premium Microsoft-centric IT operations workspace for tickets, devices, analytics, automation, and AI-assisted service delivery.
+          Launch a premium AI-native IT operations workspace for tickets, devices, analytics, automation, and intelligent service delivery.
         </p>
         <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <PremiumCTA to="/get-started">Start Free Trial</PremiumCTA>

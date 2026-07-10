@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Input } from '../ui/Input';
 import { Button } from '../ui/Button';
-import { Spinner } from '../ui/Spinner';
-import { MicrosoftLogo } from './MicrosoftLogo';
 import { AuthAlert } from './AuthAlert';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -17,8 +15,7 @@ const MODES = {
 export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, signInWithMicrosoft, resetPassword, actionLoading, isAuthenticated } =
-    useAuth();
+  const { signIn, signUp, resetPassword, actionLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -92,14 +89,6 @@ export function LoginForm() {
     }
 
     const result = await signIn(email, password);
-    if (!result.success) {
-      setError(result.message);
-    }
-  };
-
-  const handleMicrosoft = async () => {
-    clearMessages();
-    const result = await signInWithMicrosoft();
     if (!result.success) {
       setError(result.message);
     }
@@ -188,37 +177,6 @@ export function LoginForm() {
             {submitLabel}
           </Button>
         </form>
-
-        {!isReset && (
-          <>
-            <div className="relative my-7">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/[0.08]" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-transparent px-3 text-zinc-500">or continue with</span>
-              </div>
-            </div>
-
-            <Button
-              type="button"
-              variant="microsoft"
-              className="w-full py-3"
-              disabled={actionLoading}
-              loading={actionLoading}
-              onClick={handleMicrosoft}
-            >
-              <MicrosoftLogo />
-              Sign in with Microsoft
-            </Button>
-            {isSignUp && (
-              <p className="mt-3 text-center text-[11px] text-zinc-500">
-                Microsoft sign-in for workspaces is available on the Professional plan after
-                onboarding.
-              </p>
-            )}
-          </>
-        )}
 
         <p className="mt-8 text-center text-xs text-zinc-500">
           {isReset ? (

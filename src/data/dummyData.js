@@ -107,9 +107,9 @@ export const ticketsByCategory = [
 
 export const aiInsights = {
   featured: {
-    title: 'Outlook login issues trending',
+    title: 'Email login issues trending',
     description:
-      'AI detected 8 similar tickets in the last 24 hours. Likely caused by recent Microsoft 365 update.',
+      'AI detected 8 similar tickets in the last 24 hours. Likely caused by a recent cloud productivity suite update.',
     action: 'View Insights',
   },
   alerts: [
@@ -122,7 +122,7 @@ export const aiInsights = {
 export const recentTickets = [
   {
     id: 'TK-2487',
-    title: 'Outlook not syncing',
+    title: 'Email not syncing',
     user: 'Sarah Johnson',
     status: 'In Progress',
     statusColor: 'blue',

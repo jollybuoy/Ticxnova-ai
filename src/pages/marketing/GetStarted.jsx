@@ -34,7 +34,7 @@ const initialForm = {
 
 export default function GetStarted() {
   const navigate = useNavigate();
-  const { user, isAuthenticated, signUp, signInWithMicrosoft, actionLoading } = useAuth();
+  const { user, isAuthenticated, signUp, actionLoading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState(initialForm);
 
@@ -178,13 +178,6 @@ export default function GetStarted() {
     }
   };
 
-  const handleMicrosoft = async () => {
-    toast.message('Microsoft sign-in is available for existing workspaces.', {
-      description: 'Use the form to create a new organization workspace with email and password.',
-    });
-    await signInWithMicrosoft();
-  };
-
   const loading = submitting || actionLoading;
 
   return (
@@ -201,7 +194,7 @@ export default function GetStarted() {
             {[
               ['Tenant workspace created in Supabase', Building2],
               ['org_admin profile linked to tenant_id', ShieldCheck],
-              ['Ready for RBAC, Microsoft login, and feature gating', Cloud],
+              ['Ready for RBAC, enterprise SSO, and feature gating', Cloud],
             ].map(([text, Icon]) => (
               <div key={text} className="flex items-center gap-3 text-sm text-zinc-300">
                 <Icon size={18} className="text-cyan-300" />
@@ -279,16 +272,6 @@ export default function GetStarted() {
 
           <Button type="submit" className="mt-6 w-full" loading={loading} disabled={loading}>
             {isAuthenticated ? 'Complete Workspace Setup' : 'Create Workspace'}
-          </Button>
-          <Button
-            type="button"
-            variant="microsoft"
-            className="mt-3 w-full"
-            disabled={loading}
-            onClick={handleMicrosoft}
-          >
-            <Cloud size={17} />
-            Continue with Microsoft
           </Button>
         </form>
       </section>

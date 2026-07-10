@@ -5,9 +5,9 @@ import {
   DashboardMockup,
   FinalCTA,
   GlowCard,
+  IntegrationStrip,
   MarketingLayout,
   MarketingSection,
-  MicrosoftStrip,
   PremiumCTA,
   SocialProofSection,
   StoryWorkflow,
@@ -26,7 +26,7 @@ export default function Home() {
           animate={{ opacity: 1, y: 0 }}
           className="mx-auto inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
         >
-          AI-powered Microsoft-centric IT operations
+          AI-powered IT operations
         </motion.p>
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
@@ -59,10 +59,10 @@ export default function Home() {
       <MarketingSection
         eyebrow="The Problem"
         title="Modern IT operations are fragmented"
-        description="Tickets live in one tool, device data in another, Microsoft identity somewhere else, and executives still ask for better reporting. Ticxnova turns that fragmentation into a single AI-assisted operating model."
+        description="Tickets live in one tool, device data in another, identity context somewhere else, and executives still ask for better reporting. Ticxnova turns that fragmentation into a single AI-assisted operating model."
       >
         <div className="grid gap-5 md:grid-cols-3">
-          <GlowCard title="Disconnected support" body="Technicians lose time jumping between chat, tickets, device inventory, mailbox context, and manual notes." />
+          <GlowCard title="Disconnected support" body="Technicians lose time jumping between chat, tickets, device inventory, email context, and manual notes." />
           <GlowCard title="Reactive operations" body="SLA risk, device failures, and repeat incidents are often discovered after users feel the impact." />
           <GlowCard title="Weak visibility" body="Leaders need operational analytics, AI impact, and tenant-level reporting without spreadsheet work." />
         </div>
@@ -71,15 +71,15 @@ export default function Home() {
       <MarketingSection
         eyebrow="The Solution"
         title="Ticxnova unifies AI-powered IT operations in one intelligent platform"
-        description="A Microsoft-centric SaaS experience that connects AI support, ticketing, devices, analytics, automation, RBAC, and tenant isolation."
+        description="A modern SaaS experience that connects AI support, ticketing, devices, analytics, automation, RBAC, and tenant isolation."
       >
         <StoryWorkflow />
       </MarketingSection>
 
       <MarketingSection
         eyebrow="Enterprise Trust"
-        title="Built for secure, Microsoft-heavy IT operations"
-        description="Showcase-ready architecture for tenant isolation, AI workflows, Microsoft integrations, enterprise security, and realtime visibility."
+        title="Built for secure, modern IT operations"
+        description="Showcase-ready architecture for tenant isolation, AI workflows, enterprise integrations, security controls, and realtime visibility."
       >
         <div className="grid gap-4 md:grid-cols-4">
           {trustStats.map((stat) => (
@@ -112,7 +112,7 @@ export default function Home() {
       <MarketingSection
         eyebrow="AI Identity"
         title="An intelligent command layer for service operations"
-        description="Ticxnova should feel like an AI platform from the first scroll: predictive, contextual, Microsoft-aware, and operationally useful."
+        description="Ticxnova should feel like an AI platform from the first scroll: predictive, contextual, integration-aware, and operationally useful."
       >
         <AiIdentityPanel />
       </MarketingSection>
@@ -141,11 +141,11 @@ export default function Home() {
       </MarketingSection>
 
       <MarketingSection
-        eyebrow="Built For Microsoft Environments"
-        title="A major advantage for Microsoft-centric organizations"
-        description="Ticxnova is positioned around Microsoft Login, Entra ID, Outlook, Exchange, Teams, Graph API, and future Intune-centered device workflows."
+        eyebrow="Enterprise Integrations"
+        title="Connect your identity and collaboration stack"
+        description="Ticxnova is designed for enterprise SSO, directory sync, email intake, messaging workflows, and endpoint management — without locking you into a single vendor."
       >
-        <MicrosoftStrip />
+        <IntegrationStrip />
       </MarketingSection>
 
       <MarketingSection eyebrow="Multi-Tenant SaaS" title="Every organization gets an isolated workspace">

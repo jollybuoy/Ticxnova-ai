@@ -12,7 +12,7 @@ export const FEATURES = {
   DEVICES: 'devices',
   BASIC_REPORTS: 'basic_reports',
   AI_SUMMARIES: 'ai_summaries',
-  MICROSOFT_LOGIN: 'microsoft_login',
+  ENTERPRISE_SSO: 'enterprise_sso',
   SMTP_SETUP: 'smtp_setup',
   INVITE_USERS: 'invite_users',
   ADVANCED_ANALYTICS: 'advanced_analytics',
@@ -23,7 +23,7 @@ export const FEATURES = {
   NOTIFICATIONS: 'notifications',
   ADVANCED_RBAC: 'advanced_rbac',
   AUDIT_LOGS: 'audit_logs',
-  GRAPH_SYNC: 'graph_sync',
+  DIRECTORY_SYNC: 'directory_sync',
   ENTERPRISE_ANALYTICS: 'enterprise_analytics',
 };
 
@@ -39,7 +39,7 @@ const PROFESSIONAL = new Set([
   FEATURES.KNOWLEDGE_BASE,
   FEATURES.SMTP_SETUP,
   FEATURES.INVITE_USERS,
-  FEATURES.MICROSOFT_LOGIN,
+  FEATURES.ENTERPRISE_SSO,
   FEATURES.ADVANCED_ANALYTICS,
   FEATURES.NOTIFICATIONS,
 ]);
@@ -51,7 +51,7 @@ const ENTERPRISE = new Set([
   FEATURES.ADVANCED_RBAC,
   FEATURES.SLA_ENGINE,
   FEATURES.AUDIT_LOGS,
-  FEATURES.GRAPH_SYNC,
+  FEATURES.DIRECTORY_SYNC,
   FEATURES.ENTERPRISE_ANALYTICS,
 ]);
 

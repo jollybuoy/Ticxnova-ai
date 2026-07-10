@@ -1,9 +1,9 @@
 import { motion } from 'framer-motion';
 
 export const suggestedPrompts = [
-  'Outlook keeps asking for password',
+  'Email keeps asking for password',
   'VPN not connecting after password reset',
-  'Teams microphone not working',
+  'Video call microphone not working',
   'How to setup MFA?',
   'Create a ticket for laptop issue',
 ];

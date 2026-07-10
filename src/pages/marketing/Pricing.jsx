@@ -15,8 +15,8 @@ const comparisonRows = [
   ['Devices', true, true, true],
   ['Reports', true, true, true],
   ['SMTP', false, true, true],
-  ['Microsoft Login', false, true, true],
-  ['Graph Sync', false, false, true],
+  ['Enterprise SSO', false, true, true],
+  ['Directory Sync', false, false, true],
   ['Multi-domain', false, false, true],
   ['Automation', false, false, true],
   ['SLA Engine', false, true, true],
@@ -32,7 +32,7 @@ export default function Pricing() {
       <MarketingSection
         eyebrow="Pricing"
         title="Plans for SMBs, MSPs, and enterprise IT teams"
-        description="Start with AI ticketing and grow into Microsoft integrations, automation, multi-domain operations, and enterprise governance."
+        description="Start with AI ticketing and grow into enterprise integrations, automation, multi-domain operations, and advanced governance."
         className="pt-28"
       >
         <div className="grid gap-6 lg:grid-cols-3">
@@ -79,7 +79,7 @@ export default function Pricing() {
       <MarketingSection
         eyebrow="Comparison"
         title="Enterprise comparison at a glance"
-        description="A premium plan matrix for buyers comparing AI, Microsoft, automation, governance, reporting, and enterprise controls."
+        description="A premium plan matrix for buyers comparing AI, integrations, automation, governance, reporting, and enterprise controls."
       >
         <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/30">
           <table className="min-w-full divide-y divide-white/10 text-sm">

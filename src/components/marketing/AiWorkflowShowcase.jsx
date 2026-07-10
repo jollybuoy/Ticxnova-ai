@@ -31,7 +31,7 @@ const aiCapabilities = [
   },
   {
     title: 'Smart enrichment',
-    body: 'Links Entra users, devices, warranty data, and prior tickets before a technician opens the case.',
+    body: 'Links directory users, devices, warranty data, and prior tickets before a technician opens the case.',
     icon: Layers,
     metric: '360° context',
   },
@@ -44,14 +44,14 @@ const aiCapabilities = [
 ];
 
 const ticketQueue = [
-  { id: 'INC-1042', title: 'Outlook MFA loop after password change', priority: 'P2', ai: 'Routing…', status: 'ai-active' },
+  { id: 'INC-1042', title: 'Email MFA loop after password change', priority: 'P2', ai: 'Routing…', status: 'ai-active' },
   { id: 'SR-881', title: 'New laptop for finance analyst', priority: 'P3', ai: 'Classified', status: 'ready' },
   { id: 'INC-1039', title: 'VPN disconnects on macOS Sequoia', priority: 'P1', ai: 'Escalated', status: 'breach-risk' },
 ];
 
 const chatScript = [
-  { role: 'user', text: 'Outlook keeps prompting for password after MFA rollout.' },
-  { role: 'ai', text: 'Analyzing Entra sign-in logs, mailbox profile, and token health…' },
+  { role: 'user', text: 'Email keeps prompting for password after MFA rollout.' },
+  { role: 'ai', text: 'Analyzing identity sign-in logs, mailbox profile, and token health…' },
   { role: 'ai', text: 'Recommended: P2 Incident · Category: Email · Device LAP-204 linked.' },
 ];
 
@@ -167,13 +167,13 @@ function AdvancedTicketingVisual() {
             className="space-y-2 rounded-xl border border-violet-400/20 bg-violet-500/10 p-3"
           >
             <div className="flex flex-wrap gap-2">
-              {['Incident', 'Email / Exchange', 'P2 · High', 'Entra linked'].map((tag) => (
+              {['Incident', 'Email / Identity', 'P2 · High', 'User linked'].map((tag) => (
                 <span key={tag} className="rounded-lg border border-white/10 bg-black/30 px-2 py-1 text-[10px] text-zinc-200">
                   {tag}
                 </span>
               ))}
             </div>
-            <p className="text-sm font-medium text-white">Outlook MFA authentication loop</p>
+            <p className="text-sm font-medium text-white">Email MFA authentication loop</p>
             <p className="text-xs leading-5 text-zinc-400">
               AI summary: Token refresh failure after MFA policy update. Recommend profile repair and sign-in log review.
             </p>
@@ -195,7 +195,7 @@ function AdvancedTicketingVisual() {
             <motion.div whileHover={{ scale: 1.02 }} className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-center">
               <Route size={16} className="mx-auto text-cyan-300" />
               <p className="mt-1 text-[10px] text-zinc-400">Routed to</p>
-              <p className="text-xs font-semibold text-white">L2 Exchange</p>
+              <p className="text-xs font-semibold text-white">L2 Identity</p>
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-center">
               <Gauge size={16} className="mx-auto text-emerald-300" />
@@ -270,7 +270,7 @@ export function AiWorkflowShowcase() {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
       >
-        {['AI-native', 'Auto-priority', 'SLA engine', 'Microsoft-ready'].map((badge) => (
+        {['AI-native', 'Auto-priority', 'SLA engine', 'Integration-ready'].map((badge) => (
           <span
             key={badge}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-zinc-300"
@@ -301,7 +301,7 @@ export function AiWorkflowShowcase() {
           </h1>
           <p className="mt-4 max-w-xl text-base leading-8 text-zinc-400 sm:mt-5">
             Ticxnova is not a traditional helpdesk with a chatbot bolted on. It is an intelligent ticketing platform that
-            classifies, enriches, routes, and resolves IT issues using realtime AI — built for MSPs and Microsoft-centric IT teams.
+            classifies, enriches, routes, and resolves IT issues using realtime AI — built for MSPs and modern IT operations teams.
           </p>
 
           <div className="mt-6 grid gap-3 sm:grid-cols-2 sm:mt-8">
@@ -335,7 +335,7 @@ export function AiWorkflowShowcase() {
             {[
               'Conversational ticket creation with human confirmation',
               'P1–P4 priority and incident type assigned by AI',
-              'Device, Entra, and history context attached automatically',
+              'Device, identity, and history context attached automatically',
             ].map((item) => (
               <li key={item} className="flex items-start gap-2">
                 <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-emerald-300" />
