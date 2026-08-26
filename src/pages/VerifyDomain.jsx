@@ -129,7 +129,7 @@ export default function VerifyDomain() {
   const isRejected = status === 'rejected';
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="app-theme relative min-h-screen overflow-hidden">
       <BackgroundMesh variant="login" />
 
       <div className="relative mx-auto max-w-5xl px-5 py-16">

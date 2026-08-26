@@ -58,7 +58,7 @@ export default function Pricing() {
               </div>
               <ul className="mt-6 space-y-3">
                 {plan.features.map((feature) => (
-                  <li key={feature} className="flex items-center gap-3 text-sm text-zinc-300">
+                  <li key={feature} className="flex items-center gap-3 text-sm text-zinc-200">
                     <CheckCircle2 size={16} className="text-emerald-300" />
                     {feature}
                   </li>
@@ -95,15 +95,15 @@ export default function Pricing() {
               {comparisonRows.map(([feature, starter, professional, enterprise]) => (
                 <motion.tr
                   key={feature}
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  viewport={{ once: true }}
+                  initial={{ y: 0 }}
+                  whileInView={{ y: 0 }}
+                  viewport={{ once: true, amount: 0.1 }}
                   className="transition-colors hover:bg-cyan-300/[0.04]"
                 >
                   <td className="px-5 py-4 text-white">{feature}</td>
                   {[starter, professional, enterprise].map((enabled, index) => (
                     <td key={`${feature}-${index}`} className="px-5 py-4">
-                      {enabled ? <CheckCircle2 size={17} className="text-emerald-300" /> : <span className="text-zinc-700">—</span>}
+                      {enabled ? <CheckCircle2 size={17} className="text-emerald-300" /> : <span className="text-zinc-500">—</span>}
                     </td>
                   ))}
                 </motion.tr>

@@ -86,7 +86,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
           placeholder="Search tickets, users, devices..."
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          className="focus-ring w-full rounded-xl border border-white/[0.08] bg-black/30 py-2.5 pl-11 pr-4 text-sm text-zinc-200 transition-all duration-200 placeholder:text-zinc-600 hover:border-white/12 focus:border-violet-500/30 focus:bg-black/40"
+          className="field-control focus-ring w-full rounded-xl border py-2.5 pl-11 pr-4 text-sm transition-all duration-200 placeholder:text-zinc-500 hover:border-violet-400/30 focus:border-violet-500/40"
         />
       </form>
 

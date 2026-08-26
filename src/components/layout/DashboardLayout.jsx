@@ -10,7 +10,7 @@ export function DashboardLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
 
   return (
-    <div className="relative min-h-screen">
+    <div className="app-theme relative min-h-screen">
       <BackgroundMesh variant="dashboard" />
       <div className="flex min-h-screen">
         <Sidebar

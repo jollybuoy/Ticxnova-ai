@@ -40,33 +40,33 @@ export default function About() {
         <div className="relative grid items-center gap-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
             <motion.p
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 10 }}
+              animate={{ y: 0 }}
               className="inline-flex items-center gap-2 rounded-full border border-violet-400/25 bg-violet-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.32em] text-violet-200"
             >
               <Sparkles size={14} className="text-cyan-300" />
               About Ticxnova
             </motion.p>
             <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 16 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.08 }}
               className="mt-6 text-4xl font-semibold tracking-tight text-white sm:text-5xl lg:text-6xl lg:leading-[1.05]"
             >
               We build the operating system for modern IT teams
             </motion.h1>
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 16 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.16 }}
-              className="mt-6 max-w-2xl text-lg leading-8 text-zinc-400"
+              className="mt-6 max-w-2xl text-lg leading-8 text-zinc-300"
             >
               Ticxnova brings AI-native service management to SMBs, MSPs, and internal IT organizations —
               unifying tickets, devices, analytics, automation, and governance in one premium workspace.
             </motion.p>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={{ y: 16 }}
+              animate={{ y: 0 }}
               transition={{ delay: 0.24 }}
               className="mt-8 flex flex-wrap gap-3"
             >
@@ -78,8 +78,8 @@ export default function About() {
           </div>
 
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ scale: 0.98 }}
+            animate={{ scale: 1 }}
             transition={{ delay: 0.2, duration: 0.5 }}
             className="relative rounded-[2rem] border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-8 shadow-2xl shadow-violet-950/40 backdrop-blur-xl"
           >
@@ -116,9 +116,9 @@ export default function About() {
             return (
             <motion.div
               key={pillar.title}
-              initial={{ opacity: 0, y: 18 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              initial={{ y: 18 }}
+              whileInView={{ y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: index * 0.06 }}
               className="group rounded-3xl border border-white/10 bg-white/[0.04] p-6 transition-colors hover:border-cyan-300/25 hover:bg-cyan-300/[0.04]"
             >
@@ -126,7 +126,7 @@ export default function About() {
                 <Icon size={20} />
               </div>
               <h3 className="text-lg font-semibold text-white">{pillar.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-zinc-400">{pillar.body}</p>
+              <p className="mt-3 text-sm leading-7 text-zinc-300">{pillar.body}</p>
             </motion.div>
             );
           })}
@@ -164,9 +164,9 @@ export default function About() {
             {aboutMilestones.map(([year, title, body], index) => (
               <motion.div
                 key={year}
-                initial={{ opacity: 0, x: index % 2 === 0 ? -20 : 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
+                initial={{ x: index % 2 === 0 ? -16 : 16 }}
+                whileInView={{ x: 0 }}
+                viewport={{ once: true, amount: 0.2 }}
                 className={`relative grid gap-4 md:grid-cols-2 md:gap-10 ${
                   index % 2 === 1 ? 'md:[&>div:first-child]:order-2' : ''
                 }`}
@@ -175,7 +175,7 @@ export default function About() {
                   <p className="text-sm font-semibold uppercase tracking-[0.28em] text-cyan-300">{year}</p>
                   <h3 className="mt-2 text-xl font-semibold text-white">{title}</h3>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm leading-7 text-zinc-400">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5 text-sm leading-7 text-zinc-300">
                   {body}
                 </div>
               </motion.div>
@@ -189,9 +189,9 @@ export default function About() {
           {aboutValues.map(([title, body], index) => (
             <motion.div
               key={title}
-              initial={{ opacity: 0, y: 14 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              initial={{ y: 14 }}
+              whileInView={{ y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: index * 0.05 }}
               className="flex gap-4 rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.05] to-transparent p-6"
             >
@@ -200,7 +200,7 @@ export default function About() {
               </div>
               <div>
                 <h3 className="font-semibold text-white">{title}</h3>
-                <p className="mt-2 text-sm leading-7 text-zinc-400">{body}</p>
+                <p className="mt-2 text-sm leading-7 text-zinc-300">{body}</p>
               </div>
             </motion.div>
           ))}
@@ -217,9 +217,9 @@ export default function About() {
 
       <section className="mx-auto max-w-7xl px-5 pb-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          initial={{ y: 16 }}
+          whileInView={{ y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
           className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-violet-600/20 via-indigo-600/10 to-cyan-500/10 p-8 text-center sm:p-12"
         >
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_55%)]" />
@@ -228,7 +228,7 @@ export default function About() {
             <h2 className="mx-auto mt-4 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl">
               Ready to see what intelligent IT operations feels like?
             </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-300 sm:text-base">
+            <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-zinc-200 sm:text-base">
               Start a free trial or book a walkthrough — we&apos;ll show you how Ticxnova unifies support, assets,
               analytics, and automation in one premium workspace.
             </p>

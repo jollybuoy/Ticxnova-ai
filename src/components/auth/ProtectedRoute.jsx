@@ -85,7 +85,7 @@ export function ProtectedRoute({
   const featureToCheck = routeGuard?.feature ?? routeFeature;
   if (featureToCheck && !canUseFeature(featureToCheck)) {
     return (
-      <div className="mesh-dashboard flex min-h-screen items-center justify-center p-6">
+      <div className="app-theme mesh-dashboard flex min-h-screen items-center justify-center p-6">
         <div className="w-full max-w-lg">
           <UpgradePrompt feature={featureToCheck} />
         </div>

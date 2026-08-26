@@ -40,7 +40,7 @@ export default function FirstLoginPasswordReset() {
   };
 
   return (
-    <div className="relative min-h-screen">
+    <div className="app-theme relative min-h-screen">
       <BackgroundMesh variant="login" />
       <div className="relative flex min-h-screen items-center justify-center px-6 py-12">
         <motion.form

@@ -7,14 +7,14 @@ export function Select({ label, id, options, className = '', children, ...props 
   return (
     <div className={className}>
       {label && (
-        <label htmlFor={selectId} className="mb-2 block text-xs font-medium text-zinc-400">
+        <label htmlFor={selectId} className="mb-2 block text-xs font-medium text-zinc-200">
           {label}
         </label>
       )}
       <div className="relative">
         <select
           id={selectId}
-          className="focus-ring w-full appearance-none rounded-xl border border-white/10 bg-black/25 py-3 pl-4 pr-10 text-sm text-white transition-all duration-200 hover:border-white/15 focus:border-violet-500/40 focus:bg-black/40 disabled:opacity-50"
+          className="field-control focus-ring w-full appearance-none rounded-xl border py-3 pl-4 pr-10 text-sm transition-all duration-200 hover:border-violet-400/40 focus:border-violet-500/50 disabled:opacity-50"
           {...props}
         >
           {optionList.length > 0

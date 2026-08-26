@@ -6,7 +6,7 @@ import { LoginForm } from '../components/auth/LoginForm';
 export default function Login() {
   return (
     <motion.div
-      className="relative min-h-screen"
+      className="app-theme relative min-h-screen"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}

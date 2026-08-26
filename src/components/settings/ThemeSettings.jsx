@@ -22,8 +22,8 @@ export function ThemeSettings({ compact = false }) {
               onClick={() => setPreference(value)}
               className={`flex flex-1 items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors ${
                 preference === value
-                  ? 'bg-violet-500/15 text-violet-700 dark:bg-white/10 dark:text-white'
-                  : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-200'
+                  ? 'bg-violet-500/20 text-white'
+                  : 'text-zinc-400 hover:bg-white/5 hover:text-white'
               }`}
               aria-pressed={preference === value}
             >

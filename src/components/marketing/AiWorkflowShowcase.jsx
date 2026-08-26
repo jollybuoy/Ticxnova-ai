@@ -74,8 +74,8 @@ function AdvancedTicketingVisual() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.98 }}
-      animate={{ opacity: 1, scale: 1 }}
+      initial={{ scale: 0.99 }}
+      animate={{ scale: 1 }}
       transition={{ duration: 0.65, delay: 0.15 }}
       className="relative overflow-hidden rounded-[1.75rem] border border-cyan-300/20 bg-[#040711] p-4 shadow-2xl shadow-cyan-950/50 sm:p-5"
     >
@@ -266,14 +266,14 @@ export function AiWorkflowShowcase() {
   return (
     <section className="relative mx-auto max-w-7xl px-5 pb-12 pt-24 lg:pb-16 lg:pt-28">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 12 }}
+        animate={{ y: 0 }}
         className="mb-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
       >
         {['AI-native', 'Auto-priority', 'SLA engine', 'Integration-ready'].map((badge) => (
           <span
             key={badge}
-            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-zinc-300"
+            className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-zinc-200"
           >
             {badge}
           </span>
@@ -281,14 +281,14 @@ export function AiWorkflowShowcase() {
       </motion.div>
 
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ y: 16 }}
+        animate={{ y: 0 }}
         transition={{ duration: 0.55 }}
         className="grid items-center gap-8 lg:grid-cols-2 lg:gap-14"
       >
         <motion.div
-          initial={{ opacity: 0, x: -24 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ x: -16 }}
+          animate={{ x: 0 }}
           transition={{ delay: 0.1, duration: 0.55 }}
           className="order-2 text-left lg:order-1"
         >
@@ -299,7 +299,7 @@ export function AiWorkflowShowcase() {
           <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:mt-6 sm:text-5xl lg:text-[3.2rem] lg:leading-[1.08]">
             The AI ticketing system that thinks like your best engineer
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-8 text-zinc-400 sm:mt-5">
+          <p className="mt-4 max-w-xl text-base leading-8 text-zinc-300 sm:mt-5">
             Ticxnova is not a traditional helpdesk with a chatbot bolted on. It is an intelligent ticketing platform that
             classifies, enriches, routes, and resolves IT issues using realtime AI — built for MSPs and modern IT operations teams.
           </p>
@@ -308,8 +308,8 @@ export function AiWorkflowShowcase() {
             {aiCapabilities.map(({ title, body, icon: Icon, metric }, index) => (
               <motion.div
                 key={title}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
+                initial={{ y: 10 }}
+                animate={{ y: 0 }}
                 transition={{ delay: 0.2 + index * 0.06 }}
                 whileHover={{ y: -4, borderColor: 'rgba(34,211,238,0.35)' }}
                 className="rounded-2xl border border-white/10 bg-white/[0.04] p-4"
@@ -321,7 +321,7 @@ export function AiWorkflowShowcase() {
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-300">{metric}</span>
                 </motion.div>
                 <p className="font-semibold text-white">{title}</p>
-                <p className="mt-1.5 text-xs leading-6 text-zinc-500">{body}</p>
+                <p className="mt-1.5 text-xs leading-6 text-zinc-400">{body}</p>
               </motion.div>
             ))}
           </div>
@@ -330,7 +330,7 @@ export function AiWorkflowShowcase() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.45 }}
-            className="mt-6 space-y-2 text-sm text-zinc-400"
+            className="mt-6 space-y-2 text-sm text-zinc-300"
           >
             {[
               'Conversational ticket creation with human confirmation',
@@ -356,8 +356,8 @@ export function AiWorkflowShowcase() {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, x: 24 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={{ x: 16 }}
+          animate={{ x: 0 }}
           transition={{ delay: 0.15, duration: 0.6 }}
           className="relative order-1 lg:order-2 lg:pl-2"
         >

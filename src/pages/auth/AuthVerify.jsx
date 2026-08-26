@@ -87,7 +87,7 @@ export default function AuthVerify() {
   const goToLogin = () => navigate(LOGIN_PATH, { replace: true });
 
   return (
-    <div className="relative min-h-screen overflow-hidden">
+    <div className="app-theme relative min-h-screen overflow-hidden">
       <BackgroundMesh variant="login" />
 
       <motion.div

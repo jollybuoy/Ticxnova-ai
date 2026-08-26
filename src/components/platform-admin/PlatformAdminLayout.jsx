@@ -28,7 +28,7 @@ export default function PlatformAdminLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07070c] text-zinc-100">
+    <div className="theme-locked-dark min-h-screen bg-[#07070c] text-zinc-100">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_left,rgba(245,158,11,0.12),transparent_40%),radial-gradient(circle_at_bottom_right,rgba(239,68,68,0.08),transparent_35%)]" />
 
       <div className="relative mx-auto flex min-h-screen max-w-[1600px]">

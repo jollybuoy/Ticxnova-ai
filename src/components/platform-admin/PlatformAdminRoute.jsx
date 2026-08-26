@@ -4,7 +4,7 @@ import PlatformAdminLayout from './PlatformAdminLayout';
 
 function PlatformAdminLoading() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#07070c] text-sm text-zinc-400">
+    <div className="theme-locked-dark flex min-h-screen items-center justify-center bg-[#07070c] text-sm text-zinc-400">
       Verifying platform admin access...
     </div>
   );

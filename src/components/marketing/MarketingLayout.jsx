@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -13,6 +14,7 @@ import {
   Layers,
   LineChart,
   LockKeyhole,
+  Menu,
   MessageSquare,
   Network,
   Radio,
@@ -21,7 +23,19 @@ import {
   Sparkles,
   Ticket,
   Users,
+  X,
 } from 'lucide-react';
+
+const revealViewport = { once: true, amount: 0.2, margin: '0px 0px -40px 0px' };
+
+function revealProps(delay = 0) {
+  return {
+    initial: { y: 18 },
+    whileInView: { y: 0 },
+    viewport: revealViewport,
+    transition: { duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] },
+  };
+}
 
 const navItems = [
   { label: 'Features', path: '/features' },
@@ -61,56 +75,98 @@ const socialMetrics = [
   ['Faster triage', '42%'],
 ];
 
-export function MarketingLayout({ children }) {
-  return (
-    <div className="min-h-screen overflow-hidden bg-[#030712] text-white">
-      <MarketingBackground />
-      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#030712]/70 backdrop-blur-2xl">
-        <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
-          <Link to="/" className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 shadow-lg shadow-violet-500/30">
-              <Sparkles size={20} />
-            </div>
-            <div>
-              <p className="text-sm font-semibold tracking-tight">Ticxnova</p>
-              <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-500">AI IT Ops</p>
-            </div>
-          </Link>
+function MarketingNav() {
+  const [open, setOpen] = useState(false);
 
-          <div className="hidden items-center gap-7 md:flex">
+  return (
+    <header className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#030712]/80 backdrop-blur-2xl">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4">
+        <Link to="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-400 text-white shadow-lg shadow-violet-500/30">
+            <Sparkles size={20} />
+          </div>
+          <div>
+            <p className="text-sm font-semibold tracking-tight text-white">Ticxnova</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-zinc-400">AI IT Ops</p>
+          </div>
+        </Link>
+
+        <div className="hidden items-center gap-7 md:flex">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              className={({ isActive }) =>
+                `text-sm font-medium transition-colors ${isActive ? 'text-white' : 'text-zinc-200 hover:text-white'}`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-3">
+          <Link to="/login" className="hidden text-sm font-medium text-zinc-200 hover:text-white sm:block">
+            Login
+          </Link>
+          <Link
+            to="/get-started"
+            className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/10 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-lg shadow-white/10 transition-transform hover:-translate-y-0.5 hover:shadow-cyan-300/20"
+          >
+            <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+            <span className="relative">Start Free Trial</span>
+            <ArrowRight className="relative transition-transform group-hover:translate-x-0.5" size={15} />
+          </Link>
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-white md:hidden"
+            aria-expanded={open}
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            onClick={() => setOpen((current) => !current)}
+          >
+            {open ? <X size={18} /> : <Menu size={18} />}
+          </button>
+        </div>
+      </nav>
+
+      {open && (
+        <div className="border-t border-white/10 bg-[#030712]/95 px-5 py-4 md:hidden">
+          <div className="flex flex-col gap-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
+                onClick={() => setOpen(false)}
                 className={({ isActive }) =>
-                  `text-sm transition-colors ${isActive ? 'text-white' : 'text-zinc-400 hover:text-white'}`
+                  `rounded-xl px-3 py-3 text-sm ${isActive ? 'bg-white/10 text-white' : 'text-zinc-200 hover:bg-white/5 hover:text-white'}`
                 }
               >
                 {item.label}
               </NavLink>
             ))}
-          </div>
-
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="hidden text-sm font-medium text-zinc-300 hover:text-white sm:block">
+            <Link
+              to="/login"
+              onClick={() => setOpen(false)}
+              className="rounded-xl px-3 py-3 text-sm text-zinc-200 hover:bg-white/5 hover:text-white"
+            >
               Login
             </Link>
-            <Link
-              to="/get-started"
-              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-full border border-white/10 bg-white px-4 py-2 text-sm font-semibold text-zinc-950 shadow-lg shadow-white/10 transition-transform hover:-translate-y-0.5 hover:shadow-cyan-300/20"
-            >
-              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-              <span className="relative">Start Free Trial</span>
-              <ArrowRight className="relative transition-transform group-hover:translate-x-0.5" size={15} />
-            </Link>
           </div>
-        </nav>
-      </header>
+        </div>
+      )}
+    </header>
+  );
+}
 
-      <main className="relative z-10 pt-20">{children}</main>
+export function MarketingLayout({ children }) {
+  return (
+    <div className="marketing-site min-h-screen overflow-x-hidden bg-[#030712] text-zinc-100">
+      <MarketingBackground />
+      <MarketingNav />
+      <main className="relative z-10 pt-20 text-zinc-100">{children}</main>
 
-      <footer className="relative z-10 border-t border-white/10 px-5 py-10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm text-zinc-500 md:flex-row md:items-center md:justify-between">
+      <footer className="relative z-10 border-t border-white/10 px-5 py-10 text-zinc-300">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 text-sm md:flex-row md:items-center md:justify-between">
           <p>© {new Date().getFullYear()} Ticxnova. AI-powered IT operations platform.</p>
           <div className="flex gap-5">
             <Link to="/pricing" className="hover:text-white">Pricing</Link>
@@ -160,15 +216,12 @@ export function MarketingSection({ eyebrow, title, description, children, classN
   return (
     <section className={`mx-auto max-w-7xl px-5 py-20 ${className}`}>
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: '-100px' }}
-        transition={{ duration: 0.5 }}
+        {...revealProps()}
         className="mx-auto mb-12 max-w-3xl text-center"
       >
         {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">{eyebrow}</p>}
         <h2 className="mt-4 text-3xl font-semibold tracking-tight text-white md:text-5xl">{title}</h2>
-        {description && <p className="mt-5 text-base leading-8 text-zinc-400">{description}</p>}
+        {description && <p className="mt-5 text-base leading-8 text-zinc-300">{description}</p>}
       </motion.div>
       {children}
     </section>
@@ -178,11 +231,9 @@ export function MarketingSection({ eyebrow, title, description, children, classN
 export function GlowCard({ icon: Icon, title, body, children, className = '' }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      {...revealProps()}
       whileHover={{ y: -8, borderColor: 'rgba(34,211,238,0.4)' }}
-      className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition-shadow hover:shadow-cyan-950/40 ${className}`}
+      className={`group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/30 backdrop-blur-xl transition-shadow hover:shadow-cyan-950/40 ${className}`}
     >
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-300/50 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       <div className="absolute -right-16 -top-16 h-36 w-36 rounded-full bg-cyan-300/10 blur-3xl transition-opacity group-hover:opacity-100" />
@@ -192,7 +243,7 @@ export function GlowCard({ icon: Icon, title, body, children, className = '' }) 
         </div>
       )}
       <h3 className="relative text-lg font-semibold text-white">{title}</h3>
-      <p className="relative mt-3 text-sm leading-7 text-zinc-400">{body}</p>
+      <p className="relative mt-3 text-sm leading-7 text-zinc-300">{body}</p>
       <div className="relative">{children}</div>
     </motion.div>
   );
@@ -202,7 +253,7 @@ export function PremiumCTA({ to, children, variant = 'primary', className = '' }
   const base = 'group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-full px-6 py-3 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5';
   const variants = {
     primary: 'bg-white text-zinc-950 shadow-xl shadow-white/10 hover:shadow-cyan-300/25',
-    secondary: 'border border-white/10 bg-white/[0.04] text-white backdrop-blur-xl hover:border-cyan-300/40 hover:bg-white/[0.08]',
+    secondary: 'border border-white/25 bg-white/10 text-white backdrop-blur-xl hover:border-cyan-300/50 hover:bg-white/15',
   };
 
   return (
@@ -217,11 +268,11 @@ export function PremiumCTA({ to, children, variant = 'primary', className = '' }
 export function DashboardMockup({ dense = false }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 28, rotateX: 8 }}
-      animate={{ opacity: 1, y: 0, rotateX: 0 }}
+      initial={{ y: 20, rotateX: 6 }}
+      animate={{ y: 0, rotateX: 0 }}
       transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -4 }}
-      className="relative mx-auto mt-12 max-w-6xl rounded-[2rem] border border-white/10 bg-white/[0.05] p-3 shadow-2xl shadow-violet-950/40 backdrop-blur-2xl sm:p-4"
+      className="relative mx-auto mt-12 max-w-6xl min-w-0 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.05] p-3 shadow-2xl shadow-violet-950/40 backdrop-blur-2xl sm:p-4"
     >
       <motion.div
         animate={{ opacity: [0.25, 0.55, 0.25] }}
@@ -233,7 +284,7 @@ export function DashboardMockup({ dense = false }) {
         <div className="relative mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-cyan-300">Live Command Center</p>
-            <h3 className="mt-2 text-xl font-semibold">AI Operations Overview</h3>
+            <p className="mt-2 text-xl font-semibold text-white">AI Operations Overview</p>
           </div>
           <div className="flex flex-wrap gap-2">
             <StatusPill icon={Radio} label="Realtime" />
@@ -249,8 +300,8 @@ export function DashboardMockup({ dense = false }) {
           ].map(([label, value, Icon]) => (
             <div key={label} className="rounded-2xl border border-white/10 bg-white/[0.055] p-4">
               <Icon className="mb-3 text-cyan-300" size={18} />
-              <p className="text-xs text-zinc-500">{label}</p>
-              <p className="mt-2 text-2xl font-semibold">{value}</p>
+              <p className="text-xs text-zinc-400">{label}</p>
+              <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
             </div>
           ))}
         </div>
@@ -276,18 +327,15 @@ export function DashboardMockup({ dense = false }) {
             {dashboardEvents.map(([title, detail, time, Icon], index) => (
               <motion.div
                 key={title}
-                initial={{ opacity: 0, x: 18 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
+                {...revealProps(index * 0.1)}
                 className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.055] p-4"
               >
                 <Icon className="mt-0.5 h-5 w-5 text-emerald-300" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-medium text-zinc-200">{title}</span>
-                  <span className="block truncate text-xs text-zinc-500">{detail}</span>
+                  <span className="block truncate text-xs text-zinc-400">{detail}</span>
                 </span>
-                <span className="text-[10px] text-zinc-600">{time}</span>
+                <span className="text-[10px] text-zinc-400">{time}</span>
               </motion.div>
             ))}
             <div className="rounded-2xl border border-cyan-300/20 bg-cyan-300/10 p-4">
@@ -331,14 +379,14 @@ export function AiChatPreview() {
       ].map(([name, message], index) => (
         <motion.div
           key={message}
-          initial={{ opacity: 0, x: index % 2 ? 20 : -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
+          initial={{ x: index % 2 ? 16 : -16 }}
+          whileInView={{ x: 0 }}
+          viewport={revealViewport}
           transition={{ delay: index * 0.15 }}
           className={`mb-3 rounded-2xl border border-white/10 p-4 ${index % 2 ? 'ml-10 bg-violet-500/10' : 'mr-10 bg-white/[0.04]'}`}
         >
           <p className="text-xs font-semibold text-cyan-300">{name}</p>
-          <p className="mt-2 text-sm text-zinc-200">{message}</p>
+          <p className="mt-2 text-sm text-zinc-100">{message}</p>
         </motion.div>
       ))}
       <div className="relative mt-4 grid gap-3 sm:grid-cols-3">
@@ -377,11 +425,8 @@ export function IntegrationStrip() {
         {['Enterprise SSO', 'Directory sync', 'Email intake', 'Team messaging', 'Calendar workflows', 'Identity federation', 'Endpoint management'].map((item, index) => (
           <motion.div
             key={item}
-            initial={{ opacity: 0, y: 14 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.06 }}
-            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] px-4 py-5 text-center text-sm text-zinc-300"
+            {...revealProps(index * 0.06)}
+            className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.07] to-white/[0.025] px-4 py-5 text-center text-sm text-zinc-200"
           >
             <Cloud className="mx-auto mb-3 text-cyan-300" size={19} />
             {item}
@@ -414,15 +459,12 @@ export function WorkflowGraphic() {
       ].map(([label, Icon, body], index) => (
         <motion.div
           key={label}
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.08 }}
+          {...revealProps(index * 0.08)}
           className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-center"
         >
           <Icon className="mx-auto text-cyan-300" size={28} />
-          <p className="mt-4 font-semibold">{label}</p>
-          <p className="mt-2 text-xs leading-6 text-zinc-500">{body}</p>
+          <p className="mt-4 font-semibold text-white">{label}</p>
+          <p className="mt-2 text-xs leading-6 text-zinc-400">{body}</p>
         </motion.div>
       ))}
     </div>
@@ -444,10 +486,7 @@ export function StoryWorkflow() {
       {workflowSteps.map(([title, body, Icon], index) => (
         <motion.div
           key={title}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: index * 0.07 }}
+          {...revealProps(index * 0.07)}
           className="relative rounded-3xl border border-white/10 bg-white/[0.045] p-6"
         >
           <span className="absolute right-5 top-5 text-4xl font-semibold text-white/[0.04]">{index + 1}</span>
@@ -455,7 +494,7 @@ export function StoryWorkflow() {
             <Icon size={22} />
           </div>
           <h3 className="font-semibold text-white">{title}</h3>
-          <p className="mt-3 text-sm leading-7 text-zinc-400">{body}</p>
+          <p className="mt-3 text-sm leading-7 text-zinc-300">{body}</p>
         </motion.div>
       ))}
     </div>
@@ -504,14 +543,11 @@ export function SocialProofSection() {
         {socialMetrics.map(([label, value], index) => (
           <motion.div
             key={label}
-            initial={{ opacity: 0, y: 16 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.06 }}
+            {...revealProps(index * 0.06)}
             className="rounded-3xl border border-white/10 bg-white/[0.045] p-6 text-center"
           >
             <p className="text-3xl font-semibold text-white">{value}</p>
-            <p className="mt-2 text-sm text-zinc-500">{label}</p>
+            <p className="mt-2 text-sm text-zinc-400">{label}</p>
           </motion.div>
         ))}
       </div>
@@ -534,7 +570,7 @@ export function FinalCTA() {
           className="absolute top-0 h-px w-1/3 bg-gradient-to-r from-transparent via-cyan-200 to-transparent"
         />
         <h2 className="relative text-4xl font-semibold tracking-tight md:text-6xl">Transform IT Operations With AI</h2>
-        <p className="relative mx-auto mt-5 max-w-2xl text-sm leading-7 text-zinc-400">
+        <p className="relative mx-auto mt-5 max-w-2xl text-sm leading-7 text-zinc-300">
           Launch a premium AI-native IT operations workspace for tickets, devices, analytics, automation, and intelligent service delivery.
         </p>
         <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">

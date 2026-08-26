@@ -50,7 +50,7 @@ const TrialExpired = lazy(() => import('./pages/TrialExpired'));
 
 function RouteLoader() {
   return (
-    <div className="mesh-dashboard min-h-screen px-6 py-8">
+    <div className="app-theme mesh-dashboard min-h-screen px-6 py-8">
       <div className="mx-auto max-w-[1600px] animate-pulse space-y-6">
         <div className="h-10 w-48 rounded-xl bg-white/[0.06]" />
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

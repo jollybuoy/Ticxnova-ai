@@ -185,8 +185,8 @@ export default function GetStarted() {
       <section className="mx-auto grid max-w-7xl gap-10 px-5 py-28 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">Get Started</p>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight md:text-6xl">Create your AI IT operations workspace</h1>
-          <p className="mt-6 text-lg leading-8 text-zinc-400">
+          <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-6xl">Create your AI IT operations workspace</h1>
+          <p className="mt-6 text-lg leading-8 text-zinc-300">
             Provision a secure multi-tenant workspace with your company domain, subscription plan, and first
             organization administrator.
           </p>
@@ -196,7 +196,7 @@ export default function GetStarted() {
               ['org_admin profile linked to tenant_id', ShieldCheck],
               ['Ready for RBAC, enterprise SSO, and feature gating', Cloud],
             ].map(([text, Icon]) => (
-              <div key={text} className="flex items-center gap-3 text-sm text-zinc-300">
+              <div key={text} className="flex items-center gap-3 text-sm text-zinc-200">
                 <Icon size={18} className="text-cyan-300" />
                 {text}
               </div>
@@ -259,7 +259,7 @@ export default function GetStarted() {
             )}
           </div>
 
-          <p className="mt-4 text-xs leading-6 text-zinc-500">
+          <p className="mt-4 text-xs leading-6 text-zinc-400">
             Your workspace is isolated by tenant_id with row-level security. Duplicate domains and emails are
             blocked before provisioning.
           </p>

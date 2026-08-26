@@ -70,7 +70,7 @@ export default function Contact() {
             <GlowCard icon={Mail} title="Sales" body="Discuss licensing, pilots, and MSP rollout plans." />
             <GlowCard icon={MessageSquare} title="Demo" body="Live walkthrough of AI ticketing, classification, and enterprise workflows." />
             <GlowCard icon={Phone} title="Enterprise" body="Plan integrations, automation, security, and governance." />
-            <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-zinc-500">
+            <p className="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-zinc-300">
               Demo requests are sent to{' '}
               <a href="mailto:ticxnova-ai@jollybuoy.com" className="text-cyan-300 hover:text-cyan-200">
                 ticxnova-ai@jollybuoy.com
@@ -155,7 +155,7 @@ export default function Contact() {
             )}
 
             {!feedback?.success && (
-              <p className="mt-4 text-xs leading-6 text-zinc-500">
+              <p className="mt-4 text-xs leading-6 text-zinc-400">
                 After you submit, our team will review your request and contact you at the email and phone number provided.
                 We appreciate your interest in Ticxnova.
               </p>

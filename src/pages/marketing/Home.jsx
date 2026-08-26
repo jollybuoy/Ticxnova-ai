@@ -19,35 +19,35 @@ import { faqItems, marketingFeatures, trustStats } from '../../components/market
 export default function Home() {
   return (
     <MarketingLayout>
-      <section className="mx-auto max-w-7xl px-5 pb-20 pt-24 text-center">
+      <section className="relative mx-auto max-w-7xl px-5 pb-20 pt-24 text-center">
         <div className="pointer-events-none absolute inset-x-0 top-20 mx-auto hidden h-72 max-w-5xl rounded-full bg-cyan-300/10 blur-3xl md:block" />
         <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ y: 10 }}
+          animate={{ y: 0 }}
           className="mx-auto inline-flex rounded-full border border-cyan-300/20 bg-cyan-300/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-200"
         >
           AI-powered IT operations
         </motion.p>
         <motion.h1
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mx-auto mt-8 max-w-5xl text-5xl font-semibold tracking-tight text-white md:text-7xl"
+          initial={{ y: 16 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="mx-auto mt-8 max-w-5xl px-1 text-balance text-[2rem] font-semibold leading-[1.12] tracking-tight text-white sm:text-5xl md:text-7xl"
         >
           AI-Powered IT Operations Platform
         </motion.h1>
         <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="mx-auto mt-6 max-w-3xl text-lg leading-8 text-zinc-400"
+          initial={{ y: 16 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.14 }}
+          className="mx-auto mt-6 max-w-3xl px-1 text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8"
         >
           Modern ticketing, AI support, asset management, analytics, and enterprise automation in one intelligent platform.
         </motion.p>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
+          initial={{ y: 16 }}
+          animate={{ y: 0 }}
+          transition={{ delay: 0.2 }}
           className="mt-10 flex flex-col justify-center gap-3 sm:flex-row"
         >
           <PremiumCTA to="/get-started">Start Free Trial</PremiumCTA>
@@ -85,13 +85,13 @@ export default function Home() {
           {trustStats.map((stat) => (
             <motion.div
               key={stat.label}
-              initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              initial={{ y: 16 }}
+              whileInView={{ y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
               className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 text-center shadow-2xl shadow-black/20"
             >
-              <p className="text-3xl font-semibold">{stat.value}</p>
-              <p className="mt-2 text-sm text-zinc-500">{stat.label}</p>
+              <p className="text-3xl font-semibold text-white">{stat.value}</p>
+              <p className="mt-2 text-sm text-zinc-400">{stat.label}</p>
             </motion.div>
           ))}
         </div>
@@ -165,7 +165,7 @@ export default function Home() {
           {faqItems.map(([question, answer]) => (
             <div key={question} className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <h3 className="font-semibold text-white">{question}</h3>
-              <p className="mt-3 text-sm leading-7 text-zinc-400">{answer}</p>
+              <p className="mt-3 text-sm leading-7 text-zinc-300">{answer}</p>
             </div>
           ))}
         </div>

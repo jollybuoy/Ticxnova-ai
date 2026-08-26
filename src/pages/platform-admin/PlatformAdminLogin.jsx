@@ -43,7 +43,7 @@ export default function PlatformAdminLogin() {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center bg-[#07070c] px-5 py-16">
+    <div className="theme-locked-dark relative flex min-h-screen items-center justify-center bg-[#07070c] px-5 py-16">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(245,158,11,0.16),transparent_45%)]" />
 
       <div className="relative w-full max-w-md rounded-[2rem] border border-amber-300/15 bg-black/50 p-8 shadow-2xl shadow-black/40 backdrop-blur-xl">
