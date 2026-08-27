@@ -183,13 +183,15 @@ serve(async (req) => {
       email,
       password: temporaryPassword,
       email_confirm: true,
-      user_metadata: {
+      app_metadata: {
         tenant_id: tenantId,
+        role,
+        must_reset_password: true,
+      },
+      user_metadata: {
         full_name: fullName,
         name: fullName,
-        role,
         department,
-        must_reset_password: true,
       },
     });
 
@@ -210,6 +212,7 @@ serve(async (req) => {
           full_name: fullName,
           role,
           department,
+          must_reset_password: true,
         });
 
       if (profileError) {

@@ -13,12 +13,32 @@ const PLAN_PRICE_ENV: Record<string, string[]> = {
   enterprise: ['STRIPE_ENTERPRISE_PRICE_ID', 'STRIPE_PRICE_ENTERPRISE'],
 };
 
-/** Public Stripe Price IDs for Ticxnova plans (CAD/month). Used when env secrets are unset. */
-const PLAN_PRICE_FALLBACK: Record<string, string> = {
+/** Test-mode Price IDs (CAD/month). Used with sk_test / rk_test. */
+const PLAN_PRICE_FALLBACK_TEST: Record<string, string> = {
   starter: 'price_1TrSG9H1xnYBWgiR8Jrks4o6',
   professional: 'price_1TrSGAH1xnYBWgiRiENaDWTk',
   enterprise: 'price_1TrSGAH1xnYBWgiRkChP3iJc',
 };
+
+/** Live-mode Price IDs (CAD/month). Used with sk_live / rk_live. */
+const PLAN_PRICE_FALLBACK_LIVE: Record<string, string> = {
+  starter: 'price_1TezkkH1xnYBWgiRHnzscJTe',
+  professional: 'price_1TezsyH1xnYBWgiRWJdPkNSn',
+  enterprise: 'price_1TezwAH1xnYBWgiRaK6gLtRa',
+};
+
+export function isLiveStripeKey(secret = Deno.env.get('STRIPE_SECRET_KEY') ?? '') {
+  return secret.startsWith('sk_live') || secret.startsWith('rk_live');
+}
+
+function priceFallbacks() {
+  return isLiveStripeKey() ? PLAN_PRICE_FALLBACK_LIVE : PLAN_PRICE_FALLBACK_TEST;
+}
+
+export function withCheckoutSessionId(url: string) {
+  if (!url || url.includes('{CHECKOUT_SESSION_ID}')) return url;
+  return `${url}${url.includes('?') ? '&' : '?'}session_id={CHECKOUT_SESSION_ID}`;
+}
 
 export function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -37,11 +57,27 @@ export function getPriceIdForPlan(plan: string) {
   const normalized = plan.toLowerCase();
   const keys = PLAN_PRICE_ENV[normalized];
   if (!keys) return null;
+
+  let fromEnv: string | undefined;
   for (const key of keys) {
     const value = Deno.env.get(key);
-    if (value) return value;
+    if (value) {
+      fromEnv = value;
+      break;
+    }
   }
-  return PLAN_PRICE_FALLBACK[normalized] ?? null;
+
+  const fallbacks = priceFallbacks();
+  if (fromEnv) {
+    const live = isLiveStripeKey();
+    const isTestPrice = Object.values(PLAN_PRICE_FALLBACK_TEST).includes(fromEnv);
+    const isLivePrice = Object.values(PLAN_PRICE_FALLBACK_LIVE).includes(fromEnv);
+    if (live && isTestPrice) return fallbacks[normalized] ?? fromEnv;
+    if (!live && isLivePrice) return fallbacks[normalized] ?? fromEnv;
+    return fromEnv;
+  }
+
+  return fallbacks[normalized] ?? null;
 }
 
 export function mapPriceToPlan(priceId: string | null | undefined) {
@@ -50,7 +86,9 @@ export function mapPriceToPlan(priceId: string | null | undefined) {
     for (const key of keys) {
       if (Deno.env.get(key) === priceId) return plan;
     }
-    if (PLAN_PRICE_FALLBACK[plan] === priceId) return plan;
+    if (PLAN_PRICE_FALLBACK_TEST[plan] === priceId || PLAN_PRICE_FALLBACK_LIVE[plan] === priceId) {
+      return plan;
+    }
   }
   return 'starter';
 }
@@ -162,11 +200,54 @@ export async function ensureStripeCustomer(
   return customer.id;
 }
 
+export function invoiceSubscriptionId(invoice: Stripe.Invoice) {
+  if (invoice.subscription) return String(invoice.subscription);
+  const parent = invoice.parent as { subscription_details?: { subscription?: string } } | null;
+  return parent?.subscription_details?.subscription ? String(parent.subscription_details.subscription) : null;
+}
+
+export async function syncFromCheckoutSession(
+  stripe: Stripe,
+  adminClient: SupabaseClient,
+  session: Stripe.Checkout.Session,
+  expectedTenantId?: string,
+) {
+  const tenantId = String(session.metadata?.tenant_id ?? session.client_reference_id ?? '');
+  if (!tenantId) return { synced: false, reason: 'missing_tenant' as const };
+  if (expectedTenantId && tenantId !== expectedTenantId) {
+    return { synced: false, reason: 'tenant_mismatch' as const };
+  }
+  if (!session.subscription) {
+    return { synced: false, reason: 'missing_subscription' as const, tenantId };
+  }
+
+  const subscription = await stripe.subscriptions.retrieve(String(session.subscription));
+  await syncSubscriptionRecord(adminClient, subscription, tenantId);
+
+  if (session.customer) {
+    await adminClient
+      .from('tenants')
+      .update({ stripe_customer_id: String(session.customer) })
+      .eq('id', tenantId);
+  }
+
+  const priceId = subscription.items.data[0]?.price?.id ?? null;
+  return {
+    synced: true as const,
+    tenantId,
+    status: mapStripeStatus(subscription.status),
+    plan: subscription.metadata?.target_plan ?? mapPriceToPlan(priceId),
+    subscriptionId: subscription.id,
+  };
+}
+
 export async function syncSubscriptionRecord(
   adminClient: SupabaseClient,
   subscription: Stripe.Subscription,
+  tenantIdOverride?: string | null,
 ) {
   const tenantId =
+    tenantIdOverride ??
     subscription.metadata?.tenant_id ??
     subscription.metadata?.tenantId ??
     null;

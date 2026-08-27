@@ -147,12 +147,12 @@ export default function About() {
           <GlowCard
             icon={Users}
             title="MSPs & service providers"
-            body="Deliver premium service across client workspaces with tenant isolation, RBAC, billing, and automation-ready architecture."
+            body="Deliver service across client workspaces with tenant isolation, RBAC, and Stripe billing."
           />
           <GlowCard
             icon={Target}
             title="Enterprise IT leaders"
-            body="Govern multi-domain operations with audit trails, SLA engines, directory sync, and AI impact analytics."
+            body="Govern operations with audit trails, SLA reports, and AI impact analytics."
           />
         </div>
       </MarketingSection>

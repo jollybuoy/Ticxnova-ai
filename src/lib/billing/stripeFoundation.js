@@ -1,16 +1,20 @@
 import { supabase } from '../supabase';
+import { fetchWorkspaceSubscription } from './subscriptionService';
 import {
   isStripeConfigured,
   mapStripePriceToPlan,
   PLAN_TO_STRIPE_PRICE,
   STRIPE_PRICE_IDS,
 } from './planMapping';
+import { checkoutSuccessUrl, isPaidActiveStatus } from './checkoutUrls';
 
 export {
   isStripeConfigured,
   mapStripePriceToPlan,
   PLAN_TO_STRIPE_PRICE,
   STRIPE_PRICE_IDS,
+  checkoutSuccessUrl,
+  isPaidActiveStatus,
 };
 
 export async function recordBillingEvent({ tenantId, stripeEventId, eventType, payload }) {
@@ -51,7 +55,7 @@ export async function requestPlanChange(tenantId, targetPlan, urls = {}) {
       tenantId,
       targetPlan,
       plan: targetPlan,
-      successUrl: urls.successUrl ?? `${origin}/settings/billing?checkout=success`,
+      successUrl: urls.successUrl ?? checkoutSuccessUrl(origin),
       cancelUrl: urls.cancelUrl ?? `${origin}/settings/billing?checkout=canceled`,
     },
   });
@@ -100,4 +104,62 @@ export async function openBillingPortal(tenantId) {
     return { success: true, url: data.url };
   }
   return { success: false, message: 'Billing portal unavailable.' };
+}
+
+export async function confirmCheckoutSession(tenantId, sessionId) {
+  if (!tenantId || !sessionId) {
+    return { success: false, unlocked: false, message: 'Missing checkout session.' };
+  }
+
+  const { data, error } = await supabase.functions.invoke('confirm-checkout-session', {
+    body: { tenantId, sessionId },
+  });
+
+  if (error) {
+    return { success: false, unlocked: false, message: error.message };
+  }
+  if (data?.error) {
+    return { success: false, unlocked: false, message: data.error };
+  }
+
+  return {
+    success: true,
+    unlocked: Boolean(data?.unlocked),
+    status: data?.status ?? null,
+    plan: data?.plan ?? null,
+    subscriptionId: data?.subscriptionId ?? null,
+  };
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, ms);
+  });
+}
+
+/**
+ * Confirm the Checkout Session with Stripe, then poll until the tenant is active.
+ */
+export async function waitForPaidUnlock(tenantId, sessionId, { timeoutMs = 20000, intervalMs = 1500 } = {}) {
+  if (sessionId) {
+    const confirmed = await confirmCheckoutSession(tenantId, sessionId);
+    if (confirmed.unlocked) return confirmed;
+  }
+
+  const started = Date.now();
+  while (Date.now() - started < timeoutMs) {
+    const { data } = await fetchWorkspaceSubscription(tenantId);
+    if (isPaidActiveStatus(data?.status)) {
+      return {
+        success: true,
+        unlocked: true,
+        status: data.status,
+        plan: data.plan ?? null,
+        subscriptionId: data.stripe_subscription_id ?? null,
+      };
+    }
+    await sleep(intervalMs);
+  }
+
+  return { success: true, unlocked: false, status: null, plan: null, subscriptionId: null };
 }

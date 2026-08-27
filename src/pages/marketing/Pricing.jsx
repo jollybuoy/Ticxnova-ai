@@ -11,19 +11,14 @@ import { pricingPlans } from '../../components/marketing/marketingData';
 
 const comparisonRows = [
   ['AI Assistant', true, true, true],
-  ['AI Summaries', false, true, true],
+  ['AI Summaries', true, true, true],
   ['Devices', true, true, true],
   ['Reports', true, true, true],
-  ['SMTP', false, true, true],
-  ['Enterprise SSO', false, true, true],
-  ['Directory Sync', false, false, true],
-  ['Multi-domain', false, false, true],
-  ['Automation', false, false, true],
-  ['SLA Engine', false, true, true],
-  ['Audit Logs', false, false, true],
-  ['Advanced RBAC', false, false, true],
-  ['Backups', false, true, true],
-  ['Custom Branding', false, false, true],
+  ['Invite users', false, true, true],
+  ['Knowledge base', false, true, true],
+  ['Advanced reports', false, true, true],
+  ['SLA reports', false, false, true],
+  ['Audit logs', false, false, true],
 ];
 
 export default function Pricing() {
@@ -32,7 +27,7 @@ export default function Pricing() {
       <MarketingSection
         eyebrow="Pricing"
         title="Plans for SMBs, MSPs, and enterprise IT teams"
-        description="Start with AI ticketing and grow into enterprise integrations, automation, multi-domain operations, and advanced governance."
+        description="Start with AI ticketing and grow into knowledge base, invites, SLA reports, and audit logs."
         className="pt-28"
       >
         <div className="grid gap-6 lg:grid-cols-3">
@@ -79,7 +74,7 @@ export default function Pricing() {
       <MarketingSection
         eyebrow="Comparison"
         title="Enterprise comparison at a glance"
-        description="A premium plan matrix for buyers comparing AI, integrations, automation, governance, reporting, and enterprise controls."
+        description="Compare what is available today across Starter, Professional, and Enterprise."
       >
         <div className="overflow-x-auto rounded-3xl border border-white/10 bg-white/[0.04] shadow-2xl shadow-black/30">
           <table className="min-w-full divide-y divide-white/10 text-sm">

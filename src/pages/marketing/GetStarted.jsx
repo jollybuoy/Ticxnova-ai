@@ -194,7 +194,7 @@ export default function GetStarted() {
             {[
               ['Tenant workspace created in Supabase', Building2],
               ['org_admin profile linked to tenant_id', ShieldCheck],
-              ['Ready for RBAC, enterprise SSO, and feature gating', Cloud],
+              ['Ready for RBAC, domain verification, and plan gating', Cloud],
             ].map(([text, Icon]) => (
               <div key={text} className="flex items-center gap-3 text-sm text-zinc-200">
                 <Icon size={18} className="text-cyan-300" />

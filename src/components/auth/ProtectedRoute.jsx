@@ -24,14 +24,15 @@ export function ProtectedRoute({
   const { profile, tenant, role } = useTenant();
   const { canUseFeature, isReadOnly } = usePlanAccess();
   const location = useLocation();
-  const authMustReset = user?.user_metadata?.must_reset_password;
-  const mustResetPassword =
-    typeof authMustReset === 'boolean' ? authMustReset : Boolean(profile?.must_reset_password);
-
   const routeFeature = requiredFeature ?? ROUTE_FEATURES[location.pathname];
   const routeGuard = ROUTE_GUARDS[location.pathname];
   const effectiveAllowTrialExpired =
     allowTrialExpired || isTrialExemptPath(location.pathname);
+  const domainVerified =
+    Boolean(tenant?.domain_verified) && tenant?.verification_status === 'verified';
+  const mustResetPassword = Boolean(
+    profile?.must_reset_password || user?.app_metadata?.must_reset_password,
+  );
 
   if (initializing) {
     return <AuthLoadingScreen />;
@@ -60,9 +61,6 @@ export function ProtectedRoute({
   if (!mustResetPassword && allowPasswordReset) {
     return <Navigate to="/dashboard" replace />;
   }
-
-  const domainVerified =
-    Boolean(tenant?.domain_verified) && tenant?.verification_status === 'verified';
 
   if (tenant && profile?.tenant_id && !domainVerified && !allowDomainVerification) {
     return <Navigate to="/verify-domain" replace state={{ from: location.pathname }} />;

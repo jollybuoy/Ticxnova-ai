@@ -42,7 +42,7 @@ export default function Home() {
           transition={{ delay: 0.14 }}
           className="mx-auto mt-6 max-w-3xl px-1 text-base leading-7 text-zinc-300 sm:text-lg sm:leading-8"
         >
-          Modern ticketing, AI support, asset management, analytics, and enterprise automation in one intelligent platform.
+          Modern ticketing, AI support, asset management, and analytics in one workspace.
         </motion.p>
         <motion.div
           initial={{ y: 16 }}
@@ -71,7 +71,7 @@ export default function Home() {
       <MarketingSection
         eyebrow="The Solution"
         title="Ticxnova unifies AI-powered IT operations in one intelligent platform"
-        description="A modern SaaS experience that connects AI support, ticketing, devices, analytics, automation, RBAC, and tenant isolation."
+        description="A modern SaaS workspace that connects AI support, ticketing, devices, analytics, RBAC, and tenant isolation."
       >
         <StoryWorkflow />
       </MarketingSection>
@@ -143,7 +143,7 @@ export default function Home() {
       <MarketingSection
         eyebrow="Enterprise Integrations"
         title="Connect your identity and collaboration stack"
-        description="Ticxnova is designed for enterprise SSO, directory sync, email intake, messaging workflows, and endpoint management — without locking you into a single vendor."
+        description="Ticxnova is a tenant-isolated workspace for tickets, devices, AI assistance, and reporting — without locking you into a single vendor."
       >
         <IntegrationStrip />
       </MarketingSection>

@@ -120,7 +120,8 @@ serve(async (req) => {
         .update({ role, full_name: fullName, department })
         .eq('id', tenantUser.user_id);
       await adminClient.auth.admin.updateUserById(tenantUser.user_id, {
-        user_metadata: { role, full_name: fullName, name: fullName, department, tenant_id: tenantId },
+        app_metadata: { tenant_id: tenantId, role },
+        user_metadata: { full_name: fullName, name: fullName, department },
         ban_duration: isActive ? 'none' : '876000h',
       });
     }
@@ -133,14 +134,17 @@ serve(async (req) => {
     const temporaryPassword = randomPassword();
     const { error: resetError } = await adminClient.auth.admin.updateUserById(tenantUser.user_id, {
       password: temporaryPassword,
-      user_metadata: {
+      app_metadata: {
         tenant_id: tenantId,
         role: tenantUser.role,
-        department: tenantUser.department,
         must_reset_password: true,
       },
     });
     if (resetError) return jsonResponse({ error: resetError.message }, 400);
+    await adminClient
+      .from('profiles')
+      .update({ must_reset_password: true })
+      .eq('id', tenantUser.user_id);
     return jsonResponse({ user: tenantUser, temporary_password: temporaryPassword });
   }
 

@@ -5,8 +5,8 @@ import { formatPlanPrice } from '../../lib/plans/planPricing';
 
 const planHighlights = {
   starter: ['Tickets & devices', 'Basic reports', 'AI summaries'],
-  professional: ['Knowledge base', 'SMTP & invites', 'Enterprise SSO', 'Advanced reports'],
-  enterprise: ['Multi-domain', 'Automation & SLA', 'Audit logs', 'Directory sync'],
+  professional: ['Knowledge base', 'Invite users', 'Advanced reports', 'AI assistant'],
+  enterprise: ['SLA reports', 'Audit logs', 'AI analytics', 'Priority support'],
 };
 
 function isPaidActive(subscriptionStatus, stripeSubscriptionId) {

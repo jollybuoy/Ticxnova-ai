@@ -6,6 +6,7 @@ import { BackgroundMesh } from '../components/layout/BackgroundMesh';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useAuth } from '../hooks/useAuth';
+import { supabase } from '../lib/supabase';
 
 export default function FirstLoginPasswordReset() {
   const { updatePassword } = useAuth();
@@ -24,15 +25,20 @@ export default function FirstLoginPasswordReset() {
     }
 
     setLoading(true);
-    const passwordResult = await updatePassword(form.password, {
-      must_reset_password: false,
-      password_reset_at: new Date().toISOString(),
-    });
+    const passwordResult = await updatePassword(form.password);
     if (!passwordResult.success) {
       setLoading(false);
       toast.error(passwordResult.message);
       return;
     }
+
+    const { error: resetFlagError } = await supabase.rpc('complete_own_password_reset');
+    if (resetFlagError) {
+      toast.error(resetFlagError.message || 'Password saved, but the reset flag could not be cleared.');
+      setLoading(false);
+      return;
+    }
+    await supabase.auth.refreshSession();
     setLoading(false);
 
     toast.success('Password changed. Redirecting to your workspace.');

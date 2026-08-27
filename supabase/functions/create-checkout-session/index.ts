@@ -6,6 +6,7 @@ import {
   getPriceIdForPlan,
   getStripeClient,
   jsonResponse,
+  withCheckoutSessionId,
 } from '../_shared/stripeBilling.ts';
 
 serve(async (req) => {
@@ -53,8 +54,8 @@ serve(async (req) => {
     const customerId = await ensureStripeCustomer(stripe, adminClient, tenant, profile, user);
 
     const origin = req.headers.get('origin') ?? '';
-    const successUrl = String(
-      payload.successUrl ?? `${origin}/settings/billing?checkout=success`,
+    const successUrl = withCheckoutSessionId(
+      String(payload.successUrl ?? `${origin}/settings/billing?checkout=success`),
     );
     const cancelUrl = String(
       payload.cancelUrl ?? `${origin}/settings/billing?checkout=canceled`,
@@ -66,6 +67,7 @@ serve(async (req) => {
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
+      customer_update: { address: 'auto', name: 'auto' },
       success_url: successUrl,
       cancel_url: cancelUrl,
       client_reference_id: tenant.id,

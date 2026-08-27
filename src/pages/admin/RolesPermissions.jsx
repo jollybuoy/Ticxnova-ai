@@ -1,75 +1,24 @@
-import { useMemo, useState } from 'react';
-import { KeyRound, LockKeyhole, ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
-import { Button } from '../../components/ui/Button';
-import { Input } from '../../components/ui/Input';
-import { Modal } from '../../components/ui/Modal';
+import { useMemo } from 'react';
+import { LockKeyhole, ShieldCheck } from 'lucide-react';
 import { Spinner } from '../../components/ui/Spinner';
-import { useTenant } from '../../hooks/useTenant';
 import { useTenantUsers } from '../../hooks/useTenantUsers';
-import {
-  canManageUsers,
-  createCustomRole,
-  getTenantErrorMessage,
-} from '../../lib/tenant/tenantService';
 
 const permissionTemplates = [
-  { key: 'tickets', label: 'Tickets', values: ['none', 'read', 'create', 'manage'] },
-  { key: 'devices', label: 'Devices', values: ['none', 'read', 'manage'] },
-  { key: 'users', label: 'Users', values: ['none', 'read', 'manage'] },
-  { key: 'reports', label: 'Reports', values: ['none', 'read', 'manage'] },
-  { key: 'settings', label: 'Settings', values: ['none', 'read', 'manage'] },
+  { key: 'tickets', label: 'Tickets' },
+  { key: 'devices', label: 'Devices' },
+  { key: 'users', label: 'Users' },
+  { key: 'reports', label: 'Reports' },
+  { key: 'settings', label: 'Settings' },
 ];
 
-const defaultRole = {
-  name: '',
-  description: '',
-  permissions: {
-    tickets: 'read',
-    devices: 'read',
-    users: 'none',
-    reports: 'read',
-    settings: 'none',
-  },
-};
-
 export default function RolesPermissions() {
-  const { tenantId, role } = useTenant();
-  const { roles, loading, refetch } = useTenantUsers();
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(defaultRole);
-  const [saving, setSaving] = useState(false);
-  const canManage = canManageUsers(role);
+  const { roles, loading } = useTenantUsers();
 
   const uniqueRoles = useMemo(
     () => [...new Map(roles.map((item) => [`${item.tenant_id ?? 'system'}:${item.name}`, item])).values()],
     [roles],
   );
   const systemRoles = useMemo(() => uniqueRoles.filter((item) => item.is_system), [uniqueRoles]);
-  const customRoles = useMemo(() => uniqueRoles.filter((item) => !item.is_system), [uniqueRoles]);
-
-  const updatePermission = (key, value) => {
-    setForm((current) => ({
-      ...current,
-      permissions: { ...current.permissions, [key]: value },
-    }));
-  };
-
-  const handleCreate = async (event) => {
-    event.preventDefault();
-    if (!tenantId) return;
-    setSaving(true);
-    const { error } = await createCustomRole(tenantId, form);
-    setSaving(false);
-    if (error) {
-      toast.error(getTenantErrorMessage(error));
-      return;
-    }
-    toast.success('Custom role created');
-    setForm(defaultRole);
-    setOpen(false);
-    refetch();
-  };
 
   return (
     <>
@@ -80,13 +29,9 @@ export default function RolesPermissions() {
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">Roles & Permissions</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Define role boundaries for tenant data, operations, reporting, and administration.
+            Access is enforced with five system roles. Custom roles are not applied to routes or RLS.
           </p>
         </div>
-        <Button onClick={() => setOpen(true)} disabled={!canManage}>
-          <KeyRound size={17} />
-          Create Custom Role
-        </Button>
       </div>
 
       {loading ? (
@@ -102,7 +47,7 @@ export default function RolesPermissions() {
               </div>
               <div>
                 <h2 className="text-lg font-semibold text-white">System Roles</h2>
-                <p className="text-sm text-zinc-400">Enterprise defaults used by RLS policies.</p>
+                <p className="text-sm text-zinc-400">Defaults used by route guards and RLS policies.</p>
               </div>
             </div>
             <div className="mt-5 space-y-3">
@@ -123,7 +68,7 @@ export default function RolesPermissions() {
           <section className="glass-card overflow-hidden">
             <div className="border-b border-white/[0.06] px-6 py-5">
               <h2 className="text-lg font-semibold text-white">Permission Matrix</h2>
-              <p className="mt-1 text-sm text-zinc-400">System and custom role permission scopes.</p>
+              <p className="mt-1 text-sm text-zinc-400">What each system role can do today.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-white/[0.06]">
@@ -138,7 +83,7 @@ export default function RolesPermissions() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.06]">
-                  {[...systemRoles, ...customRoles].map((item) => (
+                  {systemRoles.map((item) => (
                     <tr key={item.id} className="text-sm text-zinc-300">
                       <td className="px-5 py-4 font-medium capitalize text-white">
                         {item.name.replaceAll('_', ' ')}
@@ -158,48 +103,6 @@ export default function RolesPermissions() {
           </section>
         </div>
       )}
-
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Create custom role"
-        description="Custom roles are tenant scoped and can be expanded into granular UI controls."
-      >
-        <form onSubmit={handleCreate} className="space-y-4">
-          <Input
-            label="Role Name"
-            value={form.name}
-            onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
-            required
-          />
-          <Input
-            label="Description"
-            value={form.description}
-            onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
-          />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {permissionTemplates.map((permission) => (
-              <label key={permission.key} className="space-y-2">
-                <span className="text-xs font-medium text-zinc-400">{permission.label}</span>
-                <select
-                  value={form.permissions[permission.key]}
-                  onChange={(event) => updatePermission(permission.key, event.target.value)}
-                  className="focus-ring w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-sm text-white"
-                >
-                  {permission.values.map((value) => (
-                    <option key={value} value={value} className="bg-zinc-900">
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ))}
-          </div>
-          <Button type="submit" className="w-full" loading={saving}>
-            Create Role
-          </Button>
-        </form>
-      </Modal>
     </>
   );
 }

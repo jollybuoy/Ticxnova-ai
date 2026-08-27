@@ -12,6 +12,7 @@ import { useTenant } from '../../hooks/useTenant';
 import { getMissingStripePricePlans, isStripeConfigured } from '../../lib/billing/planMapping';
 import { PLANS } from '../../lib/plans/planConfig';
 import { fetchWorkspaceSubscription } from '../../lib/billing/subscriptionService';
+import { waitForPaidUnlock } from '../../lib/billing/stripeFoundation';
 
 export default function BillingSettings() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -20,7 +21,9 @@ export default function BillingSettings() {
   const { upgradingPlan, portalLoading, isBusy, startCheckout, openPortal } = useStripeCheckout(tenant);
   const [subscription, setSubscription] = useState(null);
   const [subscriptionLoading, setSubscriptionLoading] = useState(false);
+  const [activatingCheckout, setActivatingCheckout] = useState(false);
   const autoCheckoutStarted = useRef(false);
+  const checkoutHandled = useRef(false);
 
   const loadSubscription = async (tenantId) => {
     if (!tenantId) return;
@@ -36,16 +39,33 @@ export default function BillingSettings() {
 
   useEffect(() => {
     const checkout = searchParams.get('checkout');
-    if (checkout === 'success') {
-      toast.success('Payment received! Your subscription is activating…');
-      void refetch();
-      if (tenant?.id) void loadSubscription(tenant.id);
-      setSearchParams({}, { replace: true });
-      return;
-    }
+    const sessionId = searchParams.get('session_id');
+
     if (checkout === 'canceled') {
       toast.message('Checkout canceled — no charges were made.');
       setSearchParams({}, { replace: true });
+      return;
+    }
+
+    if (checkout === 'success') {
+      if (!tenant?.id || checkoutHandled.current) return;
+      checkoutHandled.current = true;
+      setSearchParams({}, { replace: true });
+      toast.success('Payment received. Unlocking your workspace…');
+      setActivatingCheckout(true);
+      void (async () => {
+        const result = await waitForPaidUnlock(tenant.id, sessionId);
+        await refetch();
+        await loadSubscription(tenant.id);
+        setActivatingCheckout(false);
+        if (result.unlocked) {
+          toast.success('Subscription is active. Your plan features are unlocked.');
+        } else {
+          toast.message(
+            'Payment received. If features are still locked, refresh this page in a few seconds.',
+          );
+        }
+      })();
       return;
     }
 
@@ -142,6 +162,12 @@ export default function BillingSettings() {
             )}
           </div>
         </div>
+
+        {activatingCheckout && (
+          <div className="rounded-2xl border border-violet-400/25 bg-violet-500/10 px-4 py-3 text-sm text-violet-100">
+            Confirming payment with Stripe and unlocking your plan. This usually takes a few seconds.
+          </div>
+        )}
 
         {isTrialExpiring && !trial.isExpired && (
           <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">

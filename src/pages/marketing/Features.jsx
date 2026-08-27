@@ -20,7 +20,7 @@ export default function Features() {
 
       <MarketingSection
         eyebrow="Platform"
-        title="AI, tickets, devices, analytics, and automation in one platform"
+        title="AI, tickets, devices, and analytics in one platform"
         description="Explore the full Ticxnova capability map — premium visual showcases of the modules powering your IT operations workspace."
         className="pt-4 sm:pt-8"
       >
@@ -60,9 +60,9 @@ export default function Features() {
       </MarketingSection>
 
       <MarketingSection
-        eyebrow="Enterprise Integrations"
-        title="Ready for identity-aware organizations"
-        description="Enterprise SSO, directory sync, email intake, messaging workflows, and endpoint management are core to how Ticxnova scales with your stack."
+        eyebrow="Workspace security"
+        title="Built for tenant isolation and role-based access"
+        description="Each organization verifies a domain, signs in with email and password, and works inside tenant-scoped tickets, devices, and reports. Identity-provider SSO is on the roadmap."
       >
         <IntegrationStrip />
       </MarketingSection>

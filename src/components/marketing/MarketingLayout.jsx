@@ -422,7 +422,7 @@ export function IntegrationStrip() {
   return (
     <div className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-5 backdrop-blur-xl">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
-        {['Enterprise SSO', 'Directory sync', 'Email intake', 'Team messaging', 'Calendar workflows', 'Identity federation', 'Endpoint management'].map((item, index) => (
+        {['Email login', 'Domain verify', 'Tenant roles', 'Audit logs', 'AI assistant', 'SLA reports', 'Stripe billing'].map((item, index) => (
           <motion.div
             key={item}
             {...revealProps(index * 0.06)}
@@ -437,7 +437,7 @@ export function IntegrationStrip() {
         {['Identity layer', 'Ticxnova AI layer', 'IT operations workspace'].map((label, index) => (
           <div key={label} className="rounded-2xl border border-cyan-300/15 bg-cyan-300/10 p-4 text-center text-sm text-cyan-100">
             {label}
-            <p className="mt-2 text-xs text-cyan-100/60">{['Users & access', 'Smart automation', 'Tickets, devices, reports'][index]}</p>
+            <p className="mt-2 text-xs text-cyan-100/60">{['Users & access', 'AI assistance', 'Tickets, devices, reports'][index]}</p>
           </div>
         )).flatMap((item, index, array) => (index < array.length - 1 ? [item, <ArrowRight key={`arrow-${index}`} className="mx-auto hidden text-cyan-300 lg:block" />] : [item]))}
       </div>

@@ -270,7 +270,7 @@ export function AiWorkflowShowcase() {
         animate={{ y: 0 }}
         className="mb-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start"
       >
-        {['AI-native', 'Auto-priority', 'SLA engine', 'Integration-ready'].map((badge) => (
+        {['AI-native', 'Auto-priority', 'SLA reports', 'Tenant-ready'].map((badge) => (
           <span
             key={badge}
             className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-medium text-zinc-200"

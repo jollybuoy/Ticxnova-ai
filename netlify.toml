@@ -2,6 +2,21 @@
   command = "npm run build"
   publish = "dist"
 
+[context.production.environment]
+  VITE_STRIPE_STARTER_PRICE_ID = "price_1TezkkH1xnYBWgiRHnzscJTe"
+  VITE_STRIPE_PROFESSIONAL_PRICE_ID = "price_1TezsyH1xnYBWgiRWJdPkNSn"
+  VITE_STRIPE_ENTERPRISE_PRICE_ID = "price_1TezwAH1xnYBWgiRaK6gLtRa"
+
+[context.deploy-preview.environment]
+  VITE_STRIPE_STARTER_PRICE_ID = "price_1TrSG9H1xnYBWgiR8Jrks4o6"
+  VITE_STRIPE_PROFESSIONAL_PRICE_ID = "price_1TrSGAH1xnYBWgiRiENaDWTk"
+  VITE_STRIPE_ENTERPRISE_PRICE_ID = "price_1TrSGAH1xnYBWgiRkChP3iJc"
+
+[context.branch-deploy.environment]
+  VITE_STRIPE_STARTER_PRICE_ID = "price_1TrSG9H1xnYBWgiR8Jrks4o6"
+  VITE_STRIPE_PROFESSIONAL_PRICE_ID = "price_1TrSGAH1xnYBWgiRiENaDWTk"
+  VITE_STRIPE_ENTERPRISE_PRICE_ID = "price_1TrSGAH1xnYBWgiRkChP3iJc"
+
 [[redirects]]
   from = "/*"
   to = "/index.html"

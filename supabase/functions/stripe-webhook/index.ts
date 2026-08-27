@@ -3,6 +3,8 @@ import Stripe from 'https://esm.sh/stripe@17.5.0?target=deno';
 import {
   corsHeaders,
   getStripeClient,
+  invoiceSubscriptionId,
+  syncFromCheckoutSession,
   syncSubscriptionRecord,
 } from '../_shared/stripeBilling.ts';
 
@@ -11,8 +13,9 @@ async function syncInvoiceSubscription(
   supabase: ReturnType<typeof createClient>,
   invoice: Stripe.Invoice,
 ) {
-  if (!invoice.subscription) return;
-  const subscription = await stripe.subscriptions.retrieve(String(invoice.subscription));
+  const subscriptionId = invoiceSubscriptionId(invoice);
+  if (!subscriptionId) return;
+  const subscription = await stripe.subscriptions.retrieve(subscriptionId);
   await syncSubscriptionRecord(supabase, subscription);
 }
 
@@ -45,12 +48,8 @@ Deno.serve(async (req) => {
 
   if (!webhookSecret) {
     return new Response(
-      JSON.stringify({
-        received: true,
-        stub: true,
-        message: 'Set STRIPE_WEBHOOK_SECRET to process webhook events',
-      }),
-      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      JSON.stringify({ error: 'STRIPE_WEBHOOK_SECRET is not configured.' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 
@@ -88,17 +87,7 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
-        const tenantId = session.metadata?.tenant_id ?? session.client_reference_id;
-        if (tenantId && session.subscription) {
-          const subscription = await stripe.subscriptions.retrieve(String(session.subscription));
-          await syncSubscriptionRecord(supabase, subscription);
-          if (session.customer) {
-            await supabase
-              .from('tenants')
-              .update({ stripe_customer_id: String(session.customer) })
-              .eq('id', tenantId);
-          }
-        }
+        await syncFromCheckoutSession(stripe, supabase, session);
         break;
       }
       case 'customer.subscription.created':

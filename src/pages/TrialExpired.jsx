@@ -4,6 +4,7 @@ import { PlanUpgradeCards } from '../components/billing/PlanUpgradeCards';
 import { usePlanAccess } from '../hooks/usePlanAccess';
 import { useStripeCheckout } from '../hooks/useStripeCheckout';
 import { useTenant } from '../hooks/useTenant';
+import { checkoutSuccessUrl } from '../lib/billing/stripeFoundation';
 
 export default function TrialExpired() {
   const { plan, planLabel, trial } = usePlanAccess();
@@ -36,7 +37,7 @@ export default function TrialExpired() {
           upgradingPlan={upgradingPlan}
           onSelectPlan={(targetPlan) => void startCheckout(targetPlan, {
             urls: {
-              successUrl: `${window.location.origin}/settings/billing?checkout=success`,
+              successUrl: checkoutSuccessUrl(),
               cancelUrl: `${window.location.origin}/trial-expired?checkout=canceled`,
             },
           })}
