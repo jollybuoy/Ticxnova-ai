@@ -6,10 +6,12 @@ import { useTenant } from './useTenant';
 import { getUserDisplayName, getUserEmail } from '../lib/user';
 import {
   addTicketComment,
+  fetchRelatedTickets,
   fetchTicketActivity,
   fetchTicketById,
   fetchTicketComments,
   getTicketErrorMessage,
+  summarizeTicket,
   updateTicketFields,
 } from '../lib/tickets/ticketService';
 import {
@@ -28,8 +30,10 @@ export function useTicketDetails(ticketId) {
   const [comments, setComments] = useState([]);
   const [activity, setActivity] = useState([]);
   const [linkedDevices, setLinkedDevices] = useState([]);
+  const [relatedTickets, setRelatedTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const actor = useMemo(
     () => ({
@@ -53,8 +57,11 @@ export function useTicketDetails(ticketId) {
     if (ticketResult.error) {
       toast.error(getTicketErrorMessage(ticketResult.error));
       setTicket(null);
+      setRelatedTickets([]);
     } else {
       setTicket(ticketResult.data);
+      const relatedResult = await fetchRelatedTickets(ticketResult.data, userId, tenantId);
+      setRelatedTickets(relatedResult.data ?? []);
     }
 
     if (commentsResult.error) {
@@ -168,11 +175,11 @@ export function useTicketDetails(ticketId) {
   );
 
   const addComment = useCallback(
-    async (body) => {
+    async (body, visibility = 'internal') => {
       if (!userId || !ticketId || !body.trim()) return { success: false };
 
       setMutating(true);
-      const { data, error } = await addTicketComment(userId, ticketId, body, actor);
+      const { data, error } = await addTicketComment(userId, ticketId, body, actor, visibility);
       setMutating(false);
 
       if (error) {
@@ -181,11 +188,25 @@ export function useTicketDetails(ticketId) {
       }
 
       setComments((prev) => [...prev, data]);
-      toast.success('Work note added');
+      toast.success(visibility === 'public' ? 'Reply sent to requester' : 'Internal note added');
       return { success: true, data };
     },
     [actor, ticketId, userId],
   );
+
+  const runDiagnostics = useCallback(async () => {
+    if (!userId || !ticket) return { success: false };
+    setAiLoading(true);
+    const { data, error } = await summarizeTicket(userId, ticket);
+    setAiLoading(false);
+    if (error) {
+      toast.error(getTicketErrorMessage(error));
+      return { success: false };
+    }
+    setTicket(data);
+    toast.success('AI diagnostics updated');
+    return { success: true, data };
+  }, [ticket, userId]);
 
   const updateLinkedDevices = useCallback(
     async (deviceIds) => {
@@ -227,11 +248,14 @@ export function useTicketDetails(ticketId) {
     comments,
     activity,
     linkedDevices,
+    relatedTickets,
     loading,
     mutating,
+    aiLoading,
     refetch: loadTicket,
     updateFields,
     addComment,
+    runDiagnostics,
     updateLinkedDevices,
     removeLinkedDevice,
   };

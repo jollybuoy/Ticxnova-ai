@@ -9,6 +9,11 @@
       (function () {
         try {
           var pref = localStorage.getItem('ticxnova-theme') || 'dark';
+          var queryTheme = new URLSearchParams(location.search).get('theme');
+          if (queryTheme === 'light' || queryTheme === 'dark' || queryTheme === 'system') {
+            localStorage.setItem('ticxnova-theme', queryTheme);
+            pref = queryTheme;
+          }
           var resolved =
             pref === 'system'
               ? window.matchMedia('(prefers-color-scheme: dark)').matches

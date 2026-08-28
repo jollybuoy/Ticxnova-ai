@@ -16,8 +16,8 @@ import {
 } from 'recharts';
 import { ChartTooltip } from '../../components/ui/ChartTooltip';
 
-const axis = { fill: '#71717a', fontSize: 11 };
-const grid = 'rgba(255,255,255,0.06)';
+const axis = { fill: 'var(--chart-tick, #71717a)', fontSize: 11 };
+const grid = 'var(--chart-grid, rgba(255,255,255,0.06))';
 
 export function AreaReportChart({ data, dataKey = 'tickets', color = '#8b5cf6' }) {
   return (

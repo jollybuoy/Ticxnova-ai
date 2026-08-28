@@ -143,6 +143,8 @@ function buildActivityMessage(field, previousValue, newValue) {
     priority: 'updated priority',
     assignee_name: 'updated assignment',
     department: 'updated department',
+    title: 'updated title',
+    description: 'updated description',
   };
 
   return `${labels[field] ?? `updated ${field}`} from ${previousValue || 'None'} to ${
@@ -198,28 +200,68 @@ export async function updateTicketFields(userId, ticket, updates, actor) {
   return { data, error: null };
 }
 
-export async function addTicketComment(userId, ticketId, body, actor) {
-  const { data, error } = await supabase
-    .from('ticket_comments')
-    .insert({
-      ticket_id: ticketId,
-      body: body.trim(),
-      author_name: actor.name,
-      author_email: actor.email,
-    })
-    .select()
-    .single();
+export async function addTicketComment(userId, ticketId, body, actor, visibility = 'internal') {
+  const trimmed = body.trim();
+  const isPublic = visibility === 'public';
+  const payload = {
+    ticket_id: ticketId,
+    body: trimmed,
+    comment: trimmed,
+    comment_type: isPublic ? 'requester_reply' : 'work_note',
+    author_name: actor.name,
+    author_email: actor.email,
+    visibility: isPublic ? 'public' : 'internal',
+  };
+
+  let { data, error } = await supabase.from('ticket_comments').insert(payload).select().single();
+
+  if (error) {
+    const fallback = await supabase
+      .from('ticket_comments')
+      .insert({
+        ticket_id: ticketId,
+        body: isPublic ? `[[visibility:public]]\n${trimmed}` : trimmed,
+        author_name: actor.name,
+        author_email: actor.email,
+      })
+      .select()
+      .single();
+    data = fallback.data;
+    error = fallback.error;
+  }
 
   if (error) return { data: null, error };
 
   await createTicketActivity(ticketId, userId, {
     type: 'comment',
-    message: 'added a work note',
+    message: isPublic ? 'replied to the requester' : 'added an internal note',
     actor_name: actor.name,
     actor_email: actor.email,
   });
 
   return { data, error: null };
+}
+
+export async function fetchRelatedTickets(ticket, userId, tenantId) {
+  if (!ticket?.id) return { data: [], error: null };
+
+  let query = supabase
+    .from('tickets')
+    .select('id, title, ticket_number, status, priority, created_at, category, department')
+    .neq('id', ticket.id)
+    .order('created_at', { ascending: false })
+    .limit(40);
+
+  query = tenantId ? query.eq('tenant_id', tenantId) : query.eq('user_id', userId);
+
+  const { data, error } = await query;
+  const related = (data ?? []).filter(
+    (item) =>
+      (ticket.category && item.category === ticket.category) ||
+      (ticket.department && item.department === ticket.department),
+  );
+
+  return { data: related.slice(0, 8), error };
 }
 
 export async function deleteTicket(userId, ticketId) {
@@ -256,7 +298,7 @@ export async function summarizeTicket(userId, ticket) {
       ai_summary_generated_at: new Date().toISOString(),
     })
     .eq('id', ticket.id)
-    .eq('user_id', userId)
+    .eq(ticket.tenant_id ? 'tenant_id' : 'user_id', ticket.tenant_id || userId)
     .select()
     .single();
 
