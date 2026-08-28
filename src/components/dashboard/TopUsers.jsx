@@ -1,47 +1,48 @@
-import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Card, CardBody, CardHeader } from '../ui/Card';
+import { UserAvatar } from '../ui/UserAvatar';
 
-const avatarColors = [
-  'from-violet-500 to-indigo-600',
-  'from-blue-500 to-cyan-500',
-  'from-emerald-500 to-teal-600',
-  'from-amber-500 to-orange-500',
-  'from-pink-500 to-rose-500',
-];
+const loadTone = {
+  High: 'text-orange-300',
+  Medium: 'text-yellow-300',
+  Low: 'text-emerald-300',
+};
+
+const barTone = {
+  High: 'bg-orange-400',
+  Medium: 'bg-yellow-400',
+  Low: 'bg-violet-500',
+};
 
 export function TopUsers({ users = [] }) {
-  const navigate = useNavigate();
   return (
-    <Card className="h-full" delay={0.25}>
-      <CardHeader title="Top Users" subtitle="Most tickets this month" />
+    <Card hover={false} className="h-full">
+      <CardHeader title="Team workload" subtitle="Open tickets by owner" />
       <CardBody className="space-y-4">
-        {users.length === 0 && (
-          <div className="py-10 text-center text-sm text-zinc-500">No requester activity yet.</div>
-        )}
-        {users.map((user, i) => (
-          <motion.div
-            key={user.name}
-            initial={false}
-            whileHover={{ x: 6 }}
-            className="flex items-center gap-4 rounded-xl px-2 py-1"
-            onClick={() => navigate(`/tickets?search=${encodeURIComponent(user.name)}`)}
-          >
-            <motion.div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br ${avatarColors[i % avatarColors.length]} text-xs font-semibold text-white shadow-lg ring-2 ring-white/10`}
-              whileHover={{ scale: 1.08 }}
-            >
-              {user.avatar}
-            </motion.div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-white">{user.name}</p>
-              <p className="text-xs text-zinc-500">{user.department}</p>
+        {users.length === 0 ? (
+          <p className="py-8 text-center text-sm text-zinc-500">No assigned work yet.</p>
+        ) : (
+          users.map((user) => (
+            <div key={user.name} className="space-y-2">
+              <div className="flex items-center gap-3">
+                <UserAvatar name={user.name} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-white">{user.name}</p>
+                  <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-white/10">
+                    <div className={`h-full rounded-full ${barTone[user.load]}`} style={{ width: `${user.percent}%` }} />
+                  </div>
+                </div>
+                <span className="text-right">
+                  <span className="block text-xs font-semibold tabular-nums text-zinc-300">{user.percent}%</span>
+                  <span className={`text-[11px] font-semibold ${loadTone[user.load]}`}>{user.load}</span>
+                </span>
+              </div>
             </div>
-            <span className="rounded-lg bg-white/[0.04] px-2.5 py-1 text-sm font-semibold tabular-nums text-white ring-1 ring-white/[0.06]">
-              {user.tickets}
-            </span>
-          </motion.div>
-        ))}
+          ))
+        )}
+        <Link to="/settings/users" className="inline-block text-sm font-medium text-blue-400 hover:text-blue-300">
+          View team dashboard →
+        </Link>
       </CardBody>
     </Card>
   );

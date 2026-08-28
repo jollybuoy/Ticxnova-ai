@@ -1,74 +1,26 @@
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts';
-import { useNavigate } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Card, CardBody, CardHeader } from '../ui/Card';
 import { ChartTooltip } from '../ui/ChartTooltip';
 
 export function TicketsChart({ data = [] }) {
-  const navigate = useNavigate();
-  const maxTickets = Math.max(5, ...data.map((item) => item.tickets));
   return (
-    <Card className="h-full min-h-[360px] cursor-pointer" delay={0.1} onClick={() => navigate('/reports/tickets')}>
-      <CardHeader title="Tickets Overview" subtitle="Volume over the last 30 days" />
+    <Card hover={false} className="h-full min-h-[360px]">
+      <CardHeader
+        title="Ticket overview"
+        subtitle="Volume by day and priority"
+        action={<span className="rounded-lg border border-white/15 px-2.5 py-1 text-xs text-zinc-400">By day</span>}
+      />
       <CardBody className="h-[280px] pt-0">
-        <ResponsiveContainer width="100%" height="100%" debounce={50}>
-          <AreaChart data={data} margin={{ top: 12, right: 12, left: -8, bottom: 0 }}>
-            <defs>
-              <linearGradient id="ticketGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#7c6cf0" stopOpacity={0.45} />
-                <stop offset="100%" stopColor="#7c6cf0" stopOpacity={0} />
-              </linearGradient>
-              <linearGradient id="lineStroke" x1="0" y1="0" x2="1" y2="0">
-                <stop offset="0%" stopColor="#8b5cf6" />
-                <stop offset="100%" stopColor="#60a5fa" />
-              </linearGradient>
-            </defs>
-            <CartesianGrid
-              strokeDasharray="4 4"
-              stroke="rgba(255,255,255,0.04)"
-              vertical={false}
-            />
-            <XAxis
-              dataKey="date"
-              tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
-              axisLine={false}
-              tickLine={false}
-              dy={8}
-            />
-            <YAxis
-              tick={{ fill: '#64748b', fontSize: 11, fontWeight: 500 }}
-              axisLine={false}
-              tickLine={false}
-              domain={[0, maxTickets]}
-              dx={-4}
-            />
-            <Tooltip
-              content={<ChartTooltip />}
-              cursor={{ stroke: 'rgba(124,108,240,0.35)', strokeWidth: 1 }}
-            />
-            <Area
-              type="monotone"
-              dataKey="tickets"
-              stroke="url(#lineStroke)"
-              strokeWidth={2.5}
-              fill="url(#ticketGradient)"
-              dot={false}
-              isAnimationActive={false}
-              activeDot={{
-                r: 6,
-                fill: '#a78bfa',
-                stroke: '#0c1019',
-                strokeWidth: 2,
-              }}
-            />
-          </AreaChart>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <XAxis dataKey="name" tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#94a3b8', fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
+            <Tooltip content={<ChartTooltip valueLabel="tickets" />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
+            <Bar dataKey="critical" stackId="p" fill="#ef4444" radius={[0, 0, 0, 0]} />
+            <Bar dataKey="high" stackId="p" fill="#fb923c" />
+            <Bar dataKey="normal" stackId="p" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
+          </BarChart>
         </ResponsiveContainer>
       </CardBody>
     </Card>

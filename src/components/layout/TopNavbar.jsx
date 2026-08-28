@@ -52,7 +52,7 @@ export function TopNavbar({ onMenuClick, collapsed, onToggleCollapse }) {
   const busy = actionLoading || signingOut;
 
   return (
-    <header className="sticky top-0 z-30 flex h-[4.25rem] items-center gap-4 border-b border-white/[0.06] glass px-4 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-[4.25rem] items-center gap-4 border-b border-white/15 glass px-4 lg:px-6">
       <motion.button
         type="button"
         whileHover={{ scale: 1.05 }}

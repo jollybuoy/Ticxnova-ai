@@ -117,7 +117,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex ${width} flex-col border-r border-white/[0.06] glass-strong transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex ${width} flex-col border-r border-white/15 glass-strong transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] lg:static lg:translate-x-0 ${
           open ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

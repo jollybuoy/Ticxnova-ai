@@ -1,52 +1,32 @@
 import { useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { ShieldCheck, TriangleAlert, Wrench } from 'lucide-react';
-import { Card, CardBody } from '../components/ui/Card';
-import { Button } from '../components/ui/Button';
+import { Laptop, ShieldAlert, ShieldCheck, TriangleAlert, WifiOff } from 'lucide-react';
 import { DeviceFormModal } from '../components/devices/DeviceFormModal';
-import { DevicesGrid } from '../components/devices/DevicesGrid';
+import { DeviceInspector } from '../components/devices/DeviceInspector';
 import { DevicesTable } from '../components/devices/DevicesTable';
 import { DevicesToolbar } from '../components/devices/DevicesToolbar';
+import { CreateTicketModal } from '../components/tickets/CreateTicketModal';
+import { KpiCard } from '../components/ui/KpiCard';
 import { useDevices } from '../hooks/useDevices';
 import { useTickets } from '../hooks/useTickets';
-import { getDeviceStats } from '../lib/devices/constants';
+import { DEVICE_TYPES } from '../lib/devices/constants';
+import { deviceAlerts, getFleetBreakdown } from '../lib/devices/fleetMetrics';
 
-const pageSize = 9;
-
-function StatCard({ icon: Icon, label, value, tone }) {
-  const tones = {
-    violet: 'from-violet-500/20 to-indigo-500/10 text-violet-200',
-    green: 'from-emerald-500/20 to-cyan-500/10 text-emerald-200',
-    amber: 'from-amber-500/20 to-orange-500/10 text-amber-200',
-  };
-  return (
-    <Card hover={false}>
-      <CardBody className="flex items-center gap-4">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${tones[tone]}`}>
-          <Icon size={22} />
-        </div>
-        <div>
-          <p className="text-sm text-zinc-500">{label}</p>
-          <p className="mt-1 text-3xl font-semibold tracking-tight text-white">{value}</p>
-        </div>
-      </CardBody>
-    </Card>
-  );
-}
+const PAGE_SIZE = 10;
 
 export default function Devices() {
-  const [searchParams] = useSearchParams();
-  const { devices, loading, mutating, createDevice, updateDevice, deleteDevice } = useDevices();
-  const { tickets } = useTickets();
-  const [query, setQuery] = useState(() => searchParams.get('search') ?? '');
-  const [status, setStatus] = useState(() => searchParams.get('status') ?? 'all');
+  const { devices, loading, mutating, createDevice, updateDevice } = useDevices();
+  const { tickets, createTicket, mutating: ticketMutating } = useTickets();
+  const [query, setQuery] = useState('');
+  const [status, setStatus] = useState('all');
   const [type, setType] = useState('all');
-  const [view, setView] = useState('table');
   const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
+  const [ticketOpen, setTicketOpen] = useState(false);
   const [editingDevice, setEditingDevice] = useState(null);
+  const [selectedId, setSelectedId] = useState(null);
 
-  const stats = useMemo(() => getDeviceStats(devices), [devices]);
+  const fleet = useMemo(() => getFleetBreakdown(devices), [devices]);
+  const alerts = useMemo(() => deviceAlerts(devices), [devices]);
   const serviceRequestOptions = useMemo(
     () =>
       tickets
@@ -63,34 +43,26 @@ export default function Devices() {
     return devices.filter((device) => {
       const matchesQuery =
         !normalized ||
-        [
-          device.name,
-          device.asset_tag,
-          device.serial_number,
-          device.assigned_user,
-          device.department,
-          device.device_type,
-          device.manufacturer,
-          device.model,
-        ]
+        [device.name, device.asset_tag, device.serial_number, device.assigned_user, device.department, device.device_type, device.manufacturer, device.model]
           .filter(Boolean)
           .some((value) => value.toLowerCase().includes(normalized));
-      const matchesStatus = status === 'all' || device.health_status === status;
+      const matchesStatus =
+        status === 'all' ||
+        (status === 'risk'
+          ? ['Warning', 'Critical', 'Offline'].includes(device.health_status)
+          : device.health_status === status);
       const matchesType = type === 'all' || device.device_type === type;
       return matchesQuery && matchesStatus && matchesType;
     });
   }, [devices, query, status, type]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredDevices.length / pageSize));
-  const pagedDevices = filteredDevices.slice((page - 1) * pageSize, page * pageSize);
+  const totalPages = Math.max(1, Math.ceil(filteredDevices.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedDevices = filteredDevices.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const selectedDevice = devices.find((device) => device.id === selectedId) || pagedDevices[0] || null;
 
   const openCreate = () => {
     setEditingDevice(null);
-    setModalOpen(true);
-  };
-
-  const openEdit = (device) => {
-    setEditingDevice(device);
     setModalOpen(true);
   };
 
@@ -115,30 +87,16 @@ export default function Devices() {
     return createDevice(payload);
   };
 
-  const confirmDelete = async (device) => {
-    if (!window.confirm(`Delete ${device.name}? This removes notes and activity too.`)) return;
-    await deleteDevice(device.id);
-  };
+  const kpis = [
+    { id: 'all', label: 'Managed', value: fleet.total, hint: 'Enrolled endpoints', icon: Laptop, iconBg: 'bg-violet-500/15 text-violet-300', color: '#8b5cf6' },
+    { id: 'Healthy', label: 'Healthy', value: fleet.healthy, hint: `${fleet.total ? Math.round((fleet.healthy / fleet.total) * 100) : 0}% of fleet`, icon: ShieldCheck, iconBg: 'bg-emerald-500/15 text-emerald-300', color: '#34d399' },
+    { id: 'Warning', label: 'Need attention', value: fleet.attention, hint: 'Warning status', icon: TriangleAlert, iconBg: 'bg-amber-500/15 text-amber-300', color: '#fbbf24' },
+    { id: 'Critical', label: 'Critical', value: fleet.critical, hint: 'Immediate review', icon: ShieldAlert, iconBg: 'bg-red-500/15 text-red-300', color: '#f87171' },
+    { id: 'Offline', label: 'Offline', value: fleet.offline, hint: 'Not checking in', icon: WifiOff, iconBg: 'bg-zinc-500/15 text-zinc-300', color: '#94a3b8' },
+  ];
 
   return (
     <>
-      <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-label">Asset & Device Management</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-white">Device Inventory</h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-500">
-            Track endpoints, ownership, departments, warranty exposure and health across managed clients.
-          </p>
-        </div>
-        <Button onClick={openCreate}>Add device</Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard icon={ShieldCheck} label="Total devices" value={stats.total} tone="violet" />
-        <StatCard icon={TriangleAlert} label="Unhealthy devices" value={stats.unhealthy} tone="amber" />
-        <StatCard icon={Wrench} label="Warranty alerts" value={stats.warrantyAlerts} tone="green" />
-      </div>
-
       <DevicesToolbar
         query={query}
         onQueryChange={(value) => {
@@ -155,31 +113,49 @@ export default function Devices() {
           setType(value);
           setPage(1);
         }}
-        view={view}
-        onViewChange={setView}
+        types={DEVICE_TYPES}
         onCreate={openCreate}
       />
 
-      {loading ? (
-        <div className="glass-card px-6 py-12 text-center text-sm text-zinc-500">Loading device inventory...</div>
-      ) : view === 'table' ? (
-        <DevicesTable devices={pagedDevices} onEdit={openEdit} onDelete={confirmDelete} />
-      ) : (
-        <DevicesGrid devices={pagedDevices} onEdit={openEdit} onDelete={confirmDelete} />
-      )}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        {kpis.map((kpi) => (
+          <KpiCard
+            key={kpi.id}
+            {...kpi}
+            onClick={() => {
+              setStatus(kpi.id === 'all' ? 'all' : kpi.id);
+              setPage(1);
+            }}
+          />
+        ))}
+      </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-zinc-500">
-          Showing {pagedDevices.length} of {filteredDevices.length} devices
-        </p>
-        <div className="flex gap-2">
-          <Button variant="secondary" disabled={page === 1} onClick={() => setPage((value) => value - 1)}>
-            Previous
-          </Button>
-          <Button variant="secondary" disabled={page === totalPages} onClick={() => setPage((value) => value + 1)}>
-            Next
-          </Button>
-        </div>
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <DevicesTable
+          devices={pagedDevices}
+          loading={loading}
+          selectedId={selectedDevice?.id}
+          onSelect={(device) => setSelectedId(device.id)}
+          page={currentPage}
+          pageSize={PAGE_SIZE}
+          totalCount={filteredDevices.length}
+          onPageChange={setPage}
+        />
+        <DeviceInspector
+          device={selectedDevice}
+          devices={devices}
+          alerts={alerts}
+          onEdit={() => {
+            if (!selectedDevice) return;
+            setEditingDevice(selectedDevice);
+            setModalOpen(true);
+          }}
+          onCreateTicket={() => setTicketOpen(true)}
+          onReview={() => {
+            setStatus('risk');
+            setPage(1);
+          }}
+        />
       </div>
 
       <DeviceFormModal
@@ -189,6 +165,21 @@ export default function Devices() {
         onSubmit={submitDevice}
         loading={mutating}
         serviceRequestOptions={serviceRequestOptions}
+      />
+      <CreateTicketModal
+        open={ticketOpen}
+        onClose={() => setTicketOpen(false)}
+        onCreate={createTicket}
+        loading={ticketMutating}
+        seed={
+          selectedDevice
+            ? {
+                title: `Issue with ${selectedDevice.name}`,
+                device_ids: [selectedDevice.id],
+                department: selectedDevice.department || '',
+              }
+            : undefined
+        }
       />
     </>
   );

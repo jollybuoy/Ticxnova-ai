@@ -1,8 +1,13 @@
-import { Grid3X3, ListFilter, Plus, Search } from 'lucide-react';
-import { Input } from '../ui/Input';
-import { Select } from '../ui/Select';
+import { Filter, Laptop, Plus, Search } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { DEVICE_STATUSES, DEVICE_TYPES } from '../../lib/devices/constants';
+
+const chips = [
+  { id: 'all', label: 'All' },
+  { id: 'Healthy', label: 'Healthy', dot: 'bg-emerald-400' },
+  { id: 'Warning', label: 'Attention', dot: 'bg-amber-400' },
+  { id: 'Critical', label: 'Critical', dot: 'bg-red-500' },
+  { id: 'Offline', label: 'Offline', dot: 'bg-zinc-400' },
+];
 
 export function DevicesToolbar({
   query,
@@ -11,60 +16,73 @@ export function DevicesToolbar({
   onStatusChange,
   type,
   onTypeChange,
-  view,
-  onViewChange,
+  types,
   onCreate,
 }) {
   return (
-    <div className="glass-card p-4">
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div className="grid flex-1 gap-3 md:grid-cols-[1.4fr_1fr_1fr]">
-          <Input
-            label="Search inventory"
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight text-white">Devices</h1>
+          <p className="mt-1 text-sm text-zinc-400">Managed endpoints, health, and compliance.</p>
+        </div>
+        <Button onClick={onCreate}>
+          <Plus size={16} />
+          Enroll devices
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {chips.map((chip) => (
+          <button
+            key={chip.id}
+            type="button"
+            onClick={() => onStatusChange(chip.id)}
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+              status === chip.id
+                ? 'border-violet-400/40 bg-violet-500/15 text-white'
+                : 'border-white/15 bg-white/[0.03] text-zinc-400 hover:text-white'
+            }`}
+          >
+            {chip.dot && <span className={`h-1.5 w-1.5 rounded-full ${chip.dot}`} />}
+            {chip.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="search"
             value={query}
             onChange={(event) => onQueryChange(event.target.value)}
-            placeholder="Search device, asset tag, serial, user..."
+            placeholder="Search devices by name, user, serial..."
+            className="focus-ring w-full rounded-xl border border-white/15 bg-black/30 py-2.5 pl-10 pr-4 text-sm text-zinc-200 placeholder:text-zinc-600"
           />
-          <Select
-            label="Status"
-            value={status}
-            onChange={(event) => onStatusChange(event.target.value)}
-            options={[{ value: 'all', label: 'All statuses' }, ...DEVICE_STATUSES]}
-          />
-          <Select
-            label="Type"
+        </div>
+        <div className="relative sm:w-48">
+          <Filter size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <select
             value={type}
             onChange={(event) => onTypeChange(event.target.value)}
-            options={[{ value: 'all', label: 'All types' }, ...DEVICE_TYPES]}
-          />
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant={view === 'table' ? 'primary' : 'secondary'}
-            onClick={() => onViewChange('table')}
-            className="px-3"
+            className="focus-ring w-full appearance-none rounded-xl border border-white/15 bg-black/30 py-2.5 pl-9 pr-3 text-sm text-zinc-200"
           >
-            <ListFilter size={16} />
-            Table
-          </Button>
-          <Button
-            variant={view === 'grid' ? 'primary' : 'secondary'}
-            onClick={() => onViewChange('grid')}
-            className="px-3"
-          >
-            <Grid3X3 size={16} />
-            Grid
-          </Button>
-          <Button onClick={onCreate}>
-            <Plus size={16} />
-            Add device
-          </Button>
+            <option value="all" className="bg-zinc-900">
+              All types
+            </option>
+            {types.map((item) => (
+              <option key={item.value} value={item.value} className="bg-zinc-900">
+                {item.label}
+              </option>
+            ))}
+          </select>
         </div>
-      </div>
-      <div className="mt-3 flex items-center gap-2 text-xs text-zinc-500">
-        <Search size={14} />
-        Realtime inventory with assigned users, department mapping, health and warranty visibility.
       </div>
     </div>
   );
+}
+
+export function DeviceTypeIcon() {
+  return <Laptop size={16} className="text-violet-300" />;
 }

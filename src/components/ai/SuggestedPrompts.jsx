@@ -26,7 +26,7 @@ export function SuggestedPrompts({ onSelect, disabled }) {
             transition={{ delay: index * 0.04 }}
             whileHover={disabled ? undefined : { x: 4 }}
             onClick={() => onSelect(prompt)}
-            className="rounded-xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-left text-sm text-zinc-300 transition-colors hover:border-violet-500/30 hover:bg-violet-500/10 disabled:opacity-50"
+            className="rounded-xl border border-white/15 bg-white/[0.03] px-4 py-3 text-left text-sm text-zinc-300 transition-colors hover:border-violet-500/30 hover:bg-violet-500/10 disabled:opacity-50"
           >
             {prompt}
           </motion.button>

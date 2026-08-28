@@ -1,14 +1,14 @@
-import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '../ui/Card';
 import { Icon } from '../ui/IconMap';
+import { Sparkline } from '../ui/Sparkline';
 
-export function MetricCard({ metric, index = 0 }) {
+export function MetricCard({ metric }) {
   const navigate = useNavigate();
   return (
     <Card
-      className={`group p-6 ${metric.href ? 'cursor-pointer' : ''}`}
-      delay={index * 0.06}
+      hover={false}
+      className={`p-5 ${metric.href ? 'cursor-pointer' : ''}`}
       role={metric.href ? 'button' : undefined}
       tabIndex={metric.href ? 0 : undefined}
       onClick={() => metric.href && navigate(metric.href)}
@@ -16,29 +16,30 @@ export function MetricCard({ metric, index = 0 }) {
         if (metric.href && (event.key === 'Enter' || event.key === ' ')) navigate(metric.href);
       }}
     >
-      <div>
-        <motion.div
-          className={`mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl ${metric.iconBg} ring-1 ring-white/10`}
-          whileHover={{ scale: 1.08, rotate: 4 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        >
-          <Icon name={metric.icon} className={metric.iconColor} size={22} />
-        </motion.div>
-        <p className="text-label">{metric.label}</p>
-        <p className="mt-2 text-3xl font-semibold tracking-tight text-white tabular-nums">
-          {metric.value}
-        </p>
-        <p className={`mt-2 text-xs font-medium ${metric.changeColor}`}>{metric.change}</p>
+      <div className="flex items-start justify-between gap-3">
+        <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 ${metric.iconBg}`}>
+          <Icon name={metric.icon} className={metric.iconColor} size={18} />
+        </span>
+        <Sparkline values={metric.spark} color={metric.color} />
       </div>
+      <p className="mt-4 text-xs font-medium uppercase tracking-wider text-zinc-500">{metric.label}</p>
+      <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-white">{metric.value}</p>
+      <p
+        className={`mt-2 text-xs font-medium ${
+          metric.trend.good ? 'text-emerald-300' : metric.trend.good === false ? 'text-red-300' : 'text-zinc-500'
+        }`}
+      >
+        {metric.trend.text}
+      </p>
     </Card>
   );
 }
 
 export function MetricsGrid({ metrics }) {
   return (
-    <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-5">
-      {metrics.map((metric, i) => (
-        <MetricCard key={metric.id} metric={metric} index={i} />
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      {metrics.map((metric) => (
+        <MetricCard key={metric.id} metric={metric} />
       ))}
     </div>
   );

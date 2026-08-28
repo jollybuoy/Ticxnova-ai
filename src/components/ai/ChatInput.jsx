@@ -12,7 +12,7 @@ export function ChatInput({ onSend, loading }) {
   };
 
   return (
-    <div className="glass-card p-3">
+    <div className="rounded-xl border border-white/15 bg-black/25 p-3">
       <div className="flex items-end gap-3">
         <textarea
           value={value}

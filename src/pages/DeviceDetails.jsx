@@ -16,7 +16,7 @@ import { DEVICE_STATUSES, formatDeviceDate } from '../lib/devices/constants';
 
 function DetailItem({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.03] p-4">
+    <div className="rounded-2xl border border-white/15 bg-white/[0.03] p-4">
       <div className="flex items-center gap-2 text-xs uppercase tracking-[0.18em] text-zinc-500">
         <Icon size={14} />
         {label}

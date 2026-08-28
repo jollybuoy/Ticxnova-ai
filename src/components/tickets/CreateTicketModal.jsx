@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Input } from '../ui/Input';
 import { Textarea } from '../ui/Textarea';
@@ -23,10 +23,21 @@ const emptyForm = {
   device_ids: [],
 };
 
-export function CreateTicketModal({ open, onClose, onCreate, loading }) {
+export function CreateTicketModal({ open, onClose, onCreate, loading, seed }) {
   const [form, setForm] = useState(emptyForm);
   const { departmentOptions, usersForDepartment } = useTenantDirectory();
   const departmentUserOptions = usersForDepartment(form.department);
+
+  useEffect(() => {
+    if (!open) return;
+    setForm({
+      ...emptyForm,
+      title: seed?.title || '',
+      description: seed?.description || '',
+      department: seed?.department || '',
+      device_ids: seed?.device_ids || [],
+    });
+  }, [open, seed?.title, seed?.department, seed?.device_ids?.[0]]);
 
   const handleClose = () => {
     setForm(emptyForm);

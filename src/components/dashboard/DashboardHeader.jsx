@@ -1,7 +1,6 @@
-import { motion } from 'framer-motion';
+import { Plus } from 'lucide-react';
 import { Icon } from '../ui/IconMap';
-import { useAuth } from '../../hooks/useAuth';
-import { getUserDisplayName } from '../../lib/user';
+import { Button } from '../ui/Button';
 
 const ranges = [
   { value: '7', label: 'Last 7 days' },
@@ -10,37 +9,33 @@ const ranges = [
   { value: 'all', label: 'All time' },
 ];
 
-export function DashboardHeader({ dateRange, onDateRangeChange }) {
-  const { user } = useAuth();
-  const name = getUserDisplayName(user);
-
+export function DashboardHeader({ greeting, dateRange, onDateRangeChange, onCreateClick }) {
   return (
-    <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+    <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
-        <p className="text-label mb-2">Overview</p>
-        <h1 className="text-display">Dashboard</h1>
-        <p className="text-body mt-2 max-w-xl">
-          Welcome back, {name}. Here&apos;s what&apos;s happening across your IT environment
-          today.
-        </p>
+        <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}</h1>
+        <p className="mt-2 text-sm text-zinc-400">Here&apos;s what needs your attention today.</p>
       </div>
-      <motion.label
-        whileHover={{ scale: 1.02, borderColor: 'rgba(124,108,240,0.4)' }}
-        className="glass focus-ring flex items-center gap-2.5 self-start rounded-xl px-4 py-3 text-sm text-zinc-300 transition-colors duration-200"
-      >
-        <Icon name="Calendar" size={16} className="text-zinc-500" />
-        <select
-          value={dateRange}
-          onChange={(event) => onDateRangeChange(event.target.value)}
-          className="bg-transparent font-medium text-zinc-200 outline-none"
-        >
-          {ranges.map((range) => (
-            <option key={range.value} value={range.value} className="bg-zinc-900">
-              {range.label}
-            </option>
-          ))}
-        </select>
-      </motion.label>
+      <div className="flex flex-wrap items-center gap-3">
+        <label className="glass flex items-center gap-2.5 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-zinc-300">
+          <Icon name="Calendar" size={16} className="text-zinc-500" />
+          <select
+            value={dateRange}
+            onChange={(event) => onDateRangeChange(event.target.value)}
+            className="bg-transparent font-medium text-zinc-200 outline-none"
+          >
+            {ranges.map((range) => (
+              <option key={range.value} value={range.value} className="bg-zinc-900">
+                {range.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Button onClick={onCreateClick}>
+          <Plus size={16} />
+          Create ticket
+        </Button>
+      </div>
     </header>
   );
 }

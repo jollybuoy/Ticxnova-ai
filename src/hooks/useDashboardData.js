@@ -2,117 +2,20 @@ import { useMemo } from 'react';
 import { useDevices } from './useDevices';
 import { useTenantDirectory } from './useTenantDirectory';
 import { useTickets } from './useTickets';
-import { getPriorityLabel, getStatusMeta } from '../lib/tickets/constants';
-
-const colors = ['#8b5cf6', '#22c55e', '#eab308', '#3b82f6', '#ef4444', '#6b7280'];
-
-function percent(value, total) {
-  return total > 0 ? Math.round((value / total) * 100) : 0;
-}
-
-function groupDonut(items, key, fallback = 'Other') {
-  const total = items.length;
-  const counts = new Map();
-  items.forEach((item) => {
-    const name = item[key] || fallback;
-    counts.set(name, (counts.get(name) ?? 0) + 1);
-  });
-  return [...counts.entries()].map(([name, value], index) => ({
-    name,
-    value,
-    color: colors[index % colors.length],
-    percent: percent(value, total),
-  }));
-}
-
-function last30DayTrend(tickets) {
-  const today = new Date();
-  const buckets = Array.from({ length: 8 }, (_, index) => {
-    const date = new Date(today);
-    date.setDate(today.getDate() - (7 - index) * 4);
-    return {
-      key: date.toISOString().slice(0, 10),
-      date: date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      tickets: 0,
-    };
-  });
-
-  tickets.forEach((ticket) => {
-    const created = new Date(ticket.created_at);
-    const ageDays = Math.floor((today.getTime() - created.getTime()) / 86_400_000);
-    if (ageDays < 0 || ageDays > 30) return;
-    const bucketIndex = Math.min(7, Math.max(0, Math.floor((30 - ageDays) / 4)));
-    buckets[bucketIndex].tickets += 1;
-  });
-
-  return buckets;
-}
-
-function initials(name = '') {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('') || 'U';
-}
-
-function topRequesters(tickets, users) {
-  const userMap = new Map(users.map((user) => [user.email, user]));
-  const counts = new Map();
-  tickets.forEach((ticket) => {
-    const key = ticket.requester_email || ticket.requester_name || 'Unassigned';
-    const current = counts.get(key) ?? {
-      name: ticket.requester_name || userMap.get(ticket.requester_email)?.full_name || key,
-      department: ticket.department || userMap.get(ticket.requester_email)?.department || 'Unassigned',
-      tickets: 0,
-    };
-    current.tickets += 1;
-    counts.set(key, current);
-  });
-
-  return [...counts.values()]
-    .sort((a, b) => b.tickets - a.tickets)
-    .slice(0, 5)
-    .map((user) => ({ ...user, avatar: initials(user.name) }));
-}
-
-function recentTickets(tickets) {
-  return tickets.slice(0, 5).map((ticket) => {
-    const status = getStatusMeta(ticket.status);
-    return {
-      id: ticket.ticket_number || ticket.id,
-      title: ticket.title,
-      user: ticket.requester_name || ticket.requester_email || 'Unassigned',
-      status: status.label,
-      statusColor: status.badge,
-      icon: ticket.category?.includes('Password') ? 'KeyRound' : ticket.category?.includes('Network') ? 'Wifi' : 'Ticket',
-    };
-  });
-}
-
-function buildInsights(tickets, devices, users) {
-  const aiAssisted = tickets.filter((ticket) => ticket.ai_summary || ticket.ai_reasoning).length;
-  const unhealthyDevices = devices.filter((device) => ['Warning', 'Critical', 'Offline'].includes(device.health_status));
-  const inactiveUsers = users.filter((user) => !user.is_active).length;
-  const categoryCounts = groupDonut(tickets, 'category');
-  const topCategory = categoryCounts.sort((a, b) => b.value - a.value)[0];
-
-  return {
-    featured: {
-      title: topCategory ? `${topCategory.name} tickets trending` : 'No ticket trend detected yet',
-      description: topCategory
-        ? `${topCategory.value} ${topCategory.name.toLowerCase()} ticket${topCategory.value === 1 ? '' : 's'} found in your current service desk data.`
-        : 'Create tickets and connect devices to unlock operational AI insights.',
-      action: 'Open Reports',
-    },
-    alerts: [
-      { text: `${aiAssisted} AI-assisted tickets`, type: 'success', icon: 'Sparkles' },
-      { text: `${inactiveUsers} inactive users detected`, type: 'warning', icon: 'AlertCircle' },
-      { text: `${unhealthyDevices.length} unhealthy devices need review`, type: 'orange', icon: 'Star' },
-    ],
-  };
-}
+import { formatAge, getTicketSla } from '../lib/tickets/incidentModel';
+import {
+  firstName,
+  getOpenTickets,
+  getResolvedToday,
+  getSlaRiskTickets,
+  getUnassignedTickets,
+  greetingForHour,
+  sparklineCounts,
+  teamWorkload,
+  weekPriorityBars,
+} from '../lib/tickets/queueMetrics';
+import { useAuth } from './useAuth';
+import { getUserDisplayName } from '../lib/user';
 
 function withinRange(date, range) {
   if (!range || range === 'all') return true;
@@ -121,98 +24,170 @@ function withinRange(date, range) {
   return new Date(date).getTime() >= Date.now() - days * 86_400_000;
 }
 
-export function useDashboardData(dateRange = '30') {
+function deltaLabel(current, previous, { invert = false } = {}) {
+  const diff = current - previous;
+  if (diff === 0) return { text: 'No change vs prior window', good: null };
+  const improved = invert ? diff > 0 : diff < 0;
+  return {
+    text: `${diff > 0 ? '↑' : '↓'} ${Math.abs(diff)} vs last period`,
+    good: improved,
+  };
+}
+
+export function useDashboardData(dateRange = '7') {
   const { tickets, loading: ticketsLoading } = useTickets();
   const { devices, loading: devicesLoading } = useDevices();
   const { users, loading: usersLoading } = useTenantDirectory();
+  const { user } = useAuth();
 
   return useMemo(() => {
     const scopedTickets = tickets.filter((ticket) => withinRange(ticket.created_at, dateRange));
-    const scopedDevices = devices.filter((device) => withinRange(device.created_at, dateRange) || dateRange === 'all');
-    const openTickets = scopedTickets.filter((ticket) => ['open', 'in_progress', 'pending'].includes(ticket.status));
-    const aiResolved = scopedTickets.filter((ticket) => ticket.status === 'resolved' && (ticket.ai_summary || ticket.ai_reasoning));
-    const unhealthyDevices = scopedDevices.filter((device) => ['Warning', 'Critical', 'Offline'].includes(device.health_status));
-    const urgentOpen = openTickets.filter((ticket) => ['urgent', 'high'].includes(ticket.priority));
-    const resolved = scopedTickets.filter((ticket) => ticket.status === 'resolved');
-    const slaCompliance = scopedTickets.length ? Math.round((resolved.length / scopedTickets.length) * 100) : 100;
+    const previousRange = dateRange === 'all' ? 'all' : String(Number(dateRange) * 2);
+    const previousTickets =
+      dateRange === 'all'
+        ? []
+        : tickets.filter((ticket) => {
+            const created = new Date(ticket.created_at).getTime();
+            const now = Date.now();
+            const current = Number(dateRange) * 86_400_000;
+            return created < now - current && created >= now - Number(previousRange) * 86_400_000;
+          });
+
+    const openTickets = getOpenTickets(scopedTickets);
+    const slaRisk = getSlaRiskTickets(openTickets);
+    const unassigned = getUnassignedTickets(openTickets);
+    const resolvedToday = getResolvedToday(scopedTickets);
+    const prevOpen = getOpenTickets(previousTickets).length;
+    const prevSla = getSlaRiskTickets(previousTickets).length;
+    const prevUnassigned = getUnassignedTickets(previousTickets).length;
+    const prevResolved = getResolvedToday(previousTickets).length;
+
+    const name = firstName(getUserDisplayName(user));
 
     return {
       loading: ticketsLoading || devicesLoading || usersLoading,
+      greeting: `${greetingForHour()}, ${name}`,
       metrics: [
         {
-          id: 'open-tickets',
-          href: '/tickets?status=open',
-          label: 'Open Tickets',
+          id: 'open',
+          href: '/tickets?status=queue',
+          label: 'Open tickets',
           value: String(openTickets.length),
-          change: `${scopedTickets.length} total tickets`,
-          changeColor: 'text-accent-purple',
-          icon: 'MessageSquare',
-          iconBg: 'bg-purple-500/15',
-          iconColor: 'text-accent-purple',
+          trend: deltaLabel(openTickets.length, prevOpen),
+          spark: sparklineCounts(scopedTickets, 7, (ticket) => ['open', 'in_progress', 'pending'].includes(ticket.status)),
+          color: '#8b5cf6',
+          icon: 'Ticket',
+          iconBg: 'bg-violet-500/15',
+          iconColor: 'text-violet-300',
         },
         {
-          id: 'ai-resolved',
-          href: '/reports/ai-insights',
-          label: 'AI Resolved',
-          value: String(aiResolved.length),
-          change: `${scopedTickets.filter((ticket) => ticket.ai_summary || ticket.ai_reasoning).length} AI-assisted`,
-          changeColor: 'text-accent-green',
-          icon: 'CheckCircle2',
-          iconBg: 'bg-green-500/15',
-          iconColor: 'text-accent-green',
-        },
-        {
-          id: 'active-devices',
-          href: '/devices',
-          label: 'Active Devices',
-          value: String(scopedDevices.length),
-          change: `${unhealthyDevices.length} unhealthy assets`,
-          changeColor: unhealthyDevices.length ? 'text-accent-yellow' : 'text-accent-green',
-          icon: 'Monitor',
-          iconBg: 'bg-blue-500/15',
-          iconColor: 'text-accent-blue',
-        },
-        {
-          id: 'sla-compliance',
-          href: '/reports/sla',
-          label: 'Resolution Rate',
-          value: `${slaCompliance}%`,
-          change: `${resolved.length} resolved tickets`,
-          changeColor: 'text-accent-yellow',
-          icon: 'Shield',
-          iconBg: 'bg-yellow-500/15',
-          iconColor: 'text-accent-yellow',
-        },
-        {
-          id: 'priority-alerts',
-          href: '/tickets?priority=urgent',
-          label: 'Priority Alerts',
-          value: String(urgentOpen.length),
-          change: urgentOpen[0] ? `${getPriorityLabel(urgentOpen[0].priority)} needs attention` : 'No P1/P2 open tickets',
-          changeColor: urgentOpen.length ? 'text-accent-red' : 'text-accent-green',
+          id: 'sla',
+          href: '/tickets?quick=sla',
+          label: 'SLA at risk',
+          value: String(slaRisk.length),
+          trend: deltaLabel(slaRisk.length, prevSla),
+          spark: sparklineCounts(slaRisk, 7),
+          color: '#fb923c',
           icon: 'AlertTriangle',
-          iconBg: 'bg-red-500/15',
-          iconColor: 'text-accent-red',
+          iconBg: 'bg-orange-500/15',
+          iconColor: 'text-orange-300',
+        },
+        {
+          id: 'unassigned',
+          href: '/tickets?quick=unassigned',
+          label: 'Unassigned',
+          value: String(unassigned.length),
+          trend: deltaLabel(unassigned.length, prevUnassigned),
+          spark: sparklineCounts(unassigned, 7),
+          color: '#60a5fa',
+          icon: 'Users',
+          iconBg: 'bg-blue-500/15',
+          iconColor: 'text-blue-300',
+        },
+        {
+          id: 'resolved',
+          href: '/tickets?status=resolved',
+          label: 'Resolved today',
+          value: String(resolvedToday.length),
+          trend: deltaLabel(resolvedToday.length, prevResolved, { invert: true }),
+          spark: sparklineCounts(resolvedToday, 7),
+          color: '#34d399',
+          icon: 'CheckCircle2',
+          iconBg: 'bg-emerald-500/15',
+          iconColor: 'text-emerald-300',
         },
       ],
-      ticketsTrend: last30DayTrend(scopedTickets),
-      ticketsByCategory: groupDonut(scopedTickets, 'category'),
-      devicesStatus: groupDonut(scopedDevices, 'health_status', 'Unknown'),
-      recentTickets: recentTickets(scopedTickets),
-      topUsers: topRequesters(scopedTickets, users),
-      aiInsights: buildInsights(scopedTickets, scopedDevices, users),
-      automation: {
-        activeWorkflows: scopedTickets.filter((ticket) => ticket.ticket_type === 'service_request').length,
-        executedToday: scopedTickets.filter((ticket) => {
-          const created = new Date(ticket.created_at).toDateString();
-          return created === new Date().toDateString();
-        }).length,
-        successRate: `${slaCompliance}%`,
-        nextWorkflow: {
-          name: openTickets[0]?.ticket_number || 'No queued workflow',
-          time: openTickets[0] ? openTickets[0].title : 'all clear',
+      weekBars: weekPriorityBars(scopedTickets),
+      priorityQueue: [...openTickets]
+        .sort((a, b) => getTicketSla(a).remainingMs - getTicketSla(b).remainingMs)
+        .slice(0, 6),
+      team: teamWorkload(scopedTickets),
+      activity: [...scopedTickets]
+        .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+        .slice(0, 6)
+        .map((ticket) => ({
+          id: ticket.id,
+          number: ticket.ticket_number,
+          title: ticket.title,
+          status: ticket.status,
+          actor: ticket.assignee_name || ticket.requester_name || 'System',
+          age: formatAge(ticket.updated_at || ticket.created_at),
+        })),
+      brief: [
+        slaRisk.length
+          ? {
+              id: 'sla',
+              tone: 'red',
+              title: `${slaRisk.length} ticket${slaRisk.length === 1 ? '' : 's'} approaching SLA`,
+              body: 'Escalate or reassign before the window closes.',
+              href: '/tickets?quick=sla',
+            }
+          : {
+              id: 'sla',
+              tone: 'green',
+              title: 'SLA windows are healthy',
+              body: 'No open tickets are currently at risk.',
+              href: '/reports/sla',
+            },
+        unassigned.length
+          ? {
+              id: 'assign',
+              tone: 'orange',
+              title: `${unassigned.length} unassigned tickets in queue`,
+              body: 'Give these an owner so work can start.',
+              href: '/tickets?quick=unassigned',
+            }
+          : {
+              id: 'assign',
+              tone: 'blue',
+              title: 'Queue ownership looks complete',
+              body: 'Every open ticket currently has an assignee.',
+              href: '/tickets',
+            },
+        devices.filter((device) => ['Critical', 'Offline'].includes(device.health_status)).length
+          ? {
+              id: 'assets',
+              tone: 'orange',
+              title: 'Unhealthy assets need review',
+              body: `${devices.filter((device) => ['Critical', 'Offline'].includes(device.health_status)).length} devices are critical or offline.`,
+              href: '/devices',
+            }
+          : {
+              id: 'assets',
+              tone: 'green',
+              title: 'Asset health is stable',
+              body: 'No critical or offline devices in the current inventory.',
+              href: '/devices',
+            },
+        {
+          id: 'ai',
+          tone: 'blue',
+          title: `${scopedTickets.filter((ticket) => ticket.ai_summary).length} AI-assisted tickets`,
+          body: 'Open Copilot on a ticket to generate the next update.',
+          href: '/reports/ai-insights',
         },
-      },
+      ],
+      users,
     };
-  }, [dateRange, devices, devicesLoading, tickets, ticketsLoading, users, usersLoading]);
+  }, [dateRange, devices, devicesLoading, tickets, ticketsLoading, user, users, usersLoading]);
 }

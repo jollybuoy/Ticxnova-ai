@@ -197,6 +197,36 @@ export function useTickets() {
     [canWrite, tenantId, tickets, user, userId],
   );
 
+  const handleUpdateFields = useCallback(
+    async (ticketId, updates) => {
+      if (!userId) return { success: false };
+      if (!canWrite(MODULES.TICKETS, ACTIONS.UPDATE)) {
+        toast.error('You cannot update tickets in the current workspace mode.');
+        return { success: false };
+      }
+      const ticket = tickets.find((item) => item.id === ticketId);
+      if (!ticket) return { success: false };
+      setMutating(true);
+      const { data, error } = await updateTicketFields(userId, ticket, updates, {
+        name: getUserDisplayName(user),
+        email: getUserEmail(user),
+      });
+      setMutating(false);
+      if (error) {
+        toast.error(getTicketErrorMessage(error));
+        return { success: false };
+      }
+      setTickets((prev) => {
+        const next = prev.map((item) => (item.id === ticketId ? data : item));
+        writeTicketsCache(userId, tenantId, next);
+        return next;
+      });
+      toast.success('Ticket updated');
+      return { success: true };
+    },
+    [canWrite, tenantId, tickets, user, userId],
+  );
+
   const handleDelete = useCallback(
     async (ticketId) => {
       if (!userId) return { success: false };
@@ -263,6 +293,7 @@ export function useTickets() {
     refetch: loadTickets,
     createTicket: handleCreate,
     updateStatus: handleUpdateStatus,
+    updateFields: handleUpdateFields,
     deleteTicket: handleDelete,
     summarizeTicket: handleSummarize,
   };

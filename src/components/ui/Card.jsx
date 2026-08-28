@@ -23,7 +23,7 @@ export function Card({ children, className = '', hover = true, delay = 0, ...pro
 export function CardHeader({ title, subtitle, action, className = '' }) {
   return (
     <div
-      className={`flex items-start justify-between gap-4 border-b border-white/[0.06] px-6 py-5 ${className}`}
+      className={`flex items-start justify-between gap-4 border-b border-white/15 px-6 py-5 ${className}`}
     >
       <div>
         <h3 className="text-sm font-semibold tracking-tight text-white">{title}</h3>
