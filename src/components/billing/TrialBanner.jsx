@@ -16,6 +16,8 @@ export function TrialBanner() {
 
   const isUrgent = showTrialWarning || trial.daysRemaining <= 3;
 
+  const hasStripeTrial = Boolean(tenant.stripe_subscription_id);
+
   return (
     <div
       className={`mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border px-4 py-3 ${
@@ -30,15 +32,17 @@ export function TrialBanner() {
           <strong>{planLabel}</strong> — {trial.daysRemaining} day
           {trial.daysRemaining === 1 ? '' : 's'} left in your 7-day trial
           {trial.endsAt ? ` (ends ${new Date(trial.endsAt).toLocaleDateString()})` : ''}
-          {isUrgent && ' · Upgrade soon to avoid read-only mode'}
+          {hasStripeTrial
+            ? '. Cancel before this date and you will not be charged.'
+            : '. Add a card to continue — you will not be charged until the trial ends.'}
         </span>
       </div>
       <Link
-        to={billingPath({ checkout: true })}
+        to={hasStripeTrial ? billingPath() : billingPath({ checkout: true, plan: tenant.subscription_plan })}
         className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium hover:bg-white/15"
       >
         <Sparkles size={14} />
-        Upgrade now
+        {hasStripeTrial ? 'Manage billing' : 'Start trial'}
       </Link>
     </div>
   );

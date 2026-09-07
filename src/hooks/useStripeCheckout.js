@@ -8,7 +8,10 @@ import {
 import { PLANS } from '../lib/plans/planConfig';
 
 function isPaidActive(tenant) {
-  return tenant?.subscription_status === 'active' && Boolean(tenant?.stripe_subscription_id);
+  return (
+    Boolean(tenant?.stripe_subscription_id) &&
+    ['active', 'trialing'].includes(tenant?.subscription_status)
+  );
 }
 
 export function useStripeCheckout(tenant) {

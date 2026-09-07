@@ -32,18 +32,17 @@ serve(async (req) => {
       }, 400);
     }
 
-    if (
-      tenant.subscription_status === 'active' &&
-      tenant.stripe_subscription_id &&
-      tenant.subscription_plan === targetPlan
-    ) {
+    const hasStripeSubscription = Boolean(tenant.stripe_subscription_id);
+    const stripeManaged = hasStripeSubscription && ['active', 'trialing'].includes(String(tenant.subscription_status));
+
+    if (stripeManaged && tenant.subscription_plan === targetPlan) {
       return jsonResponse({
         error: 'You are already subscribed to this plan.',
         code: 'ALREADY_SUBSCRIBED',
       }, 400);
     }
 
-    if (tenant.subscription_status === 'active' && tenant.stripe_subscription_id) {
+    if (stripeManaged) {
       return jsonResponse({
         error: 'Use the billing portal to change an active subscription.',
         code: 'USE_PORTAL',
@@ -61,6 +60,7 @@ serve(async (req) => {
       payload.cancelUrl ?? `${origin}/settings/billing?checkout=canceled`,
     );
 
+    const grantTrial = !hasStripeSubscription;
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
@@ -68,6 +68,7 @@ serve(async (req) => {
       allow_promotion_codes: true,
       billing_address_collection: 'auto',
       customer_update: { address: 'auto', name: 'auto' },
+      payment_method_collection: 'always',
       success_url: successUrl,
       cancel_url: cancelUrl,
       client_reference_id: tenant.id,
@@ -75,11 +76,27 @@ serve(async (req) => {
         tenant_id: tenant.id,
         target_plan: targetPlan,
         supabase_user_id: user.id,
+        app: 'ticxnova',
       },
+      custom_text: grantTrial
+        ? {
+            submit: {
+              message:
+                'Start your 7-day Ticxnova trial. You will not be charged until the trial ends. Cancel anytime before then for no charge.',
+            },
+          }
+        : undefined,
       subscription_data: {
+        ...(grantTrial
+          ? {
+              trial_period_days: 7,
+              trial_settings: { end_behavior: { missing_payment_method: 'cancel' } },
+            }
+          : {}),
         metadata: {
           tenant_id: tenant.id,
           target_plan: targetPlan,
+          app: 'ticxnova',
         },
       },
     });

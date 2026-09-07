@@ -51,7 +51,7 @@ export default function BillingSettings() {
       if (!tenant?.id || checkoutHandled.current) return;
       checkoutHandled.current = true;
       setSearchParams({}, { replace: true });
-      toast.success('Payment received. Unlocking your workspace…');
+      toast.success('Checkout complete. Unlocking your workspace…');
       setActivatingCheckout(true);
       void (async () => {
         const result = await waitForPaidUnlock(tenant.id, sessionId);
@@ -59,7 +59,11 @@ export default function BillingSettings() {
         await loadSubscription(tenant.id);
         setActivatingCheckout(false);
         if (result.unlocked) {
-          toast.success('Subscription is active. Your plan features are unlocked.');
+          toast.success(
+            result.status === 'trialing'
+              ? 'Trial started. You will not be charged for 7 days. Cancel anytime before then for no charge.'
+              : 'Subscription is active. Your plan features are unlocked.',
+          );
         } else {
           toast.message(
             'Payment received. If features are still locked, refresh this page in a few seconds.',
@@ -102,8 +106,7 @@ export default function BillingSettings() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-white">Billing & plans</h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-400">
-              Secure billing via Stripe. Click any plan to pay through Stripe Checkout (CAD, monthly).
-              Supabase Auth remains your login — Stripe handles payments only.
+              Secure billing via Stripe for Ticxnova only. Start with a 7-day trial: enter a card now, and you are not charged unless you stay subscribed after the trial. Cancel before it ends and there is no charge.
             </p>
           </div>
           <PlanBadge />
@@ -165,13 +168,13 @@ export default function BillingSettings() {
 
         {activatingCheckout && (
           <div className="rounded-2xl border border-violet-400/25 bg-violet-500/10 px-4 py-3 text-sm text-violet-100">
-            Confirming payment with Stripe and unlocking your plan. This usually takes a few seconds.
+            Confirming your Ticxnova checkout with Stripe. This usually takes a few seconds.
           </div>
         )}
 
-        {isTrialExpiring && !trial.isExpired && (
+        {isTrialExpiring && !trial.isExpired && !tenant?.stripe_subscription_id && (
           <div className="rounded-2xl border border-amber-400/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-            Your trial ends soon. Subscribe to avoid read-only mode.
+            Your trial ends soon. Add a payment method to keep access after 7 days.
           </div>
         )}
 

@@ -153,12 +153,9 @@ export default function VerifyDomain() {
           </p>
           {tenant?.subscription_status === 'trialing' && !trial.isExpired && (
             <p className="mx-auto mt-3 max-w-xl text-sm text-cyan-200/90">
-              Your 7-day free trial started when you created this account
-              {trial.startedAt
-                ? ` on ${new Date(trial.startedAt).toLocaleDateString()}`
-                : ''}
-              . {trial.daysRemaining} day{trial.daysRemaining === 1 ? '' : 's'} remaining
-              {trial.endsAt ? ` (ends ${new Date(trial.endsAt).toLocaleDateString()})` : ''}.
+              Your 7-day Ticxnova trial starts after you add a payment method. You will not be charged
+              unless you stay subscribed after those 7 days
+              {trial.endsAt ? ` (trial ends ${new Date(trial.endsAt).toLocaleDateString()})` : ''}.
             </p>
           )}
         </motion.div>

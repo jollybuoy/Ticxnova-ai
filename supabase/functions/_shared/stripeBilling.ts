@@ -186,7 +186,7 @@ export async function ensureStripeCustomer(
   const customer = await stripe.customers.create({
     email: tenant.billing_email || profile.email || user.email || undefined,
     name: tenant.company_name ?? undefined,
-    metadata: { tenant_id: tenant.id, supabase_user_id: user.id },
+    metadata: { tenant_id: tenant.id, supabase_user_id: user.id, app: 'ticxnova' },
   });
 
   await adminClient

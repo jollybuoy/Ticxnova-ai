@@ -31,7 +31,7 @@ serve(async (req) => {
       return jsonResponse({ error: 'This checkout session belongs to another workspace.' }, 403);
     }
 
-    const unlocked = Boolean(result.synced && 'status' in result && result.status === 'active');
+    const unlocked = Boolean(result.synced && 'status' in result && ['active', 'trialing'].includes(String(result.status)));
 
     return jsonResponse({
       unlocked,

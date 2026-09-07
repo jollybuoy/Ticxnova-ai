@@ -17,6 +17,7 @@ import {
   mapAvailabilityToMessage,
   normalizeWorkspaceDomain,
 } from '../../lib/tenant/onboardingService';
+import { billingPath } from '../../lib/billing/billingPaths';
 
 const planOptions = pricingPlans.map((plan) => ({
   value: plan.name.toLowerCase(),
@@ -107,8 +108,10 @@ export default function GetStarted() {
       return false;
     }
 
-    toast.success(`Welcome to Ticxnova. Your ${form.companyName.trim()} workspace is ready.`);
-    navigate('/dashboard', { replace: true });
+    toast.success(
+      `Welcome to Ticxnova. Enter a payment method to start your 7-day trial — you will not be charged until it ends.`,
+    );
+    navigate(billingPath({ plan: form.plan, checkout: form.plan }), { replace: true });
     return true;
   };
 
@@ -187,8 +190,8 @@ export default function GetStarted() {
           <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">Get Started</p>
           <h1 className="mt-5 text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-6xl">Create your AI IT operations workspace</h1>
           <p className="mt-6 text-lg leading-8 text-zinc-300">
-            Provision a secure multi-tenant workspace with your company domain, subscription plan, and first
-            organization administrator.
+            Provision a secure workspace, then enter a payment method for a 7-day Ticxnova trial.
+            You will not be charged unless you stay subscribed after the trial.
           </p>
           <div className="mt-8 space-y-4">
             {[
@@ -260,8 +263,8 @@ export default function GetStarted() {
           </div>
 
           <p className="mt-4 text-xs leading-6 text-zinc-400">
-            Your workspace is isolated by tenant_id with row-level security. Duplicate domains and emails are
-            blocked before provisioning.
+            Your workspace is isolated by tenant_id with row-level security. After setup you will enter
+            a card for a 7-day trial. Cancel before it ends and there is no charge.
           </p>
 
           {isAuthenticated && (

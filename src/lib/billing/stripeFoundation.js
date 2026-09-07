@@ -7,6 +7,7 @@ import {
   STRIPE_PRICE_IDS,
 } from './planMapping';
 import { checkoutSuccessUrl, isPaidActiveStatus } from './checkoutUrls';
+import { isStripeCheckoutComplete } from './checkoutTrial';
 
 export {
   isStripeConfigured,
@@ -143,13 +144,21 @@ function sleep(ms) {
 export async function waitForPaidUnlock(tenantId, sessionId, { timeoutMs = 20000, intervalMs = 1500 } = {}) {
   if (sessionId) {
     const confirmed = await confirmCheckoutSession(tenantId, sessionId);
-    if (confirmed.unlocked) return confirmed;
+    if (
+      confirmed.unlocked ||
+      isStripeCheckoutComplete({
+        stripe_subscription_id: confirmed.subscriptionId,
+        status: confirmed.status,
+      })
+    ) {
+      return { ...confirmed, unlocked: true };
+    }
   }
 
   const started = Date.now();
   while (Date.now() - started < timeoutMs) {
     const { data } = await fetchWorkspaceSubscription(tenantId);
-    if (isPaidActiveStatus(data?.status)) {
+    if (isStripeCheckoutComplete(data)) {
       return {
         success: true,
         unlocked: true,

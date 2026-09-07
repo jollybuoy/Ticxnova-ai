@@ -10,7 +10,7 @@ const planHighlights = {
 };
 
 function isPaidActive(subscriptionStatus, stripeSubscriptionId) {
-  return subscriptionStatus === 'active' && Boolean(stripeSubscriptionId);
+  return Boolean(stripeSubscriptionId) && ['active', 'trialing'].includes(subscriptionStatus);
 }
 
 export function PlanUpgradeCards({
@@ -34,7 +34,7 @@ export function PlanUpgradeCards({
           ? 'Current plan'
           : paidActive
             ? `Change to ${PLAN_LABELS[planKey]}`
-            : `Subscribe — ${PLAN_LABELS[planKey]}`;
+            : `Start 7-day trial — ${PLAN_LABELS[planKey]}`;
 
         return (
           <div
