@@ -21,6 +21,12 @@ if [[ -z "${STRIPE_SECRET_KEY:-}" ]]; then
   exit 1
 fi
 
+if [[ "$STRIPE_SECRET_KEY" != sk_live_* && "$STRIPE_SECRET_KEY" != rk_live_* ]]; then
+  echo "Error: Ticxnova production webhook must be created with a live Stripe key (sk_live or rk_live)."
+  echo "The existing endpoint on this URL is test-mode only and will not receive live payments."
+  exit 1
+fi
+
 tmp_list="$(mktemp)"
 tmp_create="$(mktemp)"
 trap 'rm -f "$tmp_list" "$tmp_create"' EXIT

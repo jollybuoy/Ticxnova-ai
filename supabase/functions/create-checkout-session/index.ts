@@ -6,6 +6,7 @@ import {
   getPriceIdForPlan,
   getStripeClient,
   jsonResponse,
+  liveStripeRequiredResponse,
   withCheckoutSessionId,
 } from '../_shared/stripeBilling.ts';
 
@@ -49,10 +50,13 @@ serve(async (req) => {
       }, 400);
     }
 
+    const origin = req.headers.get('origin') ?? '';
+    const liveError = liveStripeRequiredResponse(origin);
+    if (liveError) return liveError;
+
     const stripe = getStripeClient();
     const customerId = await ensureStripeCustomer(stripe, adminClient, tenant, profile, user);
 
-    const origin = req.headers.get('origin') ?? '';
     const successUrl = withCheckoutSessionId(
       String(payload.successUrl ?? `${origin}/settings/billing?checkout=success`),
     );

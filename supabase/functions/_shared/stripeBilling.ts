@@ -27,8 +27,75 @@ const PLAN_PRICE_FALLBACK_LIVE: Record<string, string> = {
   enterprise: 'price_1TezwAH1xnYBWgiRaK6gLtRa',
 };
 
+const TICXNOVA_PRICE_IDS = new Set([
+  ...Object.values(PLAN_PRICE_FALLBACK_TEST),
+  ...Object.values(PLAN_PRICE_FALLBACK_LIVE),
+]);
+
+const TICXNOVA_PLANS = new Set(['starter', 'professional', 'enterprise']);
+
+function metadataApp(metadata?: Stripe.Metadata | null) {
+  return String(metadata?.app ?? '').toLowerCase();
+}
+
+function collectStripePriceIds(obj: {
+  items?: { data?: Array<{ price?: { id?: string } | string }> };
+  lines?: { data?: Array<{ price?: { id?: string } | string; pricing?: { price_details?: { price?: string } } }> };
+} | null | undefined) {
+  const ids: string[] = [];
+  const rows = [...(obj?.items?.data ?? []), ...(obj?.lines?.data ?? [])];
+  for (const row of rows) {
+    const price = row?.price;
+    const id = typeof price === 'string' ? price : price?.id;
+    if (id) ids.push(id);
+    const nested = row && 'pricing' in row ? row.pricing?.price_details?.price : undefined;
+    if (nested) ids.push(nested);
+  }
+  return ids;
+}
+
+type StripeBillingObject = {
+  object?: string;
+  metadata?: Stripe.Metadata | null;
+  client_reference_id?: string | null;
+  items?: { data?: Array<{ price?: { id?: string } | string }> };
+  lines?: { data?: Array<{ price?: { id?: string } | string; pricing?: { price_details?: { price?: string } } }> };
+};
+
+export function isTicxnovaStripeObject(obj: StripeBillingObject | null | undefined) {
+  if (!obj) return false;
+  const app = metadataApp(obj.metadata);
+  if (app && app !== 'ticxnova') return false;
+  if (app === 'ticxnova') return true;
+
+  if (collectStripePriceIds(obj).some((id) => TICXNOVA_PRICE_IDS.has(id))) return true;
+
+  const targetPlan = String(obj.metadata?.target_plan ?? '').toLowerCase();
+  const tenantId = String(obj.metadata?.tenant_id ?? obj.client_reference_id ?? '');
+  return Boolean(tenantId && TICXNOVA_PLANS.has(targetPlan));
+}
+
+/** Ignore RAMSCHESS / ElevatR events on the shared Stripe account. */
+export function isTicxnovaBillingEvent(event: Stripe.Event) {
+  const obj = event.data.object as StripeBillingObject;
+  if (obj.object === 'invoice' && !metadataApp(obj.metadata) && collectStripePriceIds(obj).length === 0) {
+    return true;
+  }
+  return isTicxnovaStripeObject(obj);
+}
+
 export function isLiveStripeKey(secret = Deno.env.get('STRIPE_SECRET_KEY') ?? '') {
   return secret.startsWith('sk_live') || secret.startsWith('rk_live');
+}
+
+export function liveStripeRequiredResponse(origin: string) {
+  if (origin.includes('ticxnova.com') && !isLiveStripeKey()) {
+    return jsonResponse(
+      { error: 'Live Stripe is not configured. Set a live STRIPE_SECRET_KEY on the Ticxnova functions.' },
+      500,
+    );
+  }
+  return null;
 }
 
 function priceFallbacks() {

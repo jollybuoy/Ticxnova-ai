@@ -4,6 +4,8 @@ import {
   corsHeaders,
   getStripeClient,
   invoiceSubscriptionId,
+  isTicxnovaBillingEvent,
+  isTicxnovaStripeObject,
   syncFromCheckoutSession,
   syncSubscriptionRecord,
 } from '../_shared/stripeBilling.ts';
@@ -16,6 +18,7 @@ async function syncInvoiceSubscription(
   const subscriptionId = invoiceSubscriptionId(invoice);
   if (!subscriptionId) return;
   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+  if (!isTicxnovaStripeObject(subscription)) return;
   await syncSubscriptionRecord(supabase, subscription);
 }
 
@@ -71,6 +74,13 @@ Deno.serve(async (req) => {
     const meta = (obj.metadata as Record<string, string> | undefined) ?? {};
     return meta.tenant_id ?? (obj.client_reference_id as string | undefined) ?? null;
   };
+
+  if (!isTicxnovaBillingEvent(event)) {
+    return new Response(JSON.stringify({ received: true, ignored: true }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   await supabase.from('billing_events').upsert(
     {

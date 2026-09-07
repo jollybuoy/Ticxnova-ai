@@ -5,6 +5,7 @@ import {
   ensureStripeCustomer,
   getStripeClient,
   jsonResponse,
+  liveStripeRequiredResponse,
 } from '../_shared/stripeBilling.ts';
 
 serve(async (req) => {
@@ -17,10 +18,13 @@ serve(async (req) => {
 
     const { user, profile, tenant, adminClient } = auth;
     const payload = await req.json().catch(() => ({}));
+    const origin = req.headers.get('origin') ?? '';
+    const liveError = liveStripeRequiredResponse(origin);
+    if (liveError) return liveError;
+
     const stripe = getStripeClient();
     const customerId = await ensureStripeCustomer(stripe, adminClient, tenant, profile, user);
 
-    const origin = req.headers.get('origin') ?? '';
     const returnUrl = String(payload.returnUrl ?? `${origin}/settings/billing`);
 
     const portal = await stripe.billingPortal.sessions.create({
