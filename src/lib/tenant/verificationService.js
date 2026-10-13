@@ -54,6 +54,14 @@ export function getVerificationStatusLabel(status) {
   return map[status] ?? 'Unknown';
 }
 
+/** Which self-serve path to highlight after signup. */
+export function getRecommendedVerificationPath({ adminEmailMatchesDomain, status } = {}) {
+  if (status === 'under_review') return 'review';
+  if (status === 'rejected') return 'dns';
+  if (adminEmailMatchesDomain) return 'email';
+  return 'dns';
+}
+
 export function tenantSelectFields() {
   return TENANT_VERIFICATION_FIELDS;
 }

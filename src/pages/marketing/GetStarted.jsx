@@ -17,8 +17,6 @@ import {
   mapAvailabilityToMessage,
   normalizeWorkspaceDomain,
 } from '../../lib/tenant/onboardingService';
-import { billingPath } from '../../lib/billing/billingPaths';
-
 const planOptions = pricingPlans.map((plan) => ({
   value: plan.name.toLowerCase(),
   label: plan.name,
@@ -109,9 +107,9 @@ export default function GetStarted() {
     }
 
     toast.success(
-      `Welcome to Ticxnova. Enter a payment method to start your 7-day trial — you will not be charged until it ends.`,
+      'Workspace created. Next: verify your company domain, then you can start the 7-day trial.',
     );
-    navigate(billingPath({ plan: form.plan, checkout: form.plan }), { replace: true });
+    navigate('/verify-domain', { replace: true });
     return true;
   };
 
@@ -167,7 +165,7 @@ export default function GetStarted() {
           state: {
             email: form.email.trim(),
             message:
-              'Account created. Confirm your email, then sign in — your workspace will be finalized automatically.',
+              'Account created. Confirm your email, then sign in. We will finish workspace setup and take you to domain verification.',
           },
         });
         return;
@@ -195,9 +193,9 @@ export default function GetStarted() {
           </p>
           <div className="mt-8 space-y-4">
             {[
-              ['Tenant workspace created in Supabase', Building2],
-              ['org_admin profile linked to tenant_id', ShieldCheck],
-              ['Ready for RBAC, domain verification, and plan gating', Cloud],
+              ['1. Create your workspace with a company domain', Building2],
+              ['2. Verify that domain (DNS, work email, or platform review)', ShieldCheck],
+              ['3. Start a 7-day trial with a card — no charge if you cancel in time', Cloud],
             ].map(([text, Icon]) => (
               <div key={text} className="flex items-center gap-3 text-sm text-zinc-200">
                 <Icon size={18} className="text-cyan-300" />
@@ -219,14 +217,19 @@ export default function GetStarted() {
               required
               disabled={loading}
             />
-            <Input
-              label="Primary domain"
-              value={form.domain}
-              onChange={update('domain')}
-              placeholder="company.com"
-              required
-              disabled={loading}
-            />
+            <div>
+              <Input
+                label="Primary domain"
+                value={form.domain}
+                onChange={update('domain')}
+                placeholder="company.com"
+                required
+                disabled={loading}
+              />
+              <p className="mt-2 text-xs leading-5 text-zinc-400">
+                Use your company domain (acme.com), not gmail.com. You will prove ownership after signup.
+              </p>
+            </div>
             <Select
               label="Subscription plan"
               value={form.plan}
@@ -263,8 +266,9 @@ export default function GetStarted() {
           </div>
 
           <p className="mt-4 text-xs leading-6 text-zinc-400">
-            Your workspace is isolated by tenant_id with row-level security. After setup you will enter
-            a card for a 7-day trial. Cancel before it ends and there is no charge.
+            Admin login can be Gmail. Domain verification still requires the company domain above.
+            After setup you verify ownership, then add a card for a 7-day trial. Cancel before it ends
+            and there is no charge.
           </p>
 
           {isAuthenticated && (
