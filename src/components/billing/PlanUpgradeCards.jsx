@@ -2,6 +2,11 @@ import { Sparkles } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { PLAN_LABELS, PLANS } from '../../lib/plans/planConfig';
 import { formatPlanPrice } from '../../lib/plans/planPricing';
+import {
+  isPaidActiveSubscription,
+  planUpgradeBadge,
+  planUpgradeButtonLabel,
+} from '../../lib/billing/planCheckoutCta';
 
 const planHighlights = {
   starter: ['Tickets & devices', 'Basic reports', 'AI summaries'],
@@ -9,20 +14,17 @@ const planHighlights = {
   enterprise: ['SLA reports', 'Audit logs', 'AI analytics', 'Priority support'],
 };
 
-function isPaidActive(subscriptionStatus, stripeSubscriptionId) {
-  return Boolean(stripeSubscriptionId) && ['active', 'trialing'].includes(subscriptionStatus);
-}
-
 export function PlanUpgradeCards({
   currentPlan,
   subscriptionStatus = 'trialing',
   stripeSubscriptionId = null,
+  grantTrial = false,
   mutating = false,
   upgradingPlan = null,
   onSelectPlan,
   compact = false,
 }) {
-  const paidActive = isPaidActive(subscriptionStatus, stripeSubscriptionId);
+  const paidActive = isPaidActiveSubscription(subscriptionStatus, stripeSubscriptionId);
 
   return (
     <div className={`grid gap-6 ${compact ? 'md:grid-cols-3' : 'lg:grid-cols-3'}`}>
@@ -30,11 +32,19 @@ export function PlanUpgradeCards({
         const isCurrent = currentPlan === planKey;
         const isLoading = mutating && upgradingPlan === planKey;
         const isLockedCurrent = isCurrent && paidActive;
-        const buttonLabel = isLockedCurrent
-          ? 'Current plan'
-          : paidActive
-            ? `Change to ${PLAN_LABELS[planKey]}`
-            : `Start 7-day trial — ${PLAN_LABELS[planKey]}`;
+        const badge = planUpgradeBadge({
+          currentPlan,
+          planKey,
+          paidActive,
+          grantTrial,
+        });
+        const buttonLabel = planUpgradeButtonLabel({
+          planKey,
+          currentPlan,
+          subscriptionStatus,
+          stripeSubscriptionId,
+          grantTrial,
+        });
 
         return (
           <div
@@ -54,9 +64,9 @@ export function PlanUpgradeCards({
                   <span className="text-sm text-zinc-500">CAD / mo</span>
                 </p>
               </div>
-              {isCurrent && (
+              {badge && (
                 <span className="shrink-0 rounded-full bg-violet-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase text-violet-200">
-                  {paidActive ? 'Current' : 'Trial'}
+                  {badge}
                 </span>
               )}
             </div>

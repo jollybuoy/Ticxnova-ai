@@ -18,6 +18,23 @@ export {
   isPaidActiveStatus,
 };
 
+async function readFunctionError(error, data, fallback) {
+  if (typeof data?.error === 'string' && data.error) return data.error;
+
+  const response = error?.context;
+  if (response && typeof response.json === 'function') {
+    try {
+      const body = await response.clone().json();
+      if (typeof body?.error === 'string' && body.error) return body.error;
+      if (typeof body?.message === 'string' && body.message) return body.message;
+    } catch {
+      /* ignore non-JSON function bodies */
+    }
+  }
+
+  return error?.message || fallback;
+}
+
 export async function recordBillingEvent({ tenantId, stripeEventId, eventType, payload }) {
   const { data, error } = await supabase.from('billing_events').insert({
     tenant_id: tenantId,
@@ -64,7 +81,7 @@ export async function requestPlanChange(tenantId, targetPlan, urls = {}) {
   if (error) {
     return {
       success: false,
-      message: error.message || 'Could not start checkout. Try again or contact support.',
+      message: await readFunctionError(error, data, 'Could not start checkout. Try again or contact support.'),
     };
   }
 
@@ -96,7 +113,7 @@ export async function openBillingPortal(tenantId) {
   });
 
   if (error) {
-    return { success: false, message: error.message };
+    return { success: false, message: await readFunctionError(error, data, 'Billing portal unavailable.') };
   }
   if (data?.error) {
     return { success: false, message: data.error };
@@ -117,7 +134,11 @@ export async function confirmCheckoutSession(tenantId, sessionId) {
   });
 
   if (error) {
-    return { success: false, unlocked: false, message: error.message };
+    return {
+      success: false,
+      unlocked: false,
+      message: await readFunctionError(error, data, 'Could not confirm checkout.'),
+    };
   }
   if (data?.error) {
     return { success: false, unlocked: false, message: data.error };

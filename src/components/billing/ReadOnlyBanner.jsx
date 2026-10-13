@@ -1,9 +1,10 @@
-import { Link } from 'react-router-dom';
 import { Lock, Sparkles } from 'lucide-react';
 import { useSubscriptionAccess } from '../../hooks/useSubscriptionAccess';
+import { useUpgradePlans } from './UpgradePlansModal';
 
 export function ReadOnlyBanner() {
   const { showReadOnlyBanner, planLabel } = useSubscriptionAccess();
+  const { openPlans } = useUpgradePlans();
 
   if (!showReadOnlyBanner) return null;
 
@@ -20,13 +21,14 @@ export function ReadOnlyBanner() {
           or update tickets, devices, KB articles, or use the AI assistant.
         </span>
       </div>
-      <Link
-        to="/trial-expired"
+      <button
+        type="button"
+        onClick={openPlans}
         className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1.5 text-xs font-medium hover:bg-white/15"
       >
         <Sparkles size={14} />
         Upgrade to restore access
-      </Link>
+      </button>
     </div>
   );
 }

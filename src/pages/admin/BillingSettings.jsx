@@ -12,6 +12,7 @@ import { useTenant } from '../../hooks/useTenant';
 import { getMissingStripePricePlans, isStripeConfigured } from '../../lib/billing/planMapping';
 import { PLANS } from '../../lib/plans/planConfig';
 import { fetchWorkspaceSubscription } from '../../lib/billing/subscriptionService';
+import { shouldGrantCheckoutTrial } from '../../lib/billing/checkoutTrial';
 import { waitForPaidUnlock } from '../../lib/billing/stripeFoundation';
 
 export default function BillingSettings() {
@@ -106,7 +107,11 @@ export default function BillingSettings() {
             </p>
             <h1 className="mt-2 text-3xl font-semibold text-white">Billing & plans</h1>
             <p className="mt-2 max-w-xl text-sm text-zinc-400">
-              Secure billing via Stripe for Ticxnova only. Start with a 7-day trial: enter a card now, and you are not charged unless you stay subscribed after the trial. Cancel before it ends and there is no charge.
+              {!tenant
+                ? 'Secure billing via Stripe for Ticxnova only.'
+                : shouldGrantCheckoutTrial(tenant)
+                  ? 'Secure billing via Stripe for Ticxnova only. Start with a 7-day trial: enter a card now, and you are not charged unless you stay subscribed after the trial. Cancel before it ends and there is no charge.'
+                  : 'Secure billing via Stripe for Ticxnova only. Your free trial has ended — subscribe to a plan to restore access. Your card will be charged today.'}
             </p>
           </div>
           <PlanBadge />
@@ -188,6 +193,7 @@ export default function BillingSettings() {
           currentPlan={plan}
           subscriptionStatus={tenant?.subscription_status}
           stripeSubscriptionId={tenant?.stripe_subscription_id ?? subscription?.stripe_subscription_id}
+          grantTrial={Boolean(tenant) && shouldGrantCheckoutTrial(tenant)}
           mutating={mutating || isBusy}
           upgradingPlan={upgradingPlan}
           onSelectPlan={(targetPlan) => void startCheckout(targetPlan)}

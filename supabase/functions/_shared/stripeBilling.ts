@@ -88,6 +88,28 @@ export function isLiveStripeKey(secret = Deno.env.get('STRIPE_SECRET_KEY') ?? ''
   return secret.startsWith('sk_live') || secret.startsWith('rk_live');
 }
 
+const MS_PER_DAY = 86_400_000;
+
+/** First checkout can start a 7-day Stripe trial. Expired app trials pay immediately. */
+export function shouldGrantCheckoutTrial(tenant: {
+  stripe_subscription_id?: string | null;
+  subscription_status?: string | null;
+  trial_ends_at?: string | null;
+  created_at?: string | null;
+} | null) {
+  if (!tenant || tenant.stripe_subscription_id) return false;
+  const status = String(tenant.subscription_status ?? 'trialing');
+  if (status === 'active') return false;
+  if (status === 'expired' || status === 'suspended') return false;
+  const endsAt = tenant.trial_ends_at
+    ? new Date(tenant.trial_ends_at)
+    : tenant.created_at
+      ? new Date(new Date(tenant.created_at).getTime() + 7 * MS_PER_DAY)
+      : null;
+  if (endsAt && endsAt.getTime() < Date.now()) return false;
+  return true;
+}
+
 export function liveStripeRequiredResponse(origin: string) {
   if (origin.includes('ticxnova.com') && !isLiveStripeKey()) {
     return jsonResponse(
@@ -182,6 +204,11 @@ export async function assertBillingAdmin(
         company_name: string | null;
         stripe_customer_id: string | null;
         billing_email: string | null;
+        subscription_status: string | null;
+        subscription_plan: string | null;
+        stripe_subscription_id: string | null;
+        trial_ends_at: string | null;
+        created_at: string | null;
       };
       adminClient: SupabaseClient;
     }
@@ -229,7 +256,7 @@ export async function assertBillingAdmin(
   const { data: tenant, error: tenantError } = await adminClient
     .from('tenants')
     .select(
-      'id, company_name, stripe_customer_id, billing_email, subscription_status, subscription_plan, stripe_subscription_id',
+      'id, company_name, stripe_customer_id, billing_email, subscription_status, subscription_plan, stripe_subscription_id, trial_ends_at, created_at',
     )
     .eq('id', tenantId)
     .maybeSingle();
@@ -241,6 +268,17 @@ export async function assertBillingAdmin(
   return { user, profile, tenant, adminClient };
 }
 
+async function retrieveUsableCustomerId(stripe: Stripe, customerId: string | null) {
+  if (!customerId) return null;
+  try {
+    const customer = await stripe.customers.retrieve(customerId);
+    if ('deleted' in customer && customer.deleted) return null;
+    return customer.id;
+  } catch {
+    return null;
+  }
+}
+
 export async function ensureStripeCustomer(
   stripe: Stripe,
   adminClient: SupabaseClient,
@@ -248,7 +286,8 @@ export async function ensureStripeCustomer(
   profile: { email: string | null },
   user: { id: string; email?: string },
 ) {
-  if (tenant.stripe_customer_id) return tenant.stripe_customer_id;
+  const existingId = await retrieveUsableCustomerId(stripe, tenant.stripe_customer_id);
+  if (existingId) return existingId;
 
   const customer = await stripe.customers.create({
     email: tenant.billing_email || profile.email || user.email || undefined,

@@ -4,6 +4,7 @@ import { TopNavbar } from './TopNavbar';
 import { BackgroundMesh } from './BackgroundMesh';
 import { TrialBanner } from '../billing/TrialBanner';
 import { ReadOnlyBanner } from '../billing/ReadOnlyBanner';
+import { UpgradePlansProvider } from '../billing/UpgradePlansModal';
 
 export function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -26,9 +27,11 @@ export function DashboardLayout({ children }) {
           />
           <main className="flex-1 overflow-auto px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
             <div className="mx-auto max-w-[1600px] space-y-8">
-              <ReadOnlyBanner />
-              <TrialBanner />
-              {children}
+              <UpgradePlansProvider>
+                <ReadOnlyBanner />
+                <TrialBanner />
+                {children}
+              </UpgradePlansProvider>
             </div>
           </main>
         </div>

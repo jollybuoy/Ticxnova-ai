@@ -7,6 +7,7 @@ import {
   getStripeClient,
   jsonResponse,
   liveStripeRequiredResponse,
+  shouldGrantCheckoutTrial,
   withCheckoutSessionId,
 } from '../_shared/stripeBilling.ts';
 
@@ -64,7 +65,7 @@ serve(async (req) => {
       payload.cancelUrl ?? `${origin}/settings/billing?checkout=canceled`,
     );
 
-    const grantTrial = !hasStripeSubscription;
+    const grantTrial = shouldGrantCheckoutTrial(tenant);
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
       customer: customerId,
@@ -82,14 +83,13 @@ serve(async (req) => {
         supabase_user_id: user.id,
         app: 'ticxnova',
       },
-      custom_text: grantTrial
-        ? {
-            submit: {
-              message:
-                'Start your 7-day Ticxnova trial. You will not be charged until the trial ends. Cancel anytime before then for no charge.',
-            },
-          }
-        : undefined,
+      custom_text: {
+        submit: {
+          message: grantTrial
+            ? 'Start your 7-day Ticxnova trial. You will not be charged until the trial ends. Cancel anytime before then for no charge.'
+            : 'Subscribe to Ticxnova. Your card will be charged today for the selected plan.',
+        },
+      },
       subscription_data: {
         ...(grantTrial
           ? {

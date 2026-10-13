@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { useSubscriptionAccess } from '../../hooks/useSubscriptionAccess';
 import { UpgradePrompt } from './UpgradePrompt';
+import { useUpgradePlans } from './UpgradePlansModal';
 
 /**
  * Gates write actions by trial read-only, plan feature, and RBAC action rules.
@@ -15,6 +15,7 @@ export function WriteGuard({
   compact = false,
 }) {
   const { canWrite, canPerformAction, isReadOnly, canUseFeature } = useSubscriptionAccess();
+  const { openPlans } = useUpgradePlans();
 
   if (feature && !canUseFeature(feature)) {
     if (fallback) return fallback;
@@ -34,9 +35,13 @@ export function WriteGuard({
             <Lock size={16} />
             Trial expired — upgrade to unlock this action.
           </span>
-          <Link to="/trial-expired" className="text-xs font-medium text-violet-300 hover:text-violet-200">
-            View plans
-          </Link>
+          <button
+            type="button"
+            onClick={openPlans}
+            className="text-xs font-medium text-violet-300 hover:text-violet-200"
+          >
+            Choose a plan
+          </button>
         </div>
       </div>
     );
