@@ -104,12 +104,16 @@ export default function UserManagement() {
     event.target.value = '';
   };
 
+  const emailedInvites = createdCredentials.filter((user) => user.delivery === 'invite_email' || !user.temporary_password);
+  const passwordInvites = createdCredentials.filter((user) => user.temporary_password);
+
   const copyCredentials = async () => {
-    const text = createdCredentials
-      .map((user) => `${user.email}, ${user.temporary_password}`)
-      .join('\n');
+    const text = [
+      ...emailedInvites.map((user) => `${user.email} (invite email sent)`),
+      ...passwordInvites.map((user) => `${user.email}, ${user.temporary_password}`),
+    ].join('\n');
     await navigator.clipboard.writeText(text);
-    toast.success('Temporary credentials copied');
+    toast.success(passwordInvites.length ? 'Invite details copied' : 'Invited emails copied');
   };
 
   const openEdit = (user) => {
@@ -157,7 +161,7 @@ export default function UserManagement() {
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-white">User Management</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Create tenant users, generate temporary passwords, assign roles, and deactivate access.
+            Invite people by email, assign roles, and deactivate access. Temporary passwords are only shown if the invite email cannot be sent.
           </p>
         </div>
         <Button
@@ -165,7 +169,7 @@ export default function UserManagement() {
           disabled={!canManage || !canInviteUsers}
         >
           <MailPlus size={17} />
-          Create Users
+          Invite users
         </Button>
       </div>
 
@@ -284,7 +288,7 @@ export default function UserManagement() {
           setInviteOpen(false);
           setInviteResult(null);
         }}
-        title="Create users"
+        title="Invite users"
         description={`Paste emails or upload a CSV. Users must use ${tenant?.domain || 'your organization domain'} and public domains like Gmail or Outlook are blocked.`}
       >
         <form onSubmit={handleInvite} className="space-y-4">
@@ -316,7 +320,7 @@ export default function UserManagement() {
               </label>
             </div>
             <p className="text-xs text-zinc-500">
-              Enter one email per line, or CSV rows: Full Name, Email, Department. Users must change the password after first login.
+              Enter one email per line, or CSV rows: Full Name, Email, Department. Invitees receive an email when possible.
             </p>
           </div>
           <Select
@@ -353,10 +357,12 @@ export default function UserManagement() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="font-medium text-emerald-100">
-                    {createdCredentials.length} user{createdCredentials.length === 1 ? '' : 's'} created
+                    {createdCredentials.length} user{createdCredentials.length === 1 ? '' : 's'} invited
                   </p>
                   <p className="mt-1 text-xs text-emerald-100/70">
-                    Copy these temporary passwords now. They are shown only once.
+                    {passwordInvites.length
+                      ? 'Invite emails sent where possible. Copy any leftover temporary passwords now.'
+                      : 'Invite emails were sent. They are not shown a temporary password.'}
                   </p>
                 </div>
                 <Button type="button" variant="secondary" onClick={copyCredentials}>
@@ -371,14 +377,16 @@ export default function UserManagement() {
                     className="rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-xs text-zinc-200"
                   >
                     <div className="font-medium text-white">{user.email}</div>
-                    <div className="mt-1 font-mono text-emerald-200">{user.temporary_password}</div>
+                    <div className="mt-1 font-mono text-emerald-200">
+                      {user.temporary_password || 'Invite email sent'}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
           <Button type="submit" className="w-full" loading={mutating}>
-            Create {parsedUsers.length > 1 ? `${parsedUsers.length} Users` : 'User'}
+            Invite {parsedUsers.length > 1 ? `${parsedUsers.length} users` : 'user'}
           </Button>
         </form>
       </Modal>

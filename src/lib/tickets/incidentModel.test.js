@@ -23,6 +23,15 @@ describe('incidentModel', () => {
     expect(canEscalate('urgent')).toBe(false);
   });
 
+  it('uses a custom SLA window when the workspace has a policy', () => {
+    const sla = getTicketSla(
+      { status: 'open', priority: 'urgent', created_at: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString() },
+      Date.now(),
+      { urgent: 2 },
+    );
+    expect(sla.breached).toBe(true);
+  });
+
   it('treats urgent tickets older than 4 hours as breached', () => {
     const sla = getTicketSla(
       { status: 'open', priority: 'urgent', created_at: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString() },

@@ -60,12 +60,24 @@ export async function ensureTenantForUser(user, fullName) {
 }
 
 export async function updateTenant(tenantId, updates) {
-  const { error } = await supabase
-    .from('tenants')
-    .update(updates)
-    .eq('id', tenantId);
+  const { sla_hours, ...rest } = updates;
+  if (Object.keys(rest).length) {
+    const { error } = await supabase
+      .from('tenants')
+      .update(rest)
+      .eq('id', tenantId);
+    if (error) return { data: null, error };
+  }
 
-  if (error) return { data: null, error };
+  if (sla_hours) {
+    const slaResult = await supabase
+      .from('tenants')
+      .update({ sla_hours })
+      .eq('id', tenantId);
+    if (slaResult.error && !/sla_hours|schema cache|42703/i.test(slaResult.error.message || '')) {
+      return { data: null, error: slaResult.error };
+    }
+  }
 
   const { data, error: fetchError } = await supabase
     .from('tenants')

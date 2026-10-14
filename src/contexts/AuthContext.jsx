@@ -114,6 +114,22 @@ export function AuthProvider({ children }) {
     });
   }, [runAuthAction]);
 
+  const signInWithGoogle = useCallback(async () => {
+    return runAuthAction(async () => {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+          queryParams: { access_type: 'offline', prompt: 'select_account' },
+        },
+      });
+      if (error) {
+        return { success: false, message: getAuthErrorMessage(error) };
+      }
+      return { success: true, message: null };
+    });
+  }, [runAuthAction]);
+
   const signInWithMicrosoft = useCallback(async () => {
     return runAuthAction(async () => {
       const { error } = await supabase.auth.signInWithOAuth({
@@ -172,6 +188,7 @@ export function AuthProvider({ children }) {
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
       signInWithMicrosoft,
       resetPassword,
       updatePassword,
@@ -184,6 +201,7 @@ export function AuthProvider({ children }) {
       signIn,
       signUp,
       signOut,
+      signInWithGoogle,
       signInWithMicrosoft,
       resetPassword,
       updatePassword,

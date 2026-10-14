@@ -46,6 +46,7 @@ export const PlatformAdminVerifications = lazyPage(() => import('../pages/platfo
 /** Route path → dynamic import for sidebar prefetch */
 export const PREFETCH_BY_PATH = {
   '/dashboard': () => import('../pages/Dashboard'),
+  '/portal': () => import('../pages/portal/RequesterPortal'),
   '/tickets': () => import('../pages/Tickets'),
   '/ai-assistant': () => import('../pages/AIAssistant'),
   '/assets': () => import('../pages/AssetOverview'),

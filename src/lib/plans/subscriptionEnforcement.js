@@ -12,6 +12,7 @@ export const READ_ONLY_BLOCKED_PREFIXES = [
 /** Paths always reachable in read-only (view + billing). */
 export const READ_ONLY_ALLOWED_PREFIXES = [
   '/dashboard',
+  '/portal',
   '/tickets',
   '/devices',
   '/assets',

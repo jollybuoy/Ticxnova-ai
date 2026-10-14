@@ -15,3 +15,12 @@ verify_jwt = true
 
 [functions.book-demo]
 verify_jwt = false
+
+[functions.notify-ticket]
+verify_jwt = true
+
+[functions.email-inbound]
+verify_jwt = false
+
+[functions.tenant-mail]
+verify_jwt = true

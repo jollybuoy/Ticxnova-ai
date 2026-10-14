@@ -274,13 +274,14 @@ export async function deleteTicket(userId, ticketId) {
   return { error };
 }
 
-export async function summarizeTicket(userId, ticket) {
+export async function summarizeTicket(userId, ticket, kbContext = '') {
   const { data, error } = await supabase.functions.invoke('summarize-ticket', {
     body: {
       title: ticket.title,
       description: ticket.description,
       category: ticket.category,
       priority: ticket.priority,
+      kbContext,
     },
   });
 

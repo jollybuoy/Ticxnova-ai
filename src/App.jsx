@@ -47,6 +47,7 @@ const KnowledgeBase = lazy(() => import('./pages/KnowledgeBase'));
 const BillingSettings = lazy(() => import('./pages/admin/BillingSettings'));
 const AuditLog = lazy(() => import('./pages/admin/AuditLog'));
 const TrialExpired = lazy(() => import('./pages/TrialExpired'));
+const RequesterPortal = lazy(() => import('./pages/portal/RequesterPortal'));
 
 function RouteLoader() {
   return (
@@ -123,6 +124,14 @@ function AnimatedRoutes() {
         <Route path="/admin/roles" element={<Navigate to="/settings/roles" replace />} />
 
         <Route element={<AppShellLayout />}>
+          <Route
+            path="/portal"
+            element={
+              <ProtectedRoute>
+                <RequesterPortal />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/dashboard"
             element={

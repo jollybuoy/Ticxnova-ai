@@ -15,7 +15,7 @@ const MODES = {
 export function LoginForm() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { signIn, signUp, resetPassword, actionLoading, isAuthenticated } = useAuth();
+  const { signIn, signUp, resetPassword, signInWithGoogle, actionLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -177,6 +177,32 @@ export function LoginForm() {
             {submitLabel}
           </Button>
         </form>
+
+        {isSignIn && (
+          <div className="mt-5">
+            <div className="mb-4 flex items-center gap-3 text-[11px] uppercase tracking-[0.2em] text-zinc-500">
+              <span className="h-px flex-1 bg-white/10" />
+              or
+              <span className="h-px flex-1 bg-white/10" />
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full py-3"
+              disabled={actionLoading}
+              onClick={async () => {
+                clearMessages();
+                const result = await signInWithGoogle();
+                if (!result.success) setError(result.message);
+              }}
+            >
+              Continue with Google
+            </Button>
+            <p className="mt-2 text-center text-[11px] text-zinc-500">
+              Password sign-in still works. Google must be enabled in Supabase Auth.
+            </p>
+          </div>
+        )}
 
         <p className="mt-8 text-center text-xs text-zinc-500">
           {isReset ? (

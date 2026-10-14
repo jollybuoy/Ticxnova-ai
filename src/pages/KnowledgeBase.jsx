@@ -67,7 +67,7 @@ export default function KnowledgeBase() {
     setLoading(true);
     const [catRes, artRes] = await Promise.all([
       listKbCategories(tenantId),
-      listKbArticles(tenantId, { status: statusFilter || undefined, search }),
+      listKbArticles(tenantId, { status: canEdit ? statusFilter || undefined : 'published', search }),
     ]);
     setLoading(false);
     if (catRes.error || artRes.error) {
@@ -76,7 +76,7 @@ export default function KnowledgeBase() {
     }
     setCategories(catRes.data);
     setArticles(artRes.data);
-  }, [tenantId, statusFilter, search]);
+  }, [canEdit, tenantId, statusFilter, search]);
 
   useEffect(() => {
     const task = window.setTimeout(load, 0);
@@ -218,12 +218,14 @@ export default function KnowledgeBase() {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
+            {canEdit && (
             <Select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-40"
               options={STATUS_OPTIONS}
             />
+            )}
           </div>
 
           {loading ? (

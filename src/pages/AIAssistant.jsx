@@ -62,7 +62,7 @@ export default function AIAssistant() {
       </header>
 
       <div className="grid min-h-0 flex-1 gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
-        <Card hover={false} className="flex min-h-0 flex-col overflow-hidden p-0">
+        <Card hover={false} className="ai-chat-frame flex min-h-0 flex-col overflow-hidden p-0">
           <CardHeader
             title="Ticxnova Copilot"
             subtitle="IT operations assistant"

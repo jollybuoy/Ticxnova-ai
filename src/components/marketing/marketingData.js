@@ -62,7 +62,7 @@ export const faqItems = [
   ['What security controls are available?', 'Tenant isolation, five system roles, domain verification, and audit logging on Enterprise. Custom roles are not enforced yet.'],
   ['Can pricing scale for MSPs?', 'Yes. Professional and Enterprise add invites, knowledge base, advanced reports, SLA reporting, and audit logs.'],
   ['Are backups supported?', 'Database backups are managed through the Supabase project. Contact us for enterprise backup requirements.'],
-  ['Can we use custom SMTP?', 'Not in this release. Invites currently share a temporary password in the admin UI. Custom SMTP is on the roadmap.'],
+  ['Can we use custom SMTP?', 'Yes. Each workspace configures its own Microsoft 365, Google Workspace, or SMTP relay so ticket mail sends from the organization mailbox, not from Ticxnova.'],
 ];
 
 export const aboutPillars = [

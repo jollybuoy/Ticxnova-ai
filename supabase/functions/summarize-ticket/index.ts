@@ -30,7 +30,7 @@ serve(async (req) => {
     return jsonResponse({ error: 'OPENAI_API_KEY is not configured' }, 500);
   }
 
-  const { title, description, category, priority } = await req.json();
+  const { title, description, category, priority, kbContext } = await req.json();
 
   if (!title && !description) {
     return jsonResponse({ error: 'Ticket title or description is required' }, 400);
@@ -46,6 +46,7 @@ Current category: ${category ?? 'None'}
 Current priority: ${priority ?? 'None'}
 Description:
 ${description ?? 'No description provided.'}
+${kbContext ? `\nKnowledge base articles that may apply:\n${kbContext}\nIf you use an article, mention it in reasoning.` : ''}
 
 Return strict JSON with:
 {

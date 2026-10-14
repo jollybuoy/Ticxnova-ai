@@ -14,6 +14,8 @@ import {
   summarizeTicket,
   updateTicketFields,
 } from '../lib/tickets/ticketService';
+import { searchKbArticlesForTenant } from '../lib/kb/kbService';
+import { notifyTicketEvent } from '../lib/email/ticketMail';
 import {
   fetchTicketDevices,
   getTicketDeviceErrorMessage,
@@ -31,6 +33,7 @@ export function useTicketDetails(ticketId) {
   const [activity, setActivity] = useState([]);
   const [linkedDevices, setLinkedDevices] = useState([]);
   const [relatedTickets, setRelatedTickets] = useState([]);
+  const [kbCitations, setKbCitations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mutating, setMutating] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -58,10 +61,16 @@ export function useTicketDetails(ticketId) {
       toast.error(getTicketErrorMessage(ticketResult.error));
       setTicket(null);
       setRelatedTickets([]);
+      setKbCitations([]);
     } else {
       setTicket(ticketResult.data);
-      const relatedResult = await fetchRelatedTickets(ticketResult.data, userId, tenantId);
+      const query = `${ticketResult.data.title ?? ''} ${ticketResult.data.description ?? ''}`;
+      const [relatedResult, kbResult] = await Promise.all([
+        fetchRelatedTickets(ticketResult.data, userId, tenantId),
+        tenantId ? searchKbArticlesForTenant(tenantId, query, { limit: 4, minScore: 2 }) : Promise.resolve({ sources: [] }),
+      ]);
       setRelatedTickets(relatedResult.data ?? []);
+      setKbCitations(kbResult.sources ?? []);
     }
 
     if (commentsResult.error) {
@@ -168,6 +177,13 @@ export function useTicketDetails(ticketId) {
       }
 
       setTicket(data);
+      if (updates.status && updates.status !== ticket.status) {
+        void notifyTicketEvent({
+          ticketId: ticket.id,
+          event: 'status_changed',
+          message: `Status is now ${updates.status}.`,
+        });
+      }
       toast.success('Ticket updated');
       return { success: true, data };
     },
@@ -188,6 +204,13 @@ export function useTicketDetails(ticketId) {
       }
 
       setComments((prev) => [...prev, data]);
+      if (visibility === 'public') {
+        void notifyTicketEvent({
+          ticketId,
+          event: 'public_reply',
+          message: body.trim(),
+        });
+      }
       toast.success(visibility === 'public' ? 'Reply sent to requester' : 'Internal note added');
       return { success: true, data };
     },
@@ -197,7 +220,10 @@ export function useTicketDetails(ticketId) {
   const runDiagnostics = useCallback(async () => {
     if (!userId || !ticket) return { success: false };
     setAiLoading(true);
-    const { data, error } = await summarizeTicket(userId, ticket);
+    const kbContext = kbCitations
+      .map((article, index) => `[KB-${index + 1}] ${article.title}${article.category ? ` (${article.category})` : ''}`)
+      .join('\n');
+    const { data, error } = await summarizeTicket(userId, ticket, kbContext);
     setAiLoading(false);
     if (error) {
       toast.error(getTicketErrorMessage(error));
@@ -206,7 +232,7 @@ export function useTicketDetails(ticketId) {
     setTicket(data);
     toast.success('AI diagnostics updated');
     return { success: true, data };
-  }, [ticket, userId]);
+  }, [kbCitations, ticket, userId]);
 
   const updateLinkedDevices = useCallback(
     async (deviceIds) => {
@@ -249,6 +275,7 @@ export function useTicketDetails(ticketId) {
     activity,
     linkedDevices,
     relatedTickets,
+    kbCitations,
     loading,
     mutating,
     aiLoading,

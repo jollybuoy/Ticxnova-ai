@@ -16,6 +16,7 @@ import { useSubscriptionAccess } from './useSubscriptionAccess';
 import { MODULES } from '../lib/rbac/modulePermissions';
 import { ACTIONS } from '../lib/rbac/actionPermissions';
 import { AUDIT_ACTIONS, AUDIT_MODULES, recordAuditLog } from '../lib/audit/auditService';
+import { notifyTicketEvent } from '../lib/email/ticketMail';
 
 const ticketsCache = { key: null, data: [] };
 
@@ -141,6 +142,7 @@ export function useTickets() {
         summary: `Created ticket ${data.ticket_number ?? data.id}`,
         newValue: { title: data.title, status: data.status },
       });
+      void notifyTicketEvent({ ticketId: data.id, event: 'created' });
       toast.success('Ticket created successfully');
       return { success: true, data };
     },

@@ -14,9 +14,9 @@ export function getOpenTickets(tickets = []) {
   return tickets.filter(isOpenTicket);
 }
 
-export function getSlaRiskTickets(tickets = [], now = Date.now()) {
+export function getSlaRiskTickets(tickets = [], now = Date.now(), hoursByPriority) {
   return getOpenTickets(tickets).filter((ticket) => {
-    const sla = getTicketSla(ticket, now);
+    const sla = getTicketSla(ticket, now, hoursByPriority);
     return sla.atRisk || sla.breached;
   });
 }
@@ -52,8 +52,8 @@ export function firstName(name = 'there') {
   return String(name).trim().split(/\s+/)[0] || 'there';
 }
 
-export function formatSlaClock(ticket, now = Date.now()) {
-  const sla = getTicketSla(ticket, now);
+export function formatSlaClock(ticket, now = Date.now(), hoursByPriority) {
+  const sla = getTicketSla(ticket, now, hoursByPriority);
   if (ticket.status === 'resolved') {
     return { text: sla.label === 'Met' ? 'Met' : 'Late', tone: sla.label === 'Met' ? 'green' : 'red', sla };
   }

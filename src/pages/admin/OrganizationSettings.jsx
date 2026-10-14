@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Building2, Palette, ShieldCheck, UploadCloud } from 'lucide-react';
+import { Building2, Clock3, Mail, Palette, ShieldCheck, UploadCloud } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -8,6 +8,8 @@ import { Select } from '../../components/ui/Select';
 import { Spinner } from '../../components/ui/Spinner';
 import { useTenant } from '../../hooks/useTenant';
 import { getTenantErrorMessage, uploadTenantLogo } from '../../lib/tenant/tenantService';
+import { DEFAULT_SLA_HOURS, slaHoursFromTenant } from '../../lib/billing/slaPolicy';
+import { OrganizationMailSettings } from '../../components/settings/OrganizationMailSettings';
 
 const subscriptionOptions = [
   { value: 'starter', label: 'Starter' },
@@ -25,12 +27,17 @@ export default function OrganizationSettings() {
     logo_url: '',
     full_name: '',
     department: '',
+    sla_urgent: DEFAULT_SLA_HOURS.urgent,
+    sla_high: DEFAULT_SLA_HOURS.high,
+    sla_medium: DEFAULT_SLA_HOURS.medium,
+    sla_low: DEFAULT_SLA_HOURS.low,
   });
   const [uploading, setUploading] = useState(false);
   const [domainDeleteOpen, setDomainDeleteOpen] = useState(false);
 
   useEffect(() => {
     if (!tenant && !profile) return;
+    const sla = slaHoursFromTenant(tenant);
     const task = window.setTimeout(() => {
       setForm({
         company_name: tenant?.company_name ?? '',
@@ -40,6 +47,10 @@ export default function OrganizationSettings() {
         logo_url: tenant?.logo_url ?? '',
         full_name: profile?.full_name ?? '',
         department: profile?.department ?? '',
+        sla_urgent: sla.urgent,
+        sla_high: sla.high,
+        sla_medium: sla.medium,
+        sla_low: sla.low,
       });
     }, 0);
     return () => window.clearTimeout(task);
@@ -71,6 +82,12 @@ export default function OrganizationSettings() {
       subscription_plan: form.subscription_plan,
       brand_color: form.brand_color,
       logo_url: form.logo_url.trim() || null,
+      sla_hours: {
+        urgent: Number(form.sla_urgent) || DEFAULT_SLA_HOURS.urgent,
+        high: Number(form.sla_high) || DEFAULT_SLA_HOURS.high,
+        medium: Number(form.sla_medium) || DEFAULT_SLA_HOURS.medium,
+        low: Number(form.sla_low) || DEFAULT_SLA_HOURS.low,
+      },
     });
     await saveProfile({
       full_name: form.full_name.trim() || null,
@@ -225,7 +242,64 @@ export default function OrganizationSettings() {
             Save Organization Settings
           </Button>
         </section>
+
+      <section className="xl:col-span-2 grid gap-6 xl:grid-cols-2">
+        <div className="glass-card space-y-5 p-6">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/10 p-3 text-cyan-200">
+              <Clock3 size={22} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">SLA policy</h2>
+              <p className="text-sm text-zinc-400">
+                Hours to resolve by priority. Leave the defaults (4 / 8 / 24 / 48) to keep current clocks.
+              </p>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {[
+              ['sla_urgent', 'Urgent (hours)'],
+              ['sla_high', 'High (hours)'],
+              ['sla_medium', 'Medium (hours)'],
+              ['sla_low', 'Low (hours)'],
+            ].map(([field, label]) => (
+              <Input
+                key={field}
+                label={label}
+                type="number"
+                min="1"
+                value={form[field]}
+                onChange={(event) => updateField(field, event.target.value)}
+              />
+            ))}
+          </div>
+          <p className="text-xs text-zinc-500">
+            Saved with Organization Settings above. Existing tickets keep using these windows immediately.
+          </p>
+        </div>
+        <div className="glass-card space-y-4 p-6">
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 p-3 text-violet-200">
+              <Mail size={22} />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Inbound email to ticket</h2>
+              <p className="text-sm text-zinc-400">
+                Optional: forward a support mailbox into Ticxnova. Sending uses the organization mailbox below.
+              </p>
+            </div>
+          </div>
+          <p className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-xs leading-relaxed text-zinc-400">
+            POST JSON <span className="text-zinc-200">from, to, subject, text</span> to
+            {' '}<span className="text-zinc-200">/functions/v1/email-inbound</span> with header
+            {' '}<span className="text-zinc-200">x-webhook-secret</span>. The To domain must match this
+            organization domain ({form.domain || 'not set yet'}).
+          </p>
+        </div>
+      </section>
       </form>
+
+      <OrganizationMailSettings tenant={tenant} />
 
       <Modal
         open={domainDeleteOpen}

@@ -178,29 +178,55 @@ serve(async (req) => {
       continue;
     }
 
-    const temporaryPassword = generateTemporaryPassword();
-    const { data: created, error: createError } = await adminClient.auth.admin.createUser({
-      email,
-      password: temporaryPassword,
-      email_confirm: true,
-      app_metadata: {
-        tenant_id: tenantId,
-        role,
-        must_reset_password: true,
-      },
-      user_metadata: {
+    const origin = req.headers.get('origin') || Deno.env.get('SITE_URL') || 'https://ticxnova.com';
+    let userId: string | null = null;
+    let delivery: 'invite_email' | 'temporary_password' = 'invite_email';
+    let temporaryPassword: string | null = null;
+
+    const { data: invitedAuth, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${origin}/login`,
+      data: {
         full_name: fullName,
         name: fullName,
         department,
       },
     });
 
-    if (createError) {
-      rejected.push({ email, reason: createError.message });
-      continue;
-    }
+    if (invitedAuth?.user?.id) {
+      userId = invitedAuth.user.id;
+      delivery = 'invite_email';
+      await adminClient.auth.admin.updateUserById(userId, {
+        app_metadata: {
+          tenant_id: tenantId,
+          role,
+          must_reset_password: false,
+        },
+      });
+    } else {
+      delivery = 'temporary_password';
+      temporaryPassword = generateTemporaryPassword();
+      const { data: created, error: createError } = await adminClient.auth.admin.createUser({
+        email,
+        password: temporaryPassword,
+        email_confirm: true,
+        app_metadata: {
+          tenant_id: tenantId,
+          role,
+          must_reset_password: true,
+        },
+        user_metadata: {
+          full_name: fullName,
+          name: fullName,
+          department,
+        },
+      });
 
-    const userId = created.user?.id ?? null;
+      if (createError) {
+        rejected.push({ email, reason: inviteError?.message || createError.message });
+        continue;
+      }
+      userId = created.user?.id ?? null;
+    }
 
     if (userId) {
       const { error: profileError } = await adminClient
@@ -212,7 +238,7 @@ serve(async (req) => {
           full_name: fullName,
           role,
           department,
-          must_reset_password: true,
+          must_reset_password: delivery === 'temporary_password',
         });
 
       if (profileError) {
@@ -247,17 +273,20 @@ serve(async (req) => {
 
     invited.push({
       ...tenantUser,
+      delivery,
       temporary_password: temporaryPassword,
-      must_reset_password: true,
+      must_reset_password: delivery === 'temporary_password',
     });
   }
 
+  const emailedCount = invited.filter((item) => item.delivery === 'invite_email').length;
   return jsonResponse({
     invited,
     rejected,
     total: users.length,
     successCount: invited.length,
     rejectedCount: rejected.length,
-    deliveryMode: 'temporary_password',
+    emailedCount,
+    deliveryMode: emailedCount === invited.length && invited.length > 0 ? 'invite_email' : emailedCount > 0 ? 'mixed' : 'temporary_password',
   });
 });

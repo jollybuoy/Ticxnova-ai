@@ -45,14 +45,19 @@ import {
   isMajorIncidentCandidate,
   nextPriority,
 } from '../../lib/tickets/incidentModel';
+import { slaHoursFromTenant } from '../../lib/billing/slaPolicy';
+import { useTenant } from '../../hooks/useTenant';
 
 function SlaGauge({ ticket }) {
+  const { tenant } = useTenant();
+  const slaHours = slaHoursFromTenant(tenant);
   const [now, setNow] = useState(Date.now());
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
-  const sla = getTicketSla(ticket, now);
+  const sla = getTicketSla(ticket, now, slaHours);
+  const windowHours = slaHours[ticket.priority] ?? slaHours.medium;
   const radius = 34;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (Math.min(sla.percent, 100) / 100) * circumference;
@@ -87,7 +92,7 @@ function SlaGauge({ ticket }) {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Resolution SLA</p>
         <p className="mt-1 text-sm font-medium text-white">{sla.label}</p>
         <p className="mt-1 text-xs text-zinc-500">
-          {ticket.priority === 'urgent' ? '4h' : ticket.priority === 'high' ? '8h' : ticket.priority === 'low' ? '48h' : '24h'} window from open
+          {windowHours}h window from open
         </p>
       </div>
     </div>
@@ -176,6 +181,7 @@ export function IncidentWorkspace({
   activity,
   linkedDevices,
   relatedTickets,
+  kbCitations = [],
   mutating,
   aiLoading,
   onUpdateFields,
@@ -204,7 +210,9 @@ export function IncidentWorkspace({
     });
   }, [ticket]);
 
-  const sla = getTicketSla(ticket);
+  const { tenant } = useTenant();
+  const slaHours = slaHoursFromTenant(tenant);
+  const sla = getTicketSla(ticket, Date.now(), slaHours);
   const statusMeta = getStatusMeta(ticket.status);
   const priorityMeta = getPriorityMeta(ticket.priority);
   const typeMeta = getTicketTypeMeta(ticket.ticket_type);
@@ -483,6 +491,33 @@ export function IncidentWorkspace({
                   })}
                 </ul>
               </div>
+              {(kbCitations.length > 0 || relatedTickets.length > 0) && (
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Citations</p>
+                  <ul className="mt-2 space-y-1.5">
+                    {kbCitations.slice(0, 4).map((article) => (
+                      <li key={article.id}>
+                        <Link
+                          to="/knowledge-base"
+                          className="block truncate text-sm text-violet-200 hover:text-white"
+                        >
+                          KB · {article.title}
+                        </Link>
+                      </li>
+                    ))}
+                    {relatedTickets.slice(0, 3).map((item) => (
+                      <li key={item.id}>
+                        <Link
+                          to={`/tickets/${item.id}`}
+                          className="block truncate text-sm text-zinc-300 hover:text-white"
+                        >
+                          Similar · {item.ticket_number} {item.title}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <div className="grid grid-cols-2 gap-2">
                 <Button variant="secondary" className="w-full text-xs" loading={aiLoading} disabled={aiLoading} onClick={onDiagnose}>
                   <Bot size={14} />

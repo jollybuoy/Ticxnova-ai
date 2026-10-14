@@ -11,6 +11,8 @@ import {
 } from '../../lib/tickets/constants';
 import { DeviceSelector, suggestTicketCategory } from '../itsm/DeviceSelector';
 import { useTenantDirectory } from '../../hooks/useTenantDirectory';
+import { useAuth } from '../../hooks/useAuth';
+import { getUserDisplayName, getUserEmail } from '../../lib/user';
 
 const emptyForm = {
   title: '',
@@ -23,8 +25,9 @@ const emptyForm = {
   device_ids: [],
 };
 
-export function CreateTicketModal({ open, onClose, onCreate, loading, seed }) {
+export function CreateTicketModal({ open, onClose, onCreate, loading, seed, selfService = false }) {
   const [form, setForm] = useState(emptyForm);
+  const { user } = useAuth();
   const { departmentOptions, usersForDepartment } = useTenantDirectory();
   const departmentUserOptions = usersForDepartment(form.department);
 
@@ -36,8 +39,10 @@ export function CreateTicketModal({ open, onClose, onCreate, loading, seed }) {
       description: seed?.description || '',
       department: seed?.department || '',
       device_ids: seed?.device_ids || [],
+      requester_name: seed?.requester_name || (selfService ? getUserDisplayName(user) : ''),
+      requester_email: seed?.requester_email || (selfService ? getUserEmail(user) : ''),
     });
-  }, [open, seed?.title, seed?.department, seed?.device_ids?.[0]]);
+  }, [open, seed?.title, seed?.department, seed?.device_ids?.[0], seed?.requester_email, selfService, user]);
 
   const handleClose = () => {
     setForm(emptyForm);
@@ -84,8 +89,12 @@ export function CreateTicketModal({ open, onClose, onCreate, loading, seed }) {
     <Modal
       open={open}
       onClose={handleClose}
-      title="Create ticket"
-      description="Submit a new support request to your IT queue."
+      title={selfService ? 'New request' : 'Create ticket'}
+      description={
+        selfService
+          ? 'Tell IT what you need. You will get updates on this request.'
+          : 'Submit a new support request to your IT queue.'
+      }
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -120,6 +129,7 @@ export function CreateTicketModal({ open, onClose, onCreate, loading, seed }) {
             disabled={loading}
           />
         </div>
+        {!selfService && (
         <div className="grid gap-4 sm:grid-cols-2">
           <Select
             label="Department"
@@ -152,12 +162,15 @@ export function CreateTicketModal({ open, onClose, onCreate, loading, seed }) {
             disabled={loading || !form.department || departmentUserOptions.length === 0}
           />
         </div>
+        )}
+        {!selfService && (
         <DeviceSelector
           selectedIds={form.device_ids}
           onChange={handleDeviceSelection}
           onPrimaryDeviceChange={handlePrimaryDeviceChange}
           disabled={loading}
         />
+        )}
         <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
           <Button type="button" variant="secondary" onClick={handleClose} disabled={loading}>
             Cancel

@@ -10,6 +10,13 @@ import { useTenant } from '../../hooks/useTenant';
 import { usePlanAccess } from '../../hooks/usePlanAccess';
 import { usePermissions } from '../../hooks/usePermissions';
 import { FEATURES } from '../../lib/plans/planConfig';
+import { isRequesterRole, requesterHomePath } from '../../lib/portal/requesterAccess';
+
+const REQUESTER_NAV = [
+  { id: 'portal', label: 'My portal', icon: 'LayoutDashboard', path: '/portal' },
+  { id: 'tickets', label: 'My requests', icon: 'Ticket', path: '/tickets', showOpenBadge: true },
+  { id: 'knowledge-base', label: 'Help articles', icon: 'BookOpen', path: '/knowledge-base', planFeature: 'knowledge_base' },
+];
 
 function isNavSectionActive(pathname, item) {
   if (!item.children?.length) return false;
@@ -35,9 +42,10 @@ function SidebarComponent({ open, collapsed, onClose }) {
   const { canAccessModule, modules } = usePermissions();
   const [aiPrompt, setAiPrompt] = useState('');
   const isAdmin = ['super_admin', 'org_admin'].includes(role);
+  const isRequester = isRequesterRole(role);
   const visibleNavItems = useMemo(
     () =>
-      navItems
+      (isRequester ? REQUESTER_NAV : navItems)
         .filter((item) => navItemAllowed(item, { canUseFeature, canAccessModule, isAdmin }))
         .map((item) => {
           if (!item.children?.length) return item;
@@ -56,7 +64,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
           return { ...item, children };
         })
         .filter((item) => !item.children?.length || item.children.length > 0),
-    [canAccessModule, canUseFeature, isAdmin, modules.USERS],
+    [canAccessModule, canUseFeature, isAdmin, isRequester, modules.USERS],
   );
 
   const activeSectionIds = useMemo(
@@ -122,7 +130,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
         }`}
       >
         <div className={`border-b border-white/[0.06] ${collapsed ? 'px-3 py-4' : 'px-5 py-5'}`}>
-          <NavLink to="/dashboard" onClick={onClose} className="block">
+          <NavLink to={isRequester ? requesterHomePath() : '/dashboard'} onClick={onClose} className="block">
             <motion.div
               className="flex items-center gap-3"
               whileHover={{ scale: 1.02 }}
@@ -136,7 +144,9 @@ function SidebarComponent({ open, collapsed, onClose }) {
                   <h1 className="truncate text-base font-semibold tracking-tight text-white">
                     Ticxnova-AI
                   </h1>
-                  <p className="truncate text-[11px] text-zinc-500">IT Management Platform</p>
+                  <p className="truncate text-[11px] text-zinc-500">
+                    {isRequester ? 'Employee portal' : 'IT Management Platform'}
+                  </p>
                 </div>
               )}
             </motion.div>
@@ -243,7 +253,7 @@ function SidebarComponent({ open, collapsed, onClose }) {
           })}
         </nav>
 
-        {!collapsed && (
+        {!collapsed && !isRequester && (
           <div className="border-t border-white/[0.06] p-4">
             <div className="glass rounded-xl p-3">
               <div className="mb-2 flex items-center gap-2">

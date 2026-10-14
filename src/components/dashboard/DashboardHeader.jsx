@@ -14,7 +14,7 @@ export function DashboardHeader({ greeting, dateRange, onDateRangeChange, onCrea
     <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 className="text-3xl font-semibold tracking-tight text-white">{greeting}</h1>
-        <p className="mt-2 text-sm text-zinc-400">Here&apos;s what needs your attention today.</p>
+        <p className="mt-2 text-sm text-zinc-400">Queue, SLA, and team activity for this workspace.</p>
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <label className="glass flex items-center gap-2.5 rounded-xl border border-white/15 px-4 py-2.5 text-sm text-zinc-300">

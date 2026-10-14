@@ -20,7 +20,9 @@ export function MetricCard({ metric }) {
         <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 ${metric.iconBg}`}>
           <Icon name={metric.icon} className={metric.iconColor} size={18} />
         </span>
-        <Sparkline values={metric.spark} color={metric.color} />
+        <span className="opacity-50">
+          <Sparkline values={metric.spark} color={metric.color} />
+        </span>
       </div>
       <p className="mt-4 text-xs font-medium uppercase tracking-wider text-zinc-500">{metric.label}</p>
       <p className="mt-1 text-3xl font-semibold tabular-nums tracking-tight text-white">{metric.value}</p>

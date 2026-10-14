@@ -14,8 +14,8 @@ const priorityDot = {
   low: 'bg-emerald-400',
 };
 
-function SlaPill({ ticket }) {
-  const sla = formatSlaClock(ticket);
+function SlaPill({ ticket, slaHours }) {
+  const sla = formatSlaClock(ticket, Date.now(), slaHours);
   const cls =
     sla.tone === 'red'
       ? 'border-red-400/40 bg-red-500 text-white'
@@ -41,6 +41,8 @@ export function TicketsTable({
   tickets,
   loading,
   mutating,
+  requesterMode = false,
+  slaHours,
   selectedIds,
   onToggle,
   onToggleAll,
@@ -67,21 +69,23 @@ export function TicketsTable({
 
   if (tickets.length === 0) {
     return (
-      <Card hover={false}>
+      <Card hover={false} className="ticket-workspace-frame">
         <EmptyState onCreate={onCreate} />
       </Card>
     );
   }
 
   return (
-    <Card hover={false} className="overflow-hidden p-0">
+    <Card hover={false} className="ticket-workspace-frame overflow-hidden p-0">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[980px] text-left">
           <thead>
             <tr className="border-b border-white/15 text-[11px] uppercase tracking-wider text-zinc-500">
+              {!requesterMode && (
               <th className="px-4 py-3">
                 <input type="checkbox" checked={allSelected} onChange={onToggleAll} />
               </th>
+              )}
               <th className="px-3 py-3">ID</th>
               <th className="px-3 py-3">Subject</th>
               <th className="px-3 py-3">Requester</th>
@@ -102,6 +106,7 @@ export function TicketsTable({
                   className="cursor-pointer border-b border-white/10 last:border-0 hover:bg-violet-500/[0.08] hover:shadow-[inset_3px_0_0_0_rgb(167,139,250)]"
                   onClick={() => onOpen(ticket)}
                 >
+                  {!requesterMode && (
                   <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
                     <input
                       type="checkbox"
@@ -109,6 +114,7 @@ export function TicketsTable({
                       onChange={() => onToggle(ticket.id)}
                     />
                   </td>
+                  )}
                   <td className="px-3 py-3 text-sm font-medium text-blue-400">{ticket.ticket_number}</td>
                   <td className="max-w-[260px] px-3 py-3">
                     <p className="truncate text-sm font-medium text-white">{ticket.title}</p>
@@ -144,7 +150,7 @@ export function TicketsTable({
                   </td>
                   <td className="px-3 py-3 text-sm text-zinc-400">{formatAge(ticket.updated_at || ticket.created_at)}</td>
                   <td className="px-3 py-3">
-                    <SlaPill ticket={ticket} />
+                    <SlaPill ticket={ticket} slaHours={slaHours} />
                   </td>
                 </tr>
               );
@@ -154,7 +160,9 @@ export function TicketsTable({
       </div>
       <div className="flex flex-col gap-3 border-t border-white/15 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-2 text-sm text-zinc-400">
-          <span>{selectedIds.length} selected.</span>
+          {!requesterMode && <span>{selectedIds.length} selected.</span>}
+          {!requesterMode && (
+          <>
           <select
             disabled={!selectedIds.length || mutating}
             onChange={(event) => {
@@ -189,6 +197,8 @@ export function TicketsTable({
           >
             Add note
           </button>
+          </>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-zinc-500">

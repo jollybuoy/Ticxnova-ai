@@ -15,7 +15,9 @@ import {
   weekPriorityBars,
 } from '../lib/tickets/queueMetrics';
 import { useAuth } from './useAuth';
+import { useTenant } from './useTenant';
 import { getUserDisplayName } from '../lib/user';
+import { slaHoursFromTenant } from '../lib/billing/slaPolicy';
 
 function withinRange(date, range) {
   if (!range || range === 'all') return true;
@@ -39,6 +41,8 @@ export function useDashboardData(dateRange = '7') {
   const { devices, loading: devicesLoading } = useDevices();
   const { users, loading: usersLoading } = useTenantDirectory();
   const { user } = useAuth();
+  const { tenant } = useTenant();
+  const slaHours = slaHoursFromTenant(tenant);
 
   return useMemo(() => {
     const scopedTickets = tickets.filter((ticket) => withinRange(ticket.created_at, dateRange));
@@ -54,11 +58,11 @@ export function useDashboardData(dateRange = '7') {
           });
 
     const openTickets = getOpenTickets(scopedTickets);
-    const slaRisk = getSlaRiskTickets(openTickets);
+    const slaRisk = getSlaRiskTickets(openTickets, Date.now(), slaHours);
     const unassigned = getUnassignedTickets(openTickets);
     const resolvedToday = getResolvedToday(scopedTickets);
     const prevOpen = getOpenTickets(previousTickets).length;
-    const prevSla = getSlaRiskTickets(previousTickets).length;
+    const prevSla = getSlaRiskTickets(previousTickets, Date.now(), slaHours).length;
     const prevUnassigned = getUnassignedTickets(previousTickets).length;
     const prevResolved = getResolvedToday(previousTickets).length;
 
@@ -119,7 +123,7 @@ export function useDashboardData(dateRange = '7') {
       ],
       weekBars: weekPriorityBars(scopedTickets),
       priorityQueue: [...openTickets]
-        .sort((a, b) => getTicketSla(a).remainingMs - getTicketSla(b).remainingMs)
+        .sort((a, b) => getTicketSla(a, Date.now(), slaHours).remainingMs - getTicketSla(b, Date.now(), slaHours).remainingMs)
         .slice(0, 6),
       team: teamWorkload(scopedTickets),
       activity: [...scopedTickets]
@@ -189,5 +193,5 @@ export function useDashboardData(dateRange = '7') {
       ],
       users,
     };
-  }, [dateRange, devices, devicesLoading, tickets, ticketsLoading, user, users, usersLoading]);
+  }, [dateRange, devices, devicesLoading, slaHours, tickets, ticketsLoading, user, users, usersLoading]);
 }

@@ -11,6 +11,9 @@ const pills = [
 ];
 
 export function TicketsToolbar({
+  title = 'Tickets',
+  subtitle,
+  hideQuickFilters = false,
   search,
   onSearchChange,
   statusFilter,
@@ -29,8 +32,8 @@ export function TicketsToolbar({
     <div className="space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight text-white">Tickets</h1>
-          <p className="mt-1 text-sm text-zinc-400">{totalCount} in this view</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-white">{title}</h1>
+          <p className="mt-1 text-sm text-zinc-400">{subtitle || `${totalCount} in this view`}</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" onClick={onExport}>
@@ -44,6 +47,7 @@ export function TicketsToolbar({
         </div>
       </div>
 
+      {!hideQuickFilters && (
       <div className="flex flex-wrap gap-2">
         {pills.map((pill) => (
           <button
@@ -61,6 +65,7 @@ export function TicketsToolbar({
           </button>
         ))}
       </div>
+      )}
 
       <div className="grid gap-3 lg:grid-cols-[180px_1fr_140px_140px]">
         <select

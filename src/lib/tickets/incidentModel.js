@@ -15,12 +15,14 @@ export const SLA_WINDOWS_MS = {
 const PRIORITY_ORDER = ['low', 'medium', 'high', 'urgent'];
 const PUBLIC_PREFIX = '[[visibility:public]]\n';
 
-export function getSlaWindowMs(priority) {
+export function getSlaWindowMs(priority, hoursByPriority) {
+  const hours = Number(hoursByPriority?.[priority]);
+  if (Number.isFinite(hours) && hours > 0) return hours * 60 * 60 * 1000;
   return SLA_WINDOWS_MS[priority] ?? SLA_WINDOWS_MS.medium;
 }
 
-export function getTicketSla(ticket, now = Date.now()) {
-  const totalMs = getSlaWindowMs(ticket?.priority);
+export function getTicketSla(ticket, now = Date.now(), hoursByPriority) {
+  const totalMs = getSlaWindowMs(ticket?.priority, hoursByPriority);
   const created = ticket?.created_at ? new Date(ticket.created_at).getTime() : now;
   const elapsed = Math.max(0, now - created);
   const remainingMs = ticket?.status === 'resolved' ? totalMs : Math.max(0, totalMs - elapsed);

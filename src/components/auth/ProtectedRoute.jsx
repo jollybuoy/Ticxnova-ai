@@ -11,6 +11,11 @@ import {
 } from '../../lib/plans/subscriptionEnforcement';
 import { AuthLoadingScreen } from './AuthLoadingScreen';
 import { UpgradePrompt } from '../billing/UpgradePrompt';
+import {
+  isRequesterAllowedPath,
+  isRequesterRole,
+  requesterHomePath,
+} from '../../lib/portal/requesterAccess';
 
 export function ProtectedRoute({
   children,
@@ -28,6 +33,7 @@ export function ProtectedRoute({
   const routeGuard = ROUTE_GUARDS[location.pathname];
   const effectiveAllowTrialExpired =
     allowTrialExpired || isTrialExemptPath(location.pathname);
+  const homePath = isRequesterRole(role) ? requesterHomePath() : '/dashboard';
   const domainVerified =
     Boolean(tenant?.domain_verified) && tenant?.verification_status === 'verified';
   const mustResetPassword = Boolean(
@@ -43,15 +49,25 @@ export function ProtectedRoute({
   }
 
   if (allowedRoles?.length && profile?.role && !allowedRoles.includes(profile.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={homePath} replace />;
   }
 
   if (routeGuard?.roles?.length && profile?.role && !routeGuard.roles.includes(profile.role)) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={homePath} replace />;
   }
 
   if (routeGuard?.module && !canAccessModule(role, routeGuard.module, 'read')) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={homePath} replace />;
+  }
+
+  if (
+    profile?.role &&
+    isRequesterRole(role) &&
+    !allowPasswordReset &&
+    !allowDomainVerification &&
+    !isRequesterAllowedPath(location.pathname)
+  ) {
+    return <Navigate to={requesterHomePath()} replace />;
   }
 
   if (mustResetPassword && !allowPasswordReset) {
@@ -59,7 +75,7 @@ export function ProtectedRoute({
   }
 
   if (!mustResetPassword && allowPasswordReset) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={homePath} replace />;
   }
 
   if (tenant && profile?.tenant_id && !domainVerified && !allowDomainVerification) {
@@ -67,7 +83,7 @@ export function ProtectedRoute({
   }
 
   if (allowDomainVerification && domainVerified) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={homePath} replace />;
   }
 
   // Read-only (expired trial): allow viewing core routes; block write-heavy modules
@@ -76,7 +92,7 @@ export function ProtectedRoute({
       return <Navigate to="/trial-expired" replace state={{ from: location.pathname }} />;
     }
     if (!isPathAllowedInReadOnly(location.pathname)) {
-      return <Navigate to="/dashboard" replace />;
+      return <Navigate to={homePath} replace />;
     }
   }
 

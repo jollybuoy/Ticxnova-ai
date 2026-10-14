@@ -6,8 +6,11 @@ import { TicketsQueueSidebar } from '../components/tickets/TicketsQueueSidebar';
 import { CreateTicketModal } from '../components/tickets/CreateTicketModal';
 import { useTickets } from '../hooks/useTickets';
 import { useAuth } from '../hooks/useAuth';
-import { getUserEmail } from '../lib/user';
+import { useTenant } from '../hooks/useTenant';
+import { getUserDisplayName, getUserEmail } from '../lib/user';
 import { getTicketSla } from '../lib/tickets/incidentModel';
+import { slaHoursFromTenant } from '../lib/billing/slaPolicy';
+import { isOwnRequest, isRequesterRole } from '../lib/portal/requesterAccess';
 import {
   OPEN_STATUSES,
   exportTicketsCsv,
@@ -23,7 +26,10 @@ export default function Tickets() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
+  const { tenant, role } = useTenant();
   const email = getUserEmail(user);
+  const slaHours = slaHoursFromTenant(tenant);
+  const isRequester = isRequesterRole(role);
   const {
     tickets,
     loading,
@@ -33,6 +39,10 @@ export default function Tickets() {
     updateFields,
     refetch,
   } = useTickets();
+  const scopedTickets = useMemo(
+    () => (isRequester ? tickets.filter((ticket) => isOwnRequest(ticket, user)) : tickets),
+    [isRequester, tickets, user],
+  );
 
   const [search, setSearch] = useState(() => searchParams.get('search') ?? '');
   const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') ?? 'queue');
@@ -50,16 +60,16 @@ export default function Tickets() {
     setQuickFilter(searchParams.get('quick') ?? 'all');
   }, [searchParams]);
 
-  const openTickets = useMemo(() => getOpenTickets(tickets), [tickets]);
-  const slaRisk = useMemo(() => getSlaRiskTickets(tickets), [tickets]);
-  const unassigned = useMemo(() => getUnassignedTickets(tickets), [tickets]);
+  const openTickets = useMemo(() => getOpenTickets(scopedTickets), [scopedTickets]);
+  const slaRisk = useMemo(() => getSlaRiskTickets(scopedTickets, Date.now(), slaHours), [scopedTickets, slaHours]);
+  const unassigned = useMemo(() => getUnassignedTickets(scopedTickets), [scopedTickets]);
 
   const filteredTickets = useMemo(() => {
     const query = search.trim().toLowerCase();
     const start = new Date();
     start.setHours(0, 0, 0, 0);
 
-    const next = tickets.filter((ticket) => {
+    const next = scopedTickets.filter((ticket) => {
       const matchesStatus =
         statusFilter === 'all' ||
         (statusFilter === 'queue' ? OPEN_STATUSES.includes(ticket.status) : ticket.status === statusFilter);
@@ -75,7 +85,7 @@ export default function Tickets() {
       if (quickFilter === 'unassigned' && ticket.assignee_name?.trim()) return false;
       if (quickFilter === 'p1' && ticket.priority !== 'urgent') return false;
       if (quickFilter === 'sla') {
-        const sla = getTicketSla(ticket);
+        const sla = getTicketSla(ticket, Date.now(), slaHours);
         if (!(sla.atRisk || sla.breached) || ticket.status === 'resolved') return false;
       }
       if (quickFilter === 'today') {
@@ -96,10 +106,15 @@ export default function Tickets() {
 
     return next.sort((a, b) => {
       if (sort === 'priority') return (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9);
-      if (sort === 'sla') return getTicketSla(a).remainingMs - getTicketSla(b).remainingMs;
+      if (sort === 'sla') {
+        return (
+          getTicketSla(a, Date.now(), slaHours).remainingMs -
+          getTicketSla(b, Date.now(), slaHours).remainingMs
+        );
+      }
       return new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at);
     });
-  }, [email, priorityFilter, quickFilter, search, sort, statusFilter, tickets, user]);
+  }, [email, priorityFilter, quickFilter, scopedTickets, search, slaHours, sort, statusFilter, user]);
 
   const totalPages = Math.max(1, Math.ceil(filteredTickets.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -119,6 +134,9 @@ export default function Tickets() {
   return (
     <>
       <TicketsToolbar
+        title={isRequester ? 'My requests' : 'Tickets'}
+        subtitle={isRequester ? 'Tickets you opened or were listed on as requester.' : undefined}
+        hideQuickFilters={isRequester}
         search={search}
         onSearchChange={(value) => {
           setSearch(value);
@@ -153,11 +171,13 @@ export default function Tickets() {
         totalCount={filteredTickets.length}
       />
 
-      <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1fr)_300px]">
+      <div className={`mt-5 grid gap-5 ${isRequester ? '' : 'xl:grid-cols-[minmax(0,1fr)_300px]'}`}>
         <TicketsTable
           tickets={paginatedTickets}
           loading={loading}
           mutating={mutating}
+          requesterMode={isRequester}
+          slaHours={slaHours}
           selectedIds={selectedIds}
           onToggle={(id) =>
             setSelectedIds((prev) => (prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]))
@@ -187,12 +207,14 @@ export default function Tickets() {
           totalCount={filteredTickets.length}
           onPageChange={setPage}
         />
-        <TicketsQueueSidebar
-          open={openTickets.length}
-          unassigned={unassigned.length}
-          slaRisk={slaRisk.length}
-          onRefresh={refetch}
-        />
+        {!isRequester && (
+          <TicketsQueueSidebar
+            open={openTickets.length}
+            unassigned={unassigned.length}
+            slaRisk={slaRisk.length}
+            onRefresh={refetch}
+          />
+        )}
       </div>
 
       <CreateTicketModal
@@ -200,6 +222,15 @@ export default function Tickets() {
         onClose={() => setCreateOpen(false)}
         onCreate={createTicket}
         loading={mutating}
+        selfService={isRequester}
+        seed={
+          isRequester
+            ? {
+                requester_name: getUserDisplayName(user),
+                requester_email: email,
+              }
+            : undefined
+        }
       />
     </>
   );
