@@ -65,21 +65,28 @@ serve(async (req) => {
 
   const { data: secretRow } = await adminClient
     .from('tenant_mail_secrets')
-    .select('secret_cipher')
+    .select('secret_cipher, inbound_secret_cipher')
     .eq('tenant_id', tenantId)
     .maybeSingle();
+
+  const inboundWebhookUrl = `${supabaseUrl}/functions/v1/email-inbound`;
 
   if (action === 'status') {
     const config = normalizeMailConfig(tenant.mail_config);
     return jsonResponse({
       config: publicMailConfig(config),
       hasSecret: Boolean(secretRow?.secret_cipher),
+      hasInboundSecret: Boolean(secretRow?.inbound_secret_cipher),
+      inboundWebhookUrl,
       ready: isMailReady(config, Boolean(secretRow?.secret_cipher)),
     });
   }
 
   if (action === 'save') {
     const config = normalizeMailConfig(payload.config);
+    if (config.inbound_enabled && !config.inbound_address) {
+      config.inbound_address = config.it_inbox || config.from_email;
+    }
     const secret = String(payload.secret ?? '').trim();
     const { error: configError } = await adminClient
       .from('tenants')
@@ -99,7 +106,31 @@ serve(async (req) => {
       ok: true,
       config: publicMailConfig(config),
       hasSecret: Boolean(secret || secretRow?.secret_cipher),
+      hasInboundSecret: Boolean(secretRow?.inbound_secret_cipher),
+      inboundWebhookUrl,
       ready: isMailReady(config, Boolean(secret || secretRow?.secret_cipher)),
+    });
+  }
+
+  if (action === 'rotate-inbound') {
+    const bytes = new Uint8Array(24);
+    crypto.getRandomValues(bytes);
+    const inboundSecret = Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+    const cipher = await encryptSecret(inboundSecret);
+    const { error: secretError } = await adminClient
+      .from('tenant_mail_secrets')
+      .upsert({
+        tenant_id: tenantId,
+        secret_cipher: secretRow?.secret_cipher ?? null,
+        inbound_secret_cipher: cipher,
+        updated_at: new Date().toISOString(),
+      });
+    if (secretError) return jsonResponse({ error: secretError.message }, 500);
+    return jsonResponse({
+      ok: true,
+      inboundSecret,
+      inboundWebhookUrl,
+      hasInboundSecret: true,
     });
   }
 

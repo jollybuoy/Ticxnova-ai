@@ -11,6 +11,7 @@ describe('organization mail relay', () => {
       provider: 'microsoft365',
       smtp_host: 'smtp.office365.com',
       smtp_port: 587,
+      inbound_enabled: false,
     });
   });
 

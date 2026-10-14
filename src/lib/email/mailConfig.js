@@ -26,6 +26,8 @@ export const EMPTY_MAIL_CONFIG = {
   smtp_port: 587,
   smtp_username: '',
   smtp_secure: 'starttls',
+  inbound_enabled: false,
+  inbound_address: '',
 };
 
 export function isApiMailProvider(provider) {
@@ -51,6 +53,8 @@ export function normalizeMailConfig(value) {
     smtp_port: Number.isFinite(port) && port > 0 ? port : preset.smtp_port,
     smtp_username: String(source.smtp_username || '').trim(),
     smtp_secure: source.smtp_secure === 'tls' ? 'tls' : 'starttls',
+    inbound_enabled: source.inbound_enabled === true,
+    inbound_address: String(source.inbound_address || '').trim().toLowerCase(),
   };
 }
 

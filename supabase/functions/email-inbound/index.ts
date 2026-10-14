@@ -1,5 +1,6 @@
 import { serve } from 'https://deno.land/std@0.224.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { decryptSecret, normalizeMailConfig } from '../_shared/tenantMail.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -30,12 +31,6 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
   if (req.method !== 'POST') return jsonResponse({ error: 'Method not allowed' }, 405);
 
-  const expected = Deno.env.get('EMAIL_INBOUND_SECRET') ?? '';
-  const provided = req.headers.get('x-webhook-secret') || req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || '';
-  if (!expected || provided !== expected) {
-    return jsonResponse({ error: 'Unauthorized inbound webhook.' }, 401);
-  }
-
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   if (!supabaseUrl || !serviceRoleKey) {
@@ -47,6 +42,10 @@ serve(async (req) => {
   const to = extractEmail(String(payload.to ?? payload.recipient ?? ''));
   const subject = String(payload.subject ?? payload.title ?? 'Email request').trim() || 'Email request';
   const text = String(payload.text ?? payload['stripped-text'] ?? payload.html ?? payload.description ?? '').trim();
+  const provided =
+    req.headers.get('x-webhook-secret') ||
+    req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ||
+    String(payload.secret ?? '');
 
   if (!from || !to) return jsonResponse({ error: 'from and to are required.' }, 400);
 
@@ -54,12 +53,36 @@ serve(async (req) => {
   const domain = emailDomain(to) || emailDomain(from);
   const { data: tenant } = await adminClient
     .from('tenants')
-    .select('id, domain')
+    .select('id, domain, mail_config')
     .eq('domain', domain)
     .maybeSingle();
 
   if (!tenant?.id) {
     return jsonResponse({ error: `No workspace matched domain ${domain}.` }, 404);
+  }
+
+  const config = normalizeMailConfig(tenant.mail_config);
+  if (!config.inbound_enabled) {
+    return jsonResponse({ error: 'Email-to-ticket is turned off for this workspace.' }, 403);
+  }
+
+  if (config.inbound_address && to !== config.inbound_address) {
+    return jsonResponse({ error: 'This mailbox is not configured for inbound tickets.' }, 403);
+  }
+
+  const { data: secretRow } = await adminClient
+    .from('tenant_mail_secrets')
+    .select('inbound_secret_cipher')
+    .eq('tenant_id', tenant.id)
+    .maybeSingle();
+
+  const tenantSecret = secretRow?.inbound_secret_cipher
+    ? await decryptSecret(secretRow.inbound_secret_cipher)
+    : '';
+  const platformSecret = Deno.env.get('EMAIL_INBOUND_SECRET') ?? '';
+  const authorized = Boolean(provided) && (provided === tenantSecret || (platformSecret && provided === platformSecret));
+  if (!authorized) {
+    return jsonResponse({ error: 'Unauthorized inbound webhook.' }, 401);
   }
 
   const { data: owner } = await adminClient

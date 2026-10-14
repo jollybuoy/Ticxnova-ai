@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Mail, Send } from 'lucide-react';
+import { Copy, Inbox, Mail, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -17,9 +17,13 @@ export function OrganizationMailSettings({ tenant }) {
   const [form, setForm] = useState(EMPTY_MAIL_CONFIG);
   const [secret, setSecret] = useState('');
   const [hasSecret, setHasSecret] = useState(false);
+  const [hasInboundSecret, setHasInboundSecret] = useState(false);
+  const [inboundWebhookUrl, setInboundWebhookUrl] = useState('');
+  const [inboundSecret, setInboundSecret] = useState('');
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [rotating, setRotating] = useState(false);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -31,6 +35,8 @@ export function OrganizationMailSettings({ tenant }) {
         if (cancelled || error) return;
         if (data?.config) setForm(normalizeMailConfig(data.config));
         setHasSecret(Boolean(data?.hasSecret));
+        setHasInboundSecret(Boolean(data?.hasInboundSecret));
+        setInboundWebhookUrl(data?.inboundWebhookUrl || '');
         setReady(Boolean(data?.ready));
       });
     return () => {
@@ -74,8 +80,31 @@ export function OrganizationMailSettings({ tenant }) {
     }
     setSecret('');
     setHasSecret(Boolean(data.hasSecret));
+    setHasInboundSecret(Boolean(data.hasInboundSecret));
+    setInboundWebhookUrl(data.inboundWebhookUrl || inboundWebhookUrl);
     setReady(Boolean(data.ready));
     toast.success('Organization mailbox saved. Ticket mail will send from this address.');
+  };
+
+  const handleRotateInbound = async () => {
+    if (!tenant?.id) return;
+    setRotating(true);
+    const { data, error } = await invokeMail({ action: 'rotate-inbound' });
+    setRotating(false);
+    if (error || data?.error) {
+      toast.error(data?.error || error?.message || 'Could not generate a connection key.');
+      return;
+    }
+    setInboundSecret(data.inboundSecret || '');
+    setHasInboundSecret(true);
+    setInboundWebhookUrl(data.inboundWebhookUrl || inboundWebhookUrl);
+    toast.success('Copy the connection key now. It is shown only once.');
+  };
+
+  const copyValue = async (value, label) => {
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
+    toast.success(`${label} copied`);
   };
 
   const handleTest = async () => {
@@ -217,6 +246,91 @@ export function OrganizationMailSettings({ tenant }) {
         domain there — the From address stays yours. Password and API keys are stored encrypted
         and never shown again.
       </p>
+
+      <div className="rounded-2xl border border-white/10 bg-black/20 p-5">
+        <div className="flex items-start gap-3">
+          <div className="rounded-xl border border-cyan-400/20 bg-cyan-500/10 p-2 text-cyan-200">
+            <Inbox size={18} />
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-white">Create tickets from email</h3>
+            <p className="mt-1 text-sm text-zinc-400">
+              Optional. If someone emails this address, Ticxnova can open a ticket. Leave this off if people only submit from the portal.
+            </p>
+          </div>
+        </div>
+
+        <label className="mt-4 inline-flex items-center gap-2 text-sm text-zinc-200">
+          <input
+            type="checkbox"
+            checked={form.inbound_enabled}
+            onChange={(event) => updateField('inbound_enabled', event.target.checked)}
+          />
+          Turn on email-to-ticket
+        </label>
+
+        {form.inbound_enabled && (
+          <div className="mt-4 space-y-4">
+            <Input
+              label="Address people should email"
+              type="email"
+              value={form.inbound_address}
+              placeholder={form.it_inbox || form.from_email || 'it@yourcompany.com'}
+              onChange={(event) => updateField('inbound_address', event.target.value)}
+            />
+            <div>
+              <p className="mb-2 text-xs font-medium text-zinc-200">Connection URL</p>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <input
+                  readOnly
+                  value={inboundWebhookUrl}
+                  className="field-control focus-ring w-full rounded-xl border px-4 py-3 text-xs text-zinc-300"
+                />
+                <Button type="button" variant="secondary" onClick={() => copyValue(inboundWebhookUrl, 'Connection URL')}>
+                  <Copy size={15} />
+                  Copy
+                </Button>
+              </div>
+            </div>
+            <div>
+              <p className="mb-2 text-xs font-medium text-zinc-200">Connection key</p>
+              {inboundSecret ? (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <input
+                    readOnly
+                    value={inboundSecret}
+                    className="field-control focus-ring w-full rounded-xl border px-4 py-3 font-mono text-xs text-emerald-200"
+                  />
+                  <Button type="button" variant="secondary" onClick={() => copyValue(inboundSecret, 'Connection key')}>
+                    <Copy size={15} />
+                    Copy
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-zinc-500">
+                  {hasInboundSecret
+                    ? 'A key is already saved. Generate a new one only if you need to replace it.'
+                    : 'Generate a key, then add it to your mail provider as header x-webhook-secret.'}
+                </p>
+              )}
+              <Button
+                type="button"
+                variant="secondary"
+                className="mt-3"
+                loading={rotating}
+                disabled={rotating}
+                onClick={handleRotateInbound}
+              >
+                {hasInboundSecret ? 'Generate new key' : 'Generate key'}
+              </Button>
+            </div>
+            <p className="text-xs leading-relaxed text-zinc-500">
+              In Microsoft 365, Google, Mailgun, or SendGrid, forward or parse that mailbox to the URL above.
+              Save this form after turning the option on.
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button type="button" variant="secondary" loading={testing} disabled={testing || saving} onClick={handleTest}>

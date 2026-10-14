@@ -12,6 +12,8 @@ export type MailConfig = {
   smtp_port: number;
   smtp_username: string;
   smtp_secure: 'starttls' | 'tls';
+  inbound_enabled: boolean;
+  inbound_address: string;
 };
 
 export type MailMessage = {
@@ -48,6 +50,8 @@ export function normalizeMailConfig(value: unknown): MailConfig {
     smtp_port: Number.isFinite(port) && port > 0 ? port : preset.smtp_port,
     smtp_username: String(source.smtp_username ?? '').trim(),
     smtp_secure: source.smtp_secure === 'tls' ? 'tls' : 'starttls',
+    inbound_enabled: source.inbound_enabled === true,
+    inbound_address: String(source.inbound_address ?? '').trim().toLowerCase(),
   };
 }
 
