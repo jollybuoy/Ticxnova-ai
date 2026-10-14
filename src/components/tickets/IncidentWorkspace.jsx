@@ -242,16 +242,18 @@ export function IncidentWorkspace({
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
+      <Link
+        to="/tickets"
+        className="inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.22em] text-zinc-500 hover:text-white"
+      >
+        <ArrowLeft size={14} />
+        Tickets / {ticket.ticket_number}
+      </Link>
+
+      <div className="ticket-workspace-frame space-y-5 p-4 sm:p-6">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
         <div className="min-w-0">
-          <Link
-            to="/tickets"
-            className="mb-3 inline-flex items-center gap-2 text-xs font-medium uppercase tracking-[0.22em] text-zinc-500 hover:text-white"
-          >
-            <ArrowLeft size={14} />
-            Tickets / {ticket.ticket_number}
-          </Link>
           <h1 className="max-w-4xl text-2xl font-semibold tracking-tight text-white md:text-3xl">
             {ticket.title}
           </h1>
@@ -565,6 +567,7 @@ export function IncidentWorkspace({
             </div>
           )}
         </aside>
+      </div>
       </div>
 
       <Modal

@@ -99,7 +99,7 @@ export function TicketsTable({
               return (
                 <tr
                   key={ticket.id}
-                  className="cursor-pointer border-b border-white/10 last:border-0 hover:bg-white/[0.03]"
+                  className="cursor-pointer border-b border-white/10 last:border-0 hover:bg-violet-500/[0.08] hover:shadow-[inset_3px_0_0_0_rgb(167,139,250)]"
                   onClick={() => onOpen(ticket)}
                 >
                   <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
